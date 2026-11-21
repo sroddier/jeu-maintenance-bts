@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/jeu-maintenance/schema_historique.json",
+  "title": "Historique GMAO des interventions — jeu sérieux BTS MS",
+  "description": "Tableau d'événements. Durées en heures d'ouverture (_h), coûts en euros HT (_eur). Types de maintenance d'après NF EN 13306. Règle : duree_arret_totale_h = détection + attente logistique + réparation active + remise en service (vérifiée par le script, pas exprimable en JSON Schema).",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/evenement"
+  },
+  "$defs": {
+    "piece_consommee": {
+      "type": "object",
+      "required": [
+        "ref",
+        "quantite",
+        "prix_unitaire_eur"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "type": "string"
+        },
+        "quantite": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "prix_unitaire_eur": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "evenement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id_evenement",
+        "source",
+        "id_equipement",
+        "id_sous_ensemble",
+        "id_mode_defaillance",
+        "type_maintenance",
+        "debut_arret",
+        "fin_arret",
+        "hors_temps_ouverture",
+        "duree_detection_h",
+        "duree_attente_logistique_h",
+        "duree_reparation_active_h",
+        "duree_remise_en_service_h",
+        "duree_arret_totale_h",
+        "nb_techniciens",
+        "heures_main_oeuvre_h",
+        "pieces",
+        "cout_direct_eur",
+        "cout_indirect_eur",
+        "cout_total_eur"
+      ],
+      "properties": {
+        "id_evenement": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}-[0-9]{4}$"
+        },
+        "source": {
+          "enum": [
+            "exercice",
+            "simulation",
+            "partie"
+          ]
+        },
+        "id_equipement": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "id_sous_ensemble": {
+          "type": "string"
+        },
+        "id_mode_defaillance": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type_maintenance": {
+          "enum": [
+            "corrective_immediate",
+            "corrective_differee",
+            "preventive_systematique",
+            "preventive_conditionnelle",
+            "preventive_previsionnelle",
+            "amelioration"
+          ]
+        },
+        "action": {
+          "enum": [
+            "depannage",
+            "reglage",
+            "reparation",
+            "remplacement",
+            "inspection",
+            "nettoyage"
+          ]
+        },
+        "reparation_provisoire": {
+          "type": "boolean",
+          "description": "vrai = action palliative (dépannage), faux = action curative"
+        },
+        "debut_arret": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 avec décalage horaire (Europe/Paris)"
+        },
+        "fin_arret": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "hors_temps_ouverture": {
+          "type": "boolean"
+        },
+        "debut_arret_h_ouverture": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Instant de début en heures d'ouverture depuis le début de la période"
+        },
+        "tbf_precedent_h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Temps de bon fonctionnement depuis la remise en service précédente du même équipement"
+        },
+        "duree_detection_h": {
+          "type": "number",
+          "minimum": 0
+        },
+        "duree_attente_logistique_h": {
+          "type": "number",
+          "minimum": 0
+        },
+        "duree_reparation_active_h": {
+          "type": "number",
+          "minimum": 0
+        },
+        "duree_remise_en_service_h": {
+          "type": "number",
+          "minimum": 0
+        },
+        "duree_arret_totale_h": {
+          "type": "number",
+          "minimum": 0
+        },
+        "nb_techniciens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "intervenant": {
+          "enum": [
+            "interne",
+            "sous_traitance",
+            "mixte"
+          ]
+        },
+        "heures_main_oeuvre_h": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pieces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/piece_consommee"
+          }
+        },
+        "cout_pieces_eur": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cout_main_oeuvre_eur": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cout_sous_traitance_eur": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cout_direct_eur": {
+          "type": "number",
+          "minimum": 0
+        },
+        "penalite_arret_eur_par_h": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cout_arret_production_eur": {
+          "type": "number",
+          "minimum": 0
+        },
+        "nb_rebuts_bouteilles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cout_rebuts_eur": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cout_indirect_eur": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cout_total_eur": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

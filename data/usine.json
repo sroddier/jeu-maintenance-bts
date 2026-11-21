@@ -1,0 +1,559 @@
+{
+  "meta": {
+    "nom": "Boissons des Calanques — ligne L1 d'embouteillage (usine FICTIVE)",
+    "version": "1.0",
+    "date": "2026-11-21",
+    "avertissement": "Usine, données et coûts fictifs mais réalistes, construits pour l'enseignement (BTS MS).",
+    "unites": "Durées en heures d'ouverture (h), coûts en euros HT (eur), cadences en bouteilles par heure."
+  },
+  "organisation": {
+    "postes_par_jour": 2,
+    "heures_par_poste": 8,
+    "jours_par_semaine": 5,
+    "heures_ouverture_par_semaine": 80,
+    "horaires": "lundi-vendredi 05:00-21:00",
+    "produit": "Boisson plate aux fruits, bouteille PET 1 L",
+    "marge_sur_cout_variable_eur_par_bouteille": 0.12,
+    "cout_rebut_eur_par_bouteille": 0.2,
+    "coefficient_propagation_arret_hors_goulot": 1.0
+  },
+  "couts": {
+    "taux_main_oeuvre_eur_par_h": 40.0,
+    "taux_main_oeuvre_heures_sup_eur_par_h": 50.0,
+    "sous_traitance_eur_par_h": 90.0,
+    "sous_traitance_deplacement_eur": 150.0,
+    "sous_traitance_delai_arrivee_h": 4.0,
+    "majoration_express_pct": 50.0,
+    "delai_express_h": 16.0,
+    "cout_possession_stock_pct_par_an": 20.0,
+    "penalite_arret_goulot_eur_par_h": 1200.0,
+    "penalite_arret_autre_eur_par_h": 1200.0
+  },
+  "politique_initiale": [
+    {
+      "id_mode": "REM-M1",
+      "type_maintenance": "preventive_systematique",
+      "action": "Remplacement de tous les joints des 24 vannes (kit P-REM-02)",
+      "periode_semaines": 4,
+      "hors_temps_ouverture": true,
+      "duree_h": 8.0,
+      "nb_techniciens": 1,
+      "cout_eur": 1000.0
+    }
+  ],
+  "pieces": [
+    {
+      "ref": "P-SOU-01",
+      "designation": "Lampe infrarouge four de préchauffe 1,5 kW",
+      "prix_unitaire_eur": 60.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 6,
+      "stock_mini": 2
+    },
+    {
+      "ref": "P-SOU-02",
+      "designation": "Vanne haute pression de soufflage 40 bar",
+      "prix_unitaire_eur": 1200.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 1,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-REM-01",
+      "designation": "Kit joints pour 1 vanne de remplissage",
+      "prix_unitaire_eur": 25.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 10,
+      "stock_mini": 4
+    },
+    {
+      "ref": "P-REM-02",
+      "designation": "Kit joints complet 24 vannes de remplissage",
+      "prix_unitaire_eur": 600.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 1,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-REM-03",
+      "designation": "Sonde de niveau / débitmètre de vanne",
+      "prix_unitaire_eur": 450.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 0,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-REM-04",
+      "designation": "Motoréducteur d'entraînement du carrousel",
+      "prix_unitaire_eur": 5750.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 0,
+      "stock_mini": 0
+    },
+    {
+      "ref": "P-BOU-01",
+      "designation": "Tête de vissage à embrayage magnétique",
+      "prix_unitaire_eur": 900.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 1,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-ETI-01",
+      "designation": "Cellule photoélectrique de détection d'étiquette",
+      "prix_unitaire_eur": 180.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 2,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-ETI-02",
+      "designation": "Brosse de pose d'étiquette",
+      "prix_unitaire_eur": 120.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 2,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-FAR-01",
+      "designation": "Résistance du four de rétraction",
+      "prix_unitaire_eur": 250.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 1,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-FAR-02",
+      "designation": "Lame de coupe du film",
+      "prix_unitaire_eur": 150.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 2,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-CON-01",
+      "designation": "Variateur de vitesse 1,5 kW",
+      "prix_unitaire_eur": 450.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 1,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-CON-02",
+      "designation": "Carte d'entrées/sorties déportée automate",
+      "prix_unitaire_eur": 600.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 1,
+      "stock_mini": 1
+    },
+    {
+      "ref": "P-CON-03",
+      "designation": "Chaîne à palettes inox (lot de 1 m)",
+      "prix_unitaire_eur": 200.0,
+      "delai_standard_semaines": 2,
+      "stock_initial": 2,
+      "stock_mini": 1
+    }
+  ],
+  "equipements": [
+    {
+      "id_equipement": "SOU",
+      "designation": "Souffleuse rotative de préformes PET",
+      "fonction": "Former les bouteilles PET 1 L à partir de préformes chauffées",
+      "cadence_nominale_bouteilles_par_h": 11000,
+      "goulot": false,
+      "penalite_arret_eur_par_h": 1200.0,
+      "sous_ensembles": [
+        {
+          "id_sous_ensemble": "SOU-FOUR",
+          "designation": "Four de préchauffe infrarouge"
+        },
+        {
+          "id_sous_ensemble": "SOU-SOUF",
+          "designation": "Postes de soufflage (moules, vannes HP)"
+        },
+        {
+          "id_sous_ensemble": "SOU-TRF",
+          "designation": "Transferts et roues étoiles"
+        }
+      ],
+      "modes": [
+        {
+          "id_mode": "SOU-M1",
+          "id_sous_ensemble": "SOU-FOUR",
+          "designation": "Claquage de lampe infrarouge",
+          "loi": "exponentielle",
+          "beta": 1,
+          "eta_h": 400,
+          "gamma_h": 0,
+          "lambda_par_h": 0.0025,
+          "mtbf_theorique_h": 400.0,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 1.5,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-SOU-01"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "automatique (pyromètre)",
+          "probabilite_piece_en_stock": 0.95
+        },
+        {
+          "id_mode": "SOU-M2",
+          "id_sous_ensemble": "SOU-SOUF",
+          "designation": "Fuite / blocage de vanne haute pression",
+          "loi": "weibull",
+          "beta": 2,
+          "eta_h": 800,
+          "gamma_h": 0,
+          "lambda_par_h": null,
+          "mtbf_theorique_h": 709.0,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 2.5,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-SOU-02"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "opérateur (bouteilles mal formées)",
+          "probabilite_piece_en_stock": 0.8
+        }
+      ],
+      "mtbf_theorique_equipement_h": null
+    },
+    {
+      "id_equipement": "REM",
+      "designation": "Remplisseuse rotative 24 vannes",
+      "fonction": "Remplir les bouteilles au niveau (1 L) — machine GOULOT de la ligne",
+      "cadence_nominale_bouteilles_par_h": 10000,
+      "goulot": true,
+      "penalite_arret_eur_par_h": 1200.0,
+      "sous_ensembles": [
+        {
+          "id_sous_ensemble": "REM-VAN",
+          "designation": "Vannes de remplissage (24)"
+        },
+        {
+          "id_sous_ensemble": "REM-MES",
+          "designation": "Mesure de niveau / débitmètres"
+        },
+        {
+          "id_sous_ensemble": "REM-ENT",
+          "designation": "Entraînement du carrousel"
+        },
+        {
+          "id_sous_ensemble": "REM-CUV",
+          "designation": "Cuve produit et circuit NEP"
+        }
+      ],
+      "modes": [
+        {
+          "id_mode": "REM-M1",
+          "id_sous_ensemble": "REM-VAN",
+          "designation": "Fuite de joint de vanne (sous-remplissage)",
+          "loi": "weibull",
+          "beta": 3,
+          "eta_h": 300,
+          "gamma_h": 0,
+          "lambda_par_h": null,
+          "mtbf_theorique_h": 267.9,
+          "effet_correctif": "reparation_minimale",
+          "mttr_actif_h": 2.5,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-REM-01"
+          ],
+          "pieces_preventive": [
+            "P-REM-02"
+          ],
+          "mode_detection": "opérateur (fuite visible ; pas de contrôleur pondéral en ligne)",
+          "probabilite_piece_en_stock": 0.95
+        },
+        {
+          "id_mode": "REM-M2",
+          "id_sous_ensemble": "REM-MES",
+          "designation": "Dérive / panne de sonde de niveau",
+          "loi": "exponentielle",
+          "beta": 1,
+          "eta_h": 600,
+          "gamma_h": 0,
+          "lambda_par_h": 0.0016666666666666668,
+          "mtbf_theorique_h": 600.0,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 3.0,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-REM-03"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "contrôle qualité (niveaux hors tolérance)",
+          "probabilite_piece_en_stock": 0.0
+        },
+        {
+          "id_mode": "REM-M3",
+          "id_sous_ensemble": "REM-ENT",
+          "designation": "Défaillance du motoréducteur du carrousel",
+          "loi": "weibull",
+          "beta": 2,
+          "eta_h": 4000,
+          "gamma_h": 0,
+          "lambda_par_h": null,
+          "mtbf_theorique_h": 3544.9,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 22.0,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-REM-04"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "bruit / vibration (ronde)",
+          "probabilite_piece_en_stock": 0.0
+        }
+      ],
+      "mtbf_theorique_equipement_h": null
+    },
+    {
+      "id_equipement": "BOU",
+      "designation": "Boucheuse rotative (bouchons vissés)",
+      "fonction": "Visser les bouchons au couple prescrit",
+      "cadence_nominale_bouteilles_par_h": 11500,
+      "goulot": false,
+      "penalite_arret_eur_par_h": 1200.0,
+      "sous_ensembles": [
+        {
+          "id_sous_ensemble": "BOU-TET",
+          "designation": "Têtes de vissage"
+        },
+        {
+          "id_sous_ensemble": "BOU-ALI",
+          "designation": "Alimentation et orientation des bouchons"
+        }
+      ],
+      "modes": [
+        {
+          "id_mode": "BOU-M1",
+          "id_sous_ensemble": "BOU-TET",
+          "designation": "Usure d'embrayage de tête de vissage (couple hors tolérance)",
+          "loi": "weibull",
+          "beta": 2,
+          "eta_h": 500,
+          "gamma_h": 0,
+          "lambda_par_h": null,
+          "mtbf_theorique_h": 443.1,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 2.0,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-BOU-01"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "contrôle de couple",
+          "probabilite_piece_en_stock": 0.9
+        },
+        {
+          "id_mode": "BOU-M2",
+          "id_sous_ensemble": "BOU-ALI",
+          "designation": "Bourrage de l'alimentation bouchons",
+          "loi": "exponentielle",
+          "beta": 1,
+          "eta_h": 1000,
+          "gamma_h": 0,
+          "lambda_par_h": 0.001,
+          "mtbf_theorique_h": 1000.0,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 1.0,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [],
+          "pieces_preventive": [],
+          "mode_detection": "automatique (détecteur de bourrage)",
+          "probabilite_piece_en_stock": 1.0
+        }
+      ],
+      "mtbf_theorique_equipement_h": null
+    },
+    {
+      "id_equipement": "ETI",
+      "designation": "Étiqueteuse (étiquettes adhésives)",
+      "fonction": "Poser l'étiquette sur la bouteille",
+      "cadence_nominale_bouteilles_par_h": 12000,
+      "goulot": false,
+      "penalite_arret_eur_par_h": 1200.0,
+      "sous_ensembles": [
+        {
+          "id_sous_ensemble": "ETI-DET",
+          "designation": "Détection et synchronisation"
+        },
+        {
+          "id_sous_ensemble": "ETI-POS",
+          "designation": "Groupe de pose (brosses, rouleau)"
+        }
+      ],
+      "modes": [
+        {
+          "id_mode": "ETI-M1",
+          "id_sous_ensemble": "ETI-DET",
+          "designation": "Défaut de cellule de détection d'étiquette",
+          "loi": "exponentielle",
+          "beta": 1,
+          "eta_h": 100,
+          "gamma_h": 0,
+          "lambda_par_h": 0.01,
+          "mtbf_theorique_h": 100.0,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 0.75,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-ETI-01"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "automatique (défaut machine)",
+          "probabilite_piece_en_stock": 0.9
+        },
+        {
+          "id_mode": "ETI-M2",
+          "id_sous_ensemble": "ETI-POS",
+          "designation": "Usure de la brosse de pose",
+          "loi": "weibull",
+          "beta": 2,
+          "eta_h": 1000,
+          "gamma_h": 0,
+          "lambda_par_h": null,
+          "mtbf_theorique_h": 886.2,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 1.5,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-ETI-02"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "opérateur (étiquette mal posée)",
+          "probabilite_piece_en_stock": 0.9
+        }
+      ],
+      "mtbf_theorique_equipement_h": null
+    },
+    {
+      "id_equipement": "FAR",
+      "designation": "Fardeleuse (packs de 6 sous film rétractable)",
+      "fonction": "Regrouper les bouteilles par 6 et les filmer",
+      "cadence_nominale_bouteilles_par_h": 13000,
+      "goulot": false,
+      "penalite_arret_eur_par_h": 1200.0,
+      "sous_ensembles": [
+        {
+          "id_sous_ensemble": "FAR-FOUR",
+          "designation": "Four de rétraction"
+        },
+        {
+          "id_sous_ensemble": "FAR-FILM",
+          "designation": "Dérouleur et coupe du film"
+        }
+      ],
+      "modes": [
+        {
+          "id_mode": "FAR-M1",
+          "id_sous_ensemble": "FAR-FOUR",
+          "designation": "Rupture de résistance du four",
+          "loi": "exponentielle",
+          "beta": 1,
+          "eta_h": 1000,
+          "gamma_h": 0,
+          "lambda_par_h": 0.001,
+          "mtbf_theorique_h": 1000.0,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 1.5,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-FAR-01"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "automatique (température)",
+          "probabilite_piece_en_stock": 0.9
+        },
+        {
+          "id_mode": "FAR-M2",
+          "id_sous_ensemble": "FAR-FILM",
+          "designation": "Émoussement de la lame de coupe",
+          "loi": "weibull",
+          "beta": 3,
+          "eta_h": 400,
+          "gamma_h": 100,
+          "lambda_par_h": null,
+          "mtbf_theorique_h": 457.2,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 0.5,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-FAR-02"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "opérateur (film mal coupé)",
+          "probabilite_piece_en_stock": 0.95
+        }
+      ],
+      "mtbf_theorique_equipement_h": null
+    },
+    {
+      "id_equipement": "CON",
+      "designation": "Convoyeurs (bouteilles vides et pleines)",
+      "fonction": "Transférer et accumuler les bouteilles entre machines",
+      "cadence_nominale_bouteilles_par_h": 15000,
+      "goulot": false,
+      "penalite_arret_eur_par_h": 1200.0,
+      "sous_ensembles": [
+        {
+          "id_sous_ensemble": "CON-CMD",
+          "designation": "Commande (automate, variateurs) — rénovée récemment"
+        },
+        {
+          "id_sous_ensemble": "CON-MEC",
+          "designation": "Chaînes et guides"
+        }
+      ],
+      "modes": [
+        {
+          "id_mode": "CON-M1",
+          "id_sous_ensemble": "CON-CMD",
+          "designation": "Défaut de jeunesse après rénovation (variateur, carte E/S, paramétrage)",
+          "loi": "weibull",
+          "beta": 0.5,
+          "eta_h": 100,
+          "gamma_h": 0,
+          "lambda_par_h": null,
+          "mtbf_theorique_h": 200.0,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 0.5,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-CON-01",
+            "P-CON-02"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "automatique (défaut variateur / défaut bus E/S)",
+          "probabilite_piece_en_stock": 0.9
+        },
+        {
+          "id_mode": "CON-M2",
+          "id_sous_ensemble": "CON-MEC",
+          "designation": "Usure / allongement de chaîne",
+          "loi": "weibull",
+          "beta": 2,
+          "eta_h": 2000,
+          "gamma_h": 0,
+          "lambda_par_h": null,
+          "mtbf_theorique_h": 1772.5,
+          "effet_correctif": "renouvellement",
+          "mttr_actif_h": 2.0,
+          "sigma_log_reparation": 0.5,
+          "pieces_corrective": [
+            "P-CON-03"
+          ],
+          "pieces_preventive": [],
+          "mode_detection": "ronde (mesure d'allongement)",
+          "probabilite_piece_en_stock": 0.9
+        }
+      ],
+      "mtbf_theorique_equipement_h": null
+    }
+  ]
+}

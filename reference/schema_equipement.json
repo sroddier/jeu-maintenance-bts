@@ -1,0 +1,387 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/jeu-maintenance/schema_equipement.json",
+  "title": "Usine fictive et équipements — jeu sérieux BTS MS",
+  "description": "Durées en heures d'ouverture (_h), coûts en euros HT (_eur), cadences en bouteilles par heure.",
+  "type": "object",
+  "required": [
+    "meta",
+    "organisation",
+    "couts",
+    "pieces",
+    "equipements"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "nom",
+        "version"
+      ],
+      "properties": {
+        "nom": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "avertissement": {
+          "type": "string"
+        },
+        "unites": {
+          "type": "string"
+        }
+      }
+    },
+    "organisation": {
+      "type": "object",
+      "required": [
+        "heures_ouverture_par_semaine"
+      ],
+      "properties": {
+        "postes_par_jour": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "heures_par_poste": {
+          "type": "number",
+          "minimum": 0
+        },
+        "jours_par_semaine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "heures_ouverture_par_semaine": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "horaires": {
+          "type": "string"
+        },
+        "produit": {
+          "type": "string"
+        },
+        "marge_sur_cout_variable_eur_par_bouteille": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cout_rebut_eur_par_bouteille": {
+          "type": "number",
+          "minimum": 0
+        },
+        "coefficient_propagation_arret_hors_goulot": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "couts": {
+      "type": "object",
+      "required": [
+        "taux_main_oeuvre_eur_par_h",
+        "penalite_arret_goulot_eur_par_h",
+        "penalite_arret_autre_eur_par_h"
+      ],
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "politique_initiale": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id_mode",
+          "type_maintenance"
+        ],
+        "properties": {
+          "id_mode": {
+            "type": "string"
+          },
+          "type_maintenance": {
+            "enum": [
+              "corrective_immediate",
+              "corrective_differee",
+              "preventive_systematique",
+              "preventive_conditionnelle",
+              "preventive_previsionnelle",
+              "amelioration"
+            ]
+          },
+          "action": {
+            "type": "string"
+          },
+          "periode_semaines": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "hors_temps_ouverture": {
+            "type": "boolean"
+          },
+          "duree_h": {
+            "type": "number",
+            "minimum": 0
+          },
+          "nb_techniciens": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cout_eur": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "pieces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/piece"
+      }
+    },
+    "equipements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/equipement"
+      }
+    }
+  },
+  "$defs": {
+    "piece": {
+      "type": "object",
+      "required": [
+        "ref",
+        "designation",
+        "prix_unitaire_eur"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "type": "string",
+          "pattern": "^P-[A-Z]{3}-[0-9]{2}$"
+        },
+        "designation": {
+          "type": "string"
+        },
+        "prix_unitaire_eur": {
+          "type": "number",
+          "minimum": 0
+        },
+        "delai_standard_semaines": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stock_initial": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stock_mini": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "mode": {
+      "type": "object",
+      "required": [
+        "id_mode",
+        "id_sous_ensemble",
+        "designation",
+        "loi",
+        "beta",
+        "eta_h",
+        "gamma_h",
+        "effet_correctif",
+        "mttr_actif_h"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id_mode": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}-M[0-9]+$"
+        },
+        "id_sous_ensemble": {
+          "type": "string"
+        },
+        "designation": {
+          "type": "string"
+        },
+        "loi": {
+          "enum": [
+            "exponentielle",
+            "weibull"
+          ]
+        },
+        "beta": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Paramètre de forme (sans unité)"
+        },
+        "eta_h": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Paramètre d'échelle, en heures de fonctionnement"
+        },
+        "gamma_h": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Paramètre de position, en heures"
+        },
+        "lambda_par_h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "description": "Taux de défaillance constant (1/h) si loi exponentielle"
+        },
+        "mtbf_theorique_h": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "gamma + eta·Γ(1+1/β), en heures"
+        },
+        "effet_correctif": {
+          "enum": [
+            "renouvellement",
+            "reparation_minimale"
+          ],
+          "description": "renouvellement : âge remis à 0 ; réparation minimale : âge inchangé"
+        },
+        "mttr_actif_h": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Moyenne des durées de réparation active (h)"
+        },
+        "sigma_log_reparation": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Écart-type du logarithme des durées de réparation (loi log-normale)"
+        },
+        "pieces_corrective": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Pièces consommables en correctif pour ce mode"
+        },
+        "pieces_preventive": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Pièces consommables en préventif pour ce mode"
+        },
+        "mode_detection": {
+          "type": "string"
+        },
+        "probabilite_piece_en_stock": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "loi": {
+                "const": "exponentielle"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "beta": {
+                "const": 1
+              },
+              "gamma_h": {
+                "const": 0
+              },
+              "lambda_par_h": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "equipement": {
+      "type": "object",
+      "required": [
+        "id_equipement",
+        "designation",
+        "fonction",
+        "cadence_nominale_bouteilles_par_h",
+        "goulot",
+        "penalite_arret_eur_par_h",
+        "sous_ensembles",
+        "modes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id_equipement": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "designation": {
+          "type": "string"
+        },
+        "fonction": {
+          "type": "string"
+        },
+        "cadence_nominale_bouteilles_par_h": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "goulot": {
+          "type": "boolean"
+        },
+        "penalite_arret_eur_par_h": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sous_ensembles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id_sous_ensemble",
+              "designation"
+            ],
+            "properties": {
+              "id_sous_ensemble": {
+                "type": "string"
+              },
+              "designation": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "modes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/mode"
+          }
+        },
+        "mtbf_theorique_equipement_h": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
