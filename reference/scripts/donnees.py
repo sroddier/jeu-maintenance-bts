@@ -13,12 +13,31 @@ TAUX_MO = 40.0; TAUX_MO_HS = 50.0
 PEN_GOULOT = 1200.0; COEF_PROPAG = 1.0; PEN_AUTRE = PEN_GOULOT*COEF_PROPAG  # ligne en série sans accumulation : 1 200 €/h pour toutes les machines
 COUT_REBUT = 0.20
 
-def mode(id_, se, nom, loi, beta, eta, gamma_h, effet, mttr, pieces, detect, prob_stock, pieces_prev=()):
-    return dict(id_mode=id_, id_sous_ensemble=se, designation=nom, loi=loi, beta=beta, eta_h=eta, gamma_h=gamma_h,
+RATIO_DEPANNAGE = Fr(2,5); REAPPARITION_DEPANNAGE_H = 40.0
+def quart_heure(x):
+    """Arrondi au ¼ h le plus proche (demi-quart arrondi vers le haut), minimum 0,25 h."""
+    q = Fr(str(x))*4
+    n = int(q) + (1 if q - int(q) >= Fr(1,2) else 0)
+    return max(n/4, 0.25)
+# Modes où un palliatif n'a pas de sens métier
+PALLIATIF_INTERDIT = {
+ "REM-M3": "Motoréducteur rompu : aucune action provisoire ne rétablit l'entraînement du carrousel, seul le remplacement le fait.",
+ "FAR-M1": "Résistance coupée : on ne la « dépanne » pas, et shunter ou neutraliser une protection du four serait dangereux. Seul le remplacement convient.",
+}
+def depannage(id_, mttr):
+    return dict(autorise=id_ not in PALLIATIF_INTERDIT, ratio_reparation_active=float(RATIO_DEPANNAGE),
+                duree_reparation_active_h=quart_heure(RATIO_DEPANNAGE*Fr(str(mttr))), pieces=[],
+                reapparition_apres_h=REAPPARITION_DEPANNAGE_H, annule_par_curatif_differe=True,
+                justification=PALLIATIF_INTERDIT.get(id_))
+def mode(id_, se, nom, loi, beta, eta, gamma_h, effet, mttr, pieces, detect, prob_stock, pieces_prev=(), prev=None):
+    d = dict(id_mode=id_, id_sous_ensemble=se, designation=nom, loi=loi, beta=beta, eta_h=eta, gamma_h=gamma_h,
                 lambda_par_h=(1/eta if loi=="exponentielle" else None),
                 mtbf_theorique_h=round(gamma_h+eta*float(G(1+1/beta)),1),
                 effet_correctif=effet, mttr_actif_h=mttr, sigma_log_reparation=0.5,
                 pieces_corrective=pieces, pieces_preventive=list(pieces_prev), mode_detection=detect, probabilite_piece_en_stock=prob_stock)
+    d["depannage_provisoire"] = depannage(id_, mttr)
+    if prev: d["periode_optimale"] = prev
+    return d
 
 PIECES = [  # ref, désignation, prix €, délai standard (semaines), stock initial, stock mini
  ("P-SOU-01","Lampe infrarouge four de préchauffe 1,5 kW",60,2,6,2),
@@ -47,13 +66,15 @@ EQUIP = [
  dict(id_equipement="REM", designation="Remplisseuse rotative 24 vannes", fonction="Remplir les bouteilles au niveau (1 L) — machine GOULOT de la ligne",
       cadence_nominale_bouteilles_par_h=10000, goulot=True, penalite_arret_eur_par_h=PEN_GOULOT,
       sous_ensembles=[{"id_sous_ensemble":"REM-VAN","designation":"Vannes de remplissage (24)"},{"id_sous_ensemble":"REM-MES","designation":"Mesure de niveau / débitmètres"},{"id_sous_ensemble":"REM-ENT","designation":"Entraînement du carrousel"},{"id_sous_ensemble":"REM-CUV","designation":"Cuve produit et circuit NEP"}],
-      modes=[mode("REM-M1","REM-VAN","Fuite de joint de vanne (sous-remplissage)","weibull",3,300,0,"reparation_minimale",2.5,["P-REM-01"],"opérateur (fuite visible ; pas de contrôleur pondéral en ligne)",0.95,["P-REM-02"]),
+      modes=[mode("REM-M1","REM-VAN","Fuite de joint de vanne (sous-remplissage)","weibull",3,300,0,"reparation_minimale",2.5,["P-REM-01"],"opérateur (fuite visible ; pas de contrôleur pondéral en ligne)",0.95,["P-REM-02"],
+                  prev=dict(modele="remplacement_periodique_reparation_minimale", cout_preventif_eur=1000.0, cout_defaillance_moyen_eur=4000.0, periode_optimale_h=150.0, periode_retenue_semaines=2)),
              mode("REM-M2","REM-MES","Dérive / panne de sonde de niveau","exponentielle",1,600,0,"renouvellement",3.0,["P-REM-03"],"contrôle qualité (niveaux hors tolérance)",0.0),
              mode("REM-M3","REM-ENT","Défaillance du motoréducteur du carrousel","weibull",2,4000,0,"renouvellement",22.0,["P-REM-04"],"bruit / vibration (ronde)",0.0)]),
  dict(id_equipement="BOU", designation="Boucheuse rotative (bouchons vissés)", fonction="Visser les bouchons au couple prescrit",
       cadence_nominale_bouteilles_par_h=11500, goulot=False, penalite_arret_eur_par_h=PEN_AUTRE,
       sous_ensembles=[{"id_sous_ensemble":"BOU-TET","designation":"Têtes de vissage"},{"id_sous_ensemble":"BOU-ALI","designation":"Alimentation et orientation des bouchons"}],
-      modes=[mode("BOU-M1","BOU-TET","Usure d'embrayage de tête de vissage (couple hors tolérance)","weibull",2,500,0,"renouvellement",2.0,["P-BOU-01"],"contrôle de couple",0.9),
+      modes=[mode("BOU-M1","BOU-TET","Usure d'embrayage de tête de vissage (couple hors tolérance)","weibull",2,500,0,"renouvellement",2.0,["P-BOU-01"],"contrôle de couple",0.9,["P-BOU-01"],
+                  prev=dict(modele="remplacement_selon_age", cout_preventif_eur=1000.0, cout_defaillance_moyen_eur=5800.0, periode_optimale_h=232.3, periode_retenue_semaines=3)),
              mode("BOU-M2","BOU-ALI","Bourrage de l'alimentation bouchons","exponentielle",1,1000,0,"renouvellement",1.0,[],"automatique (détecteur de bourrage)",1.0)]),
  dict(id_equipement="ETI", designation="Étiqueteuse (étiquettes adhésives)", fonction="Poser l'étiquette sur la bouteille",
       cadence_nominale_bouteilles_par_h=12000, goulot=False, penalite_arret_eur_par_h=PEN_AUTRE,

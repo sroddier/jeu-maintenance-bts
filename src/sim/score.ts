@@ -1,7 +1,8 @@
 /**
  * Score du niveau 1, fonction pure.
  * Poids GDD : Ao du goulot 30, coût global 25, TRS 20, justesse 25.
- * Au niveau 1 les 20 points de TRS sont réaffectés à la disponibilité (GDD § 9) : 50 / 25 / 25.
+ * Au niveau 1 les 20 points de TRS sont réaffectés à l'Ao (GDD § 9) : 50 / 25 / 25.
+ * Le Do du TRS n'est pas saisi ici : il est réservé au niveau 2.
  * La note /20 = score ÷ 5, arrondie au demi-point.
  */
 
@@ -11,41 +12,43 @@ export interface QuestionScore {
 }
 
 export interface EntreeScore {
-  /** Disponibilité opérationnelle de la remplisseuse, en %. */
-  doPct: number;
+  /** Ao de la remplisseuse, en %. Ao = (Tr − ΣTA) / Tr. */
+  aoPct: number;
   coutGlobal: number;
   coutReference: number;
   questions: readonly QuestionScore[];
 }
 
 export interface Score {
-  pointsDo: number;
+  pointsAo: number;
   pointsCout: number;
   pointsJustesse: number;
   total: number;
   etoiles: 0 | 1 | 2 | 3;
   note20: number;
   justesseRatio: number;
-  objectifDo: boolean;
+  objectifAo: boolean;
+  /** Ao ≥ 92 %, au moins 2 étoiles, au moins 70 % de calculs justes. */
   passage: boolean;
 }
 
-export const POIDS_NIVEAU_1 = { do: 50, cout: 25, justesse: 25 } as const;
-export const OBJECTIF_DO_PCT = 92;
+export const POIDS_NIVEAU_1 = { ao: 50, cout: 25, justesse: 25 } as const;
+/** Seuil d'Ao pour réussir le niveau 1. Le sigle Do est réservé au TRS du niveau 2. */
+export const OBJECTIF_AO_PCT = 92;
 
 /**
  * 0 pt à 70 % ou moins, 40 pts à l'objectif 92 %, 50 pts à partir de 98 %.
  * Segments linéaires. Choix de prototype : le GDD fixe le poids, pas la courbe.
  */
-export function pointsDisponibilite(doPct: number): number {
-  const max = POIDS_NIVEAU_1.do;
-  if (doPct >= 98) return max;
-  if (doPct <= 70) return 0;
-  if (doPct >= OBJECTIF_DO_PCT) {
+export function pointsDisponibilite(aoPct: number): number {
+  const max = POIDS_NIVEAU_1.ao;
+  if (aoPct >= 98) return max;
+  if (aoPct <= 70) return 0;
+  if (aoPct >= OBJECTIF_AO_PCT) {
     const partiel = 40;
-    return partiel + ((doPct - OBJECTIF_DO_PCT) / (98 - OBJECTIF_DO_PCT)) * (max - partiel);
+    return partiel + ((aoPct - OBJECTIF_AO_PCT) / (98 - OBJECTIF_AO_PCT)) * (max - partiel);
   }
-  return ((doPct - 70) / (OBJECTIF_DO_PCT - 70)) * 40;
+  return ((aoPct - 70) / (OBJECTIF_AO_PCT - 70)) * 40;
 }
 
 /**
@@ -89,22 +92,22 @@ export function etoiles(score: number): 0 | 1 | 2 | 3 {
 }
 
 export function calculerScore(entree: EntreeScore): Score {
-  const pointsDo = pointsDisponibilite(entree.doPct);
+  const pointsAo = pointsDisponibilite(entree.aoPct);
   const pointsCoutV = pointsCout(entree.coutGlobal, entree.coutReference);
   const pointsJ = pointsJustesse(entree.questions);
-  const total = pointsDo + pointsCoutV + pointsJ;
+  const total = pointsAo + pointsCoutV + pointsJ;
   const et = etoiles(total);
   const justesse = ratioJustesse(entree.questions);
-  const objectifDo = entree.doPct + 1e-9 >= OBJECTIF_DO_PCT;
+  const objectifAo = entree.aoPct + 1e-9 >= OBJECTIF_AO_PCT;
   return {
-    pointsDo,
+    pointsAo,
     pointsCout: pointsCoutV,
     pointsJustesse: pointsJ,
     total,
     etoiles: et,
     note20: noteSur20(total),
     justesseRatio: justesse,
-    objectifDo,
-    passage: objectifDo && et >= 2 && justesse + 1e-12 >= 0.7,
+    objectifAo,
+    passage: objectifAo && et >= 2 && justesse + 1e-12 >= 0.7,
   };
 }

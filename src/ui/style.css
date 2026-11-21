@@ -151,6 +151,9 @@ input[type="text"], input[type="number"], select {
 .barre i { position: absolute; top: 0; bottom: 0; background: #c4493a; }
 .jours { display: flex; justify-content: space-between; color: var(--encre-douce); font-size: 0.8rem; margin-top: 4px; }
 
+.palier { display: inline-block; margin: 0 0 8px; padding: 4px 10px; border-radius: 999px; font-weight: 700; }
+.palier.oui { background: var(--vert-fond); color: var(--vert); }
+.palier.non { background: var(--rouge-fond); color: var(--rouge); }
 .note { font-size: 2.4rem; margin: 0; font-variant-numeric: tabular-nums; }
 .etoiles { font-size: 1.6rem; letter-spacing: 0.12em; color: #c4841d; margin: 0; }
 .aide summary { cursor: pointer; color: var(--teal-fonce); }

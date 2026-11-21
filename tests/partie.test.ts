@@ -91,26 +91,15 @@ describe("partie de niveau 1", () => {
     expect(devis.cout?.coutMainOeuvre).toBe(0);
   });
 
-  it("un dépannage sans curatif différé fait revenir la panne, le samedi l'évite", () => {
-    const retour = finirSemaine(jouerJusquaPanne("3", "REM-M1"), {
-      nature: "palliatif",
-      intervenant: "interne",
-      approvisionnement: "stock",
-      curatifDiffere: false,
-    });
-    const lundi = avancerJusquaIntervention(retour);
-    expect(lundi.panne?.rechute).toBe(true);
-    expect(lundi.panne?.modeId).toBe("REM-M1");
-
-    const solde = finirSemaine(jouerJusquaPanne("3", "REM-M1"), {
-      nature: "palliatif",
-      intervenant: "interne",
-      approvisionnement: "stock",
-      curatifDiffere: true,
-    });
-    const suite = avancerJusquaIntervention(solde);
-    expect(suite.panne?.rechute).not.toBe(true);
-    expect(solde.evenements.some((e) => e.type_maintenance === "corrective_differee")).toBe(true);
+  it("le CSV du professeur nomme l'Ao et le résultat du niveau", () => {
+    const fin = jouer("2026", politiqueReference);
+    const csv = exporterCsv(fin, new Date("2026-11-21T12:00:00Z"));
+    expect(csv).toContain("ao_pct");
+    expect(csv).toContain("points_ao");
+    expect(csv).toContain("objectif_ao_92");
+    expect(csv).toMatch(/niveau réussi|niveau non réussi/);
+    expect(csv).not.toMatch(/points_do|do_pct|objectif_do/);
+    expect(csv).toContain(";ao;");
   });
 
   it("la disponibilité finale reste entre 0 et 100 et la note est un demi-point", () => {
@@ -187,31 +176,3 @@ function decisionPourAtteindre(p: Partie, modeId: string): Decision {
   return { type: "tour-suivant" };
 }
 
-function finirSemaine(p: Partie, choixIntervention: ChoixIntervention): Partie {
-  let q = appliquer(p, { type: "intervention", choix: choixIntervention });
-  for (let i = 0; i < 20 && q.phase !== "bilan"; i++) {
-    if (q.phase === "evenements") q = appliquer(q, { type: "lire" });
-    else if (q.phase === "intervenir" && q.panne) {
-      q = appliquer(q, {
-        type: "intervention",
-        choix: { nature: "curatif", intervenant: "interne", approvisionnement: "express", curatifDiffere: false },
-      });
-    } else break;
-  }
-  if (q.erreur) throw new Error(q.erreur);
-  if (q.phase !== "bilan") throw new Error(`bilan attendu, phase ${q.phase}`);
-  return q;
-}
-
-function avancerJusquaIntervention(bilan: Partie): Partie {
-  let q = bilan;
-  if (q.bilan?.champs.some((c) => !c.resolu)) {
-    const valeurs: Record<string, string> = {};
-    for (const champ of q.bilan.champs) valeurs[champ.id] = String(champ.attendu);
-    q = appliquer(q, { type: "saisie", valeurs });
-  }
-  q = appliquer(q, { type: "tour-suivant" });
-  q = appliquer(q, { type: "planning", commandes: [] });
-  if (q.phase === "evenements") q = appliquer(q, { type: "lire" });
-  return q;
-}

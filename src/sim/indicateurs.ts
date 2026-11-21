@@ -2,7 +2,15 @@ import type { EvenementCalcul, Indicateurs } from "./types";
 
 /**
  * Filtre identique à `calculs.py` : correctif (immédiat ou différé) pendant l'ouverture.
- * Le préventif du samedi et les curatifs différés hors ouverture ne comptent pas dans TA.
+ *
+ * Une rechute après dépannage provisoire est un nouvel événement pendant l'ouverture :
+ * +1 à N, son TA entre dans ΣTA, sa réparation active dans le MTTR. Son TBF est le temps
+ * de bon fonctionnement depuis la fin du dépannage (40 h si la ligne n'a pas été arrêtée entre-temps).
+ * Le dépannage provisoire lui-même est aussi un événement.
+ *
+ * Le curatif différé du samedi (`hors_temps_ouverture`) est exclu de N, de ΣTA et du MTTR.
+ * Ses coûts directs sont hors de ces indicateurs d'arrêt : ils sont dans `sommesCouts`
+ * et dans le coût global de la partie.
  */
 export function estArretCompte(e: EvenementCalcul): boolean {
   return e.type_maintenance.startsWith("corrective") && !e.hors_temps_ouverture;

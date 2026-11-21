@@ -42,7 +42,7 @@ export function bilanExerciceRemplisseuse(): BilanTour {
   const champs: ChampBilan[] = [
     champ("mtbf", "MTBF (h)", ind.MTBF),
     champ("mttr", "MTTR (h)", ind.MTTR),
-    champ("do", "Do — disponibilité opérationnelle (%)", ind.Ao),
+    champ("ao", "Ao — disponibilité opérationnelle (%)", ind.Ao),
   ];
   return { tour: 10, tr: TR_EXERCICE_H, n: ind.N, sommeTA: ind.sommeTA, sommeReparation: ind.sommeReparation, champs };
 }

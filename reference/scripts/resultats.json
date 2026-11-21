@@ -446,6 +446,132 @@
    ]
   ]
  },
+ "prev_B_calc": {
+  "Cp": 1000,
+  "Cc": 5800,
+  "lignes": [
+   {
+    "T": 80,
+    "R": 0.9747,
+    "F": 0.0253,
+    "I_tab": 79.3,
+    "I_exact": 79.3225,
+    "num": 1121.44,
+    "C_eleve": 14.1417,
+    "C_eleve_arr": 14.14,
+    "C_exact": 14.1362,
+    "C_exact_arr": 14.14,
+    "ecart": 0.0055
+   },
+   {
+    "T": 160,
+    "R": 0.9027,
+    "F": 0.0973,
+    "I_tab": 154.7,
+    "I_exact": 154.7024,
+    "num": 1467.04,
+    "C_eleve": 9.4831,
+    "C_eleve_arr": 9.48,
+    "C_exact": 9.484,
+    "C_exact_arr": 9.48,
+    "ecart": -0.0008
+   },
+   {
+    "T": 240,
+    "R": 0.7942,
+    "F": 0.2058,
+    "I_tab": 222.8,
+    "I_exact": 222.7751,
+    "num": 1987.84,
+    "C_eleve": 8.9221,
+    "C_eleve_arr": 8.92,
+    "C_exact": 8.9227,
+    "C_exact_arr": 8.92,
+    "ecart": -0.0007
+   },
+   {
+    "T": 320,
+    "R": 0.6639,
+    "F": 0.3361,
+    "I_tab": 281.2,
+    "I_exact": 281.1935,
+    "num": 2613.28,
+    "C_eleve": 9.2933,
+    "C_eleve_arr": 9.29,
+    "C_exact": 9.2933,
+    "C_exact_arr": 9.29,
+    "ecart": 0.0001
+   },
+   {
+    "T": 400,
+    "R": 0.5273,
+    "F": 0.4727,
+    "I_tab": 328.8,
+    "I_exact": 328.8349,
+    "num": 3268.96,
+    "C_eleve": 9.9421,
+    "C_eleve_arr": 9.94,
+    "C_exact": 9.9411,
+    "C_exact_arr": 9.94,
+    "ecart": 0.0009
+   },
+   {
+    "T": 480,
+    "R": 0.3979,
+    "F": 0.6021,
+    "I_tab": 365.8,
+    "I_exact": 365.7563,
+    "num": 3890.08,
+    "C_eleve": 10.6344,
+    "C_eleve_arr": 10.63,
+    "C_exact": 10.636,
+    "C_exact_arr": 10.64,
+    "ecart": -0.0015
+   }
+  ],
+  "Tmin_grille": 240,
+  "Cmin_grille": 8.92,
+  "Cmin_exact_grille": 8.9227,
+  "Tstar_continu": 232.3,
+  "Cstar_continu": 8.919,
+  "C_corr": 13.09,
+  "gain_eur_h": 4.17,
+  "gain_annuel_eur": 16680,
+  "trapezes": [
+   {
+    "T": 80,
+    "I_trap": 79.24,
+    "ecart_pct": -0.107
+   },
+   {
+    "T": 160,
+    "I_trap": 154.55,
+    "ecart_pct": -0.101
+   },
+   {
+    "T": 240,
+    "I_trap": 222.57,
+    "ecart_pct": -0.093
+   },
+   {
+    "T": 320,
+    "I_trap": 280.96,
+    "ecart_pct": -0.082
+   },
+   {
+    "T": 400,
+    "I_trap": 328.61,
+    "ecart_pct": -0.07
+   },
+   {
+    "T": 480,
+    "I_trap": 365.55,
+    "ecart_pct": -0.056
+   }
+  ],
+  "C240_trap": 8.9314,
+  "ecart_grille_continu": 0.0041
+ },
  "prev_beta1": [
   16.775,
   15.048,
