@@ -1,0 +1,886 @@
+{
+  "meta": {
+    "version": "0.5",
+    "date": "2026-11-21",
+    "source_parametres": "usine.json (fait foi)",
+    "langue": "fr",
+    "note": "Textes et images. Les paramètres d'usine (cadences, coûts, délais, stocks) restent dans usine.json. Les probabilités et les paramètres chiffrés des événements E01–E08 sont dans usine.json (evenements.liste), apportés par une autre PR : ils ne sont pas recopiés ici. Aucun effet chiffré n'est appliqué par cette couche. Au niveau 1, seule la visite client E08 est affichée."
+  },
+  "style_images": {
+    "preambule": "Illustration semi-réaliste en peinture numérique propre, rendu net et lisible, cadrage de jeu vidéo éducatif. Décor : usine agroalimentaire moderne et propre, ligne d'embouteillage de boisson plate aux fruits en bouteilles PET transparentes de 1 L, machines en inox brossé, carters transparents, sol en résine gris clair, murs blancs. Palette cohérente : blanc, inox, bleu acier, vert d'eau, touches d'orange sécurité (boutons d'arrêt d'urgence, marquages au sol jaunes et noirs) ; lumière naturelle douce venant de verrières en hauteur complétée par un éclairage LED blanc neutre, ombres douces. Personnes avec les EPI d'hygiène alimentaire corrects : charlotte couvrant tous les cheveux, blouse ou combinaison propre, chaussures de sécurité, cache-barbe si barbe, aucun bijou ; bouchons d'oreille ou casque antibruit près des machines en marche. Ambiance bienveillante, professionnelle, réaliste. Aucun texte, aucun chiffre lisible, aucun logo, aucune marque, aucune étiquette lisible sur les bouteilles (étiquettes unies sans inscription). Pas de style photo, pas de style manga.",
+    "dossier": "assets/img/"
+  },
+  "personnages": [
+    {
+      "id": "directrice",
+      "nom": "Nadia Ferrand",
+      "role": "Directrice d'usine",
+      "caractere": "Exigeante, pressée, attachée à son usine ; s'énerve quand la ligne s'arrête car elle pense aux 1 200 € de marge perdus par heure, mais reconnaît toujours le bon travail.",
+      "ton": "Direct, phrases courtes, chiffres en euros ; jamais d'attaque personnelle : elle critique la situation, pas la personne.",
+      "apparence": "femme d'une cinquantaine d'années, cheveux gris coupés court, lunettes à fine monture noire, blouse blanche de visiteur fermée, charlotte blanche, chaussures de sécurité noires, badge sans inscription, tient souvent une tablette",
+      "repliques": [
+        "La ligne est arrêtée ? Chaque heure, c'est 1 200 € de marge qui partent. Dis-moi ce qu'il te faut.",
+        "Je ne cherche pas de coupable, je cherche une solution. On regarde l'historique ensemble ?",
+        "Ao au-dessus de l'objectif cette semaine. Merci, ça se voit sur les palettes."
+      ],
+      "portrait": "assets/img/portrait-directrice.png",
+      "competences_modes": []
+    },
+    {
+      "id": "chef_prod",
+      "nom": "Julien Rocca",
+      "role": "Chef de production (guide de la visite)",
+      "caractere": "Pédagogue, enthousiaste, connaît chaque machine par son bruit ; fait le lien entre la production et la maintenance.",
+      "ton": "Chaleureux, tutoie le joueur, explique avec des images simples.",
+      "apparence": "homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main",
+      "repliques": [
+        "Bienvenue sur L1 ! Ici, tout se joue au rythme de la remplisseuse : 10 000 bouteilles par heure.",
+        "Mes opérateurs ont vu une fuite sur une vanne. Je préfère te prévenir tôt que tard.",
+        "Pas grave si le calcul est faux : regarde la correction, on a tous confondu MTTR et MDT un jour."
+      ],
+      "portrait": "assets/img/portrait-chef-prod.png",
+      "competences_modes": []
+    },
+    {
+      "id": "tech_elec",
+      "nom": "Sofia Martins",
+      "role": "Technicienne de maintenance, électricité et automatisme",
+      "caractere": "Calme, méthodique, rigoureuse sur la sécurité ; aime comprendre l'origine d'une panne avant de changer une pièce.",
+      "ton": "Posé, précis, un brin d'humour technique.",
+      "apparence": "femme d'environ 30 ans, cheveux bruns longs attachés et entièrement rentrés sous la charlotte, combinaison de travail bleu marine propre, gants isolants pendus à la ceinture, multimètre dans une poche, lunettes de protection relevées, chaussures de sécurité",
+      "repliques": [
+        "Je consigne l'armoire avant d'ouvrir : cadenas posé, absence de tension vérifiée.",
+        "La sonde de niveau dérive. Je la remplace, ou je fais un réglage provisoire et on la change samedi ?",
+        "Juste du premier coup. Tu calcules plus vite que la GMAO !"
+      ],
+      "portrait": "assets/img/portrait-tech-elec.png",
+      "competences_modes": [
+        "SOU-M1",
+        "REM-M2",
+        "ETI-M1",
+        "FAR-M1",
+        "CON-M1"
+      ]
+    },
+    {
+      "id": "tech_meca",
+      "nom": "Lucas Garnier",
+      "role": "Technicien de maintenance, mécanique et pneumatique",
+      "caractere": "Énergique, débrouillard, fier du travail bien fait ; apprend vite et pose des questions.",
+      "ton": "Spontané, positif, parle avec les mains.",
+      "apparence": "homme d'environ 25 ans, cheveux roux courts rentrés sous la charlotte, rasé de près, combinaison de travail bleu marine, clé dynamométrique à la main, lunettes de protection, chaussures de sécurité",
+      "repliques": [
+        "Joint changé, vanne testée, pas une goutte. On peut relancer !",
+        "Mon dépannage tiendra 40 heures, pas une de plus. Pense au curatif de samedi.",
+        "Kit complet changé : 24 vannes comme neuves pour lundi."
+      ],
+      "portrait": "assets/img/portrait-tech-meca.png",
+      "competences_modes": [
+        "SOU-M2",
+        "REM-M1",
+        "REM-M3",
+        "BOU-M1",
+        "BOU-M2",
+        "ETI-M2",
+        "FAR-M2",
+        "CON-M2"
+      ]
+    },
+    {
+      "id": "magasinier",
+      "nom": "Bernard Aubry",
+      "role": "Magasinier pièces de rechange",
+      "caractere": "Mémoire vivante du magasin, connaît chaque référence par cœur, déteste les ruptures ; proche de la retraite et heureux de transmettre.",
+      "ton": "Bonhomme, précis sur les quantités et les délais.",
+      "apparence": "homme d'une soixantaine d'années, rasé de près, cheveux blancs sous une charlotte, blouse grise de magasinier, lunettes de lecture sur le front, lecteur de codes-barres à la main, chaussures de sécurité",
+      "repliques": [
+        "Kit de joints pour une vanne ? J'en ai, rayon B, deuxième étagère.",
+        "Sondes de niveau : zéro en rayon. Délai standard 2 semaines, ou express en 16 h avec 50 % de plus.",
+        "On passe sous le stock mini. Je te prépare la commande ?"
+      ],
+      "portrait": "assets/img/portrait-magasinier.png",
+      "competences_modes": []
+    },
+    {
+      "id": "fournisseur",
+      "nom": "Claire Dumas",
+      "role": "Technico-commerciale chez un fournisseur de pièces (fictif)",
+      "caractere": "Réactive, honnête sur les délais, connaît bien les machines qu'elle fournit ; prévient quand une livraison a un problème.",
+      "ton": "Professionnel, courtois, rassurant.",
+      "apparence": "femme d'environ 35 ans, cheveux noirs coupés au carré, veste de travail vert sapin sans logo, gilet visiteur, charlotte et chaussures de sécurité quand elle vient sur site, tient un carton de pièces",
+      "repliques": [
+        "Commande express bien reçue : livraison sous 16 h, majoration de 50 %.",
+        "Désolée, le transporteur a pris du retard : votre commande arrive une semaine plus tard.",
+        "Mauvaise référence dans le colis, c'est notre erreur. Je vous renvoie la bonne pièce."
+      ],
+      "portrait": "assets/img/portrait-fournisseur.png",
+      "competences_modes": []
+    }
+  ],
+  "intro": {
+    "passable": true,
+    "bouton_passer": "Passer la visite",
+    "duree_totale_max_s": 180,
+    "ecrans": [
+      {
+        "ordre": 1,
+        "id_equipement": "SOU",
+        "titre": "La souffleuse",
+        "guide": "chef_prod",
+        "image": "assets/img/intro-01-souffleuse.webp",
+        "texte": [
+          "Bienvenue pour ton premier jour sur la ligne L1 ! Tout commence ici : la souffleuse chauffe les préformes PET puis les gonfle dans des moules.",
+          "Elle va plus vite que nécessaire : 11 000 bouteilles par heure."
+        ],
+        "fait_cle": "11 000 b/h, non goulot. Panne typique : claquage de lampe infrarouge (SOU-M1, loi exponentielle, MTBF 400 h).",
+        "duree_s": 20
+      },
+      {
+        "ordre": 2,
+        "id_equipement": "CON",
+        "titre": "Les convoyeurs",
+        "guide": "chef_prod",
+        "image": "assets/img/intro-02-convoyeurs.webp",
+        "texte": [
+          "Les convoyeurs relient toutes les machines. Leur commande vient d'être rénovée : variateurs et cartes neufs.",
+          "Au début, quelques défauts de jeunesse… puis ça se calme."
+        ],
+        "fait_cle": "15 000 b/h. CON-M1 : défaut de jeunesse, Weibull β = 0,5 : le taux de panne diminue avec le temps.",
+        "duree_s": 20
+      },
+      {
+        "ordre": 3,
+        "id_equipement": "REM",
+        "titre": "La remplisseuse",
+        "guide": "chef_prod",
+        "image": "assets/img/intro-03-remplisseuse.webp",
+        "texte": [
+          "Voici la reine de la ligne : la remplisseuse rotative à 24 vannes. C'est la plus lente, c'est elle qui donne le rythme.",
+          "Quand elle s'arrête, toute la ligne s'arrête : 1 200 € de marge perdus par heure."
+        ],
+        "fait_cle": "GOULOT, 10 000 b/h. Panne typique : fuite de joint de vanne (REM-M1, Weibull β = 3, η = 300 h) ; kit de joints changé toutes les 4 semaines le samedi.",
+        "duree_s": 25
+      },
+      {
+        "ordre": 4,
+        "id_equipement": "BOU",
+        "titre": "La boucheuse",
+        "guide": "chef_prod",
+        "image": "assets/img/intro-04-boucheuse.webp",
+        "texte": [
+          "La boucheuse visse chaque bouchon au couple prescrit : trop serré, il casse ; pas assez, la bouteille fuit.",
+          "Ses têtes de vissage s'usent avec le temps."
+        ],
+        "fait_cle": "11 500 b/h. Panne typique : usure d'embrayage de tête (BOU-M1, Weibull β = 2, η = 500 h).",
+        "duree_s": 20
+      },
+      {
+        "ordre": 5,
+        "id_equipement": "ETI",
+        "titre": "L'étiqueteuse",
+        "guide": "chef_prod",
+        "image": "assets/img/intro-05-etiqueteuse.webp",
+        "texte": [
+          "L'étiqueteuse pose une étiquette adhésive sur chaque bouteille.",
+          "Sa cellule de détection tombe souvent en défaut : de petites pannes, mais nombreuses."
+        ],
+        "fait_cle": "12 000 b/h. ETI-M1 : défaut de cellule, MTBF 100 h, la panne la plus fréquente de la ligne.",
+        "duree_s": 20
+      },
+      {
+        "ordre": 6,
+        "id_equipement": "FAR",
+        "titre": "La fardeleuse",
+        "guide": "chef_prod",
+        "image": "assets/img/intro-06-fardeleuse.webp",
+        "texte": [
+          "En bout de ligne, la fardeleuse regroupe les bouteilles par 6 et les filme sous film rétractable.",
+          "Son four de rétraction ne pardonne pas : une résistance coupée, ça se remplace, ça ne se bricole pas."
+        ],
+        "fait_cle": "13 000 b/h. FAR-M1 : rupture de résistance du four, dépannage provisoire interdit.",
+        "duree_s": 20
+      },
+      {
+        "ordre": 7,
+        "id_equipement": null,
+        "titre": "L'atelier maintenance",
+        "guide": "tech_elec",
+        "image": "assets/img/intro-07-atelier.webp",
+        "texte": [
+          "Voici ton QG : l'établi, le poste GMAO, et le magasin de Bernard juste à côté. Lucas et moi, on est ton équipe.",
+          "La ligne tourne du lundi au vendredi, 05:00–21:00 ; le samedi, on fait le préventif et les curatifs différés sans arrêter la production."
+        ],
+        "fait_cle": "80 h d'ouverture par semaine. Main-d'œuvre : 40 €/h, 50 €/h le samedi (heures sup).",
+        "duree_s": 25
+      }
+    ]
+  },
+  "reactions": {
+    "regle_globale": "Au plus 1 réaction affichée à la fois et au plus 3 par phase ; priorité : colère > palliatif > stock > budget > félicitations > encouragements. Les réactions n'ont aucun effet numérique.",
+    "paliers_colere_h": [
+      {
+        "palier": 1,
+        "seuil_h": 2
+      },
+      {
+        "palier": 2,
+        "seuil_h": 5
+      },
+      {
+        "palier": 3,
+        "seuil_h": 10
+      },
+      {
+        "palier": 4,
+        "seuil_h": 20
+      }
+    ],
+    "objectif_ao_goulot": {
+      "1": 0.92,
+      "2": 0.92,
+      "3": 0.93,
+      "4": 0.93,
+      "5": 0.93,
+      "6": 0.93
+    },
+    "liste": [
+      {
+        "id": "R01",
+        "famille": "colère directrice",
+        "personnage": "directrice",
+        "niveaux": "1–6",
+        "condition": "Arrêt cumulé de la ligne dans la semaine ≥ 2 h (= 2 400 € à 1 200 €/h) — palier 1 « agacée »",
+        "replique": "Deux heures d'arrêt, déjà 2 400 € de marge. On en est où ?",
+        "cooldown": "1 fois par semaine (au franchissement du palier)"
+      },
+      {
+        "id": "R02",
+        "famille": "colère directrice",
+        "personnage": "directrice",
+        "niveaux": "1–6",
+        "condition": "Arrêt cumulé dans la semaine ≥ 5 h (= 6 000 €) — palier 2 « fâchée »",
+        "replique": "Cinq heures d'arrêt, 6 000 €. J'ai besoin d'un plan, pas d'excuses. Qu'est-ce qu'il te faut ?",
+        "cooldown": "1 fois par semaine"
+      },
+      {
+        "id": "R03",
+        "famille": "colère directrice",
+        "personnage": "directrice",
+        "niveaux": "1–6",
+        "condition": "Arrêt cumulé dans la semaine ≥ 10 h (= 12 000 €) — palier 3 « très fâchée »",
+        "replique": "12 000 € perdus cette semaine. Je descends à l'atelier : ouvre la GMAO, on regarde ensemble.",
+        "cooldown": "1 fois par semaine"
+      },
+      {
+        "id": "R04",
+        "famille": "colère directrice",
+        "personnage": "directrice",
+        "niveaux": "1–6",
+        "condition": "Arrêt cumulé dans la semaine ≥ 20 h (= 24 000 €, soit 25 % du temps d'ouverture) — palier 4 « réunion de crise »",
+        "replique": "Réunion de crise à 14 h. Pas pour chercher un coupable : pour relancer la ligne. Apporte ton historique.",
+        "cooldown": "1 fois par semaine ; au plus 2 fois par partie"
+      },
+      {
+        "id": "R05",
+        "famille": "félicitations",
+        "personnage": "directrice",
+        "niveaux": "1–6",
+        "condition": "Fin de semaine : Ao du goulot (remplisseuse) de la semaine ≥ objectif du niveau (92 % aux niveaux 1–2, 93 % aux niveaux 3–6)",
+        "replique": "Ao au-dessus de l'objectif cette semaine. Merci, ça se voit sur les palettes.",
+        "cooldown": "1 fois par semaine ; réplique différente 2 semaines de suite"
+      },
+      {
+        "id": "R06",
+        "famille": "félicitations",
+        "personnage": "chef_prod",
+        "niveaux": "2–6",
+        "condition": "Fin de semaine : TRS de la ligne (Tu/Tr) ≥ 65 %",
+        "replique": "TRS au-dessus de 65 % : mes équipes ont enfin pu dérouler. Merci la maintenance !",
+        "cooldown": "1 fois par semaine"
+      },
+      {
+        "id": "R07",
+        "famille": "palliatif",
+        "personnage": "tech_meca",
+        "niveaux": "1–6",
+        "condition": "Le joueur choisit un dépannage provisoire alors qu'il reste plus de 40 h d'ouverture avant samedi (rechute certaine avant le curatif différé)",
+        "replique": "Mon dépannage tiendra 40 heures, pas jusqu'à samedi. On répare tout de suite, ou on accepte la rechute ?",
+        "cooldown": "1 fois par dépannage provisoire"
+      },
+      {
+        "id": "R08",
+        "famille": "palliatif",
+        "personnage": "tech_elec",
+        "niveaux": "1–6",
+        "condition": "Vendredi 13:00 (8 h avant la fin de la semaine) : un dépannage provisoire est ouvert, sa rechute tomberait la semaine suivante, et aucun curatif différé n'est planifié samedi",
+        "replique": "Tu n'as pas oublié le curatif de samedi ? Sinon, la panne revient la semaine prochaine.",
+        "cooldown": "1 fois par dépannage provisoire"
+      },
+      {
+        "id": "R09",
+        "famille": "palliatif",
+        "personnage": "magasinier",
+        "niveaux": "1–6",
+        "condition": "Un curatif différé est planifié samedi mais sa pièce n'est pas en stock",
+        "replique": "Pour samedi, il te manque la pièce. Commande express (+50 %, 16 h) ou on reporte ?",
+        "cooldown": "1 fois par bon de travail"
+      },
+      {
+        "id": "R10",
+        "famille": "stock",
+        "personnage": "magasinier",
+        "niveaux": "1–6",
+        "condition": "Après une sortie de stock : stock d'une référence < stock_mini (usine.json) et aucune commande en cours",
+        "replique": "On passe sous le stock mini sur cette référence. Je te prépare la commande ?",
+        "cooldown": "1 fois par référence, réarmé quand une commande est passée ou le stock remonté"
+      },
+      {
+        "id": "R11",
+        "famille": "stock",
+        "personnage": "magasinier",
+        "niveaux": "1–6",
+        "condition": "Panne dont la pièce corrective est à 0 en stock (rupture)",
+        "replique": "Rien en rayon pour cette pièce. Délai standard 2 semaines, express 16 h à +50 %.",
+        "cooldown": "1 fois par panne"
+      },
+      {
+        "id": "R12",
+        "famille": "budget",
+        "personnage": "directrice",
+        "niveaux": "1–6",
+        "condition": "Dépenses de maintenance cumulées ≥ 75 % du budget de la partie",
+        "replique": "Trois quarts du budget consommés. On garde de la marge pour les imprévus ?",
+        "cooldown": "1 fois par partie"
+      },
+      {
+        "id": "R13",
+        "famille": "budget",
+        "personnage": "directrice",
+        "niveaux": "1–6",
+        "condition": "Dépenses cumulées ≥ 90 % du budget",
+        "replique": "90 % du budget : chaque dépense doit être justifiée maintenant.",
+        "cooldown": "1 fois par partie"
+      },
+      {
+        "id": "R14",
+        "famille": "budget",
+        "personnage": "directrice",
+        "niveaux": "1–6",
+        "condition": "Dépenses cumulées > 100 % du budget",
+        "replique": "Budget dépassé. Ce n'est pas interdit, mais il faudra l'expliquer au bilan.",
+        "cooldown": "1 fois par partie"
+      },
+      {
+        "id": "R15",
+        "famille": "encouragement",
+        "personnage": "tech_meca",
+        "niveaux": "1–6",
+        "condition": "Un préventif planifié est réalisé à l'échéance (samedi)",
+        "replique": "Kit complet changé : 24 vannes comme neuves pour lundi.",
+        "cooldown": "1 fois par semaine"
+      },
+      {
+        "id": "R16",
+        "famille": "calculs",
+        "personnage": "tech_elec",
+        "niveaux": "1–6",
+        "condition": "Phase Bilan : tous les indicateurs justes à la première saisie",
+        "replique": "Juste du premier coup. Tu calcules plus vite que la GMAO !",
+        "cooldown": "1 fois par bilan"
+      },
+      {
+        "id": "R17",
+        "famille": "calculs",
+        "personnage": "chef_prod",
+        "niveaux": "1–6",
+        "condition": "Phase Bilan : 2e saisie fausse sur un même indicateur",
+        "replique": "Pas grave : regarde la correction, on a tous confondu MTTR et MDT un jour.",
+        "cooldown": "1 fois par bilan"
+      },
+      {
+        "id": "R18",
+        "famille": "fournisseur",
+        "personnage": "fournisseur",
+        "niveaux": "1–6",
+        "condition": "Le joueur passe une commande express",
+        "replique": "Commande express bien reçue : livraison sous 16 h, majoration de 50 %.",
+        "cooldown": "1 fois par semaine"
+      }
+    ]
+  },
+  "blagues": [
+    {
+      "id": "B01",
+      "phase": "intro",
+      "texte": "Charlotte, blouse, chaussures de sécurité : ici, la mode est dictée par l'hygiène, pas par les défilés."
+    },
+    {
+      "id": "B02",
+      "phase": "intro",
+      "texte": "Sur une ligne en série, c'est la machine la plus lente qui donne le tempo. Les autres dansent un peu plus vite, puis attendent."
+    },
+    {
+      "id": "B03",
+      "phase": "intro",
+      "texte": "Une heure d'arrêt de la ligne, c'est 10 000 bouteilles qui ne seront jamais produites : à 0,12 € de marge, ça fait 1 200 €."
+    },
+    {
+      "id": "B04",
+      "phase": "planifier",
+      "texte": "Un préventif bien planifié, c'est une panne qui ne saura jamais qu'elle aurait pu exister."
+    },
+    {
+      "id": "B05",
+      "phase": "planifier",
+      "texte": "β > 1 : la machine vieillit. Le préventif systématique devient ton meilleur allié."
+    },
+    {
+      "id": "B06",
+      "phase": "planifier",
+      "texte": "Le stock mini, c'est la roue de secours du magasin : on s'en sert rarement, mais le jour où elle manque…"
+    },
+    {
+      "id": "B07",
+      "phase": "planifier",
+      "texte": "Le samedi, la ligne dort et la maintenance travaille : aucune bouteille perdue, juste des heures sup à 50 €/h."
+    },
+    {
+      "id": "B08",
+      "phase": "evenements",
+      "texte": "Un bourrage de bouchons : le seul embouteillage de l'usine qui ne doit rien au périphérique."
+    },
+    {
+      "id": "B09",
+      "phase": "evenements",
+      "texte": "Une lampe infrarouge qui claque, c'est comme une ampoule de salon… mais de 1,5 kW, avec 11 000 bouteilles par heure qui attendent."
+    },
+    {
+      "id": "B10",
+      "phase": "evenements",
+      "texte": "Canicule : tout le monde a soif, et l'usine de boissons aussi doit suivre."
+    },
+    {
+      "id": "B11",
+      "phase": "intervenir",
+      "texte": "Consigner avant d'intervenir : le cadenas, c'est le seul bijou autorisé à l'atelier."
+    },
+    {
+      "id": "B12",
+      "phase": "intervenir",
+      "texte": "Un dépannage provisoire, c'est un pansement : utile, mais il faut revenir changer la pièce samedi."
+    },
+    {
+      "id": "B13",
+      "phase": "intervenir",
+      "texte": "La sous-traitance arrive en 4 h. Ton technicien, lui, est déjà là."
+    },
+    {
+      "id": "B14",
+      "phase": "intervenir",
+      "texte": "Changer un joint sur 24, c'est une réparation minimale : les 23 autres ne rajeunissent pas pour autant."
+    },
+    {
+      "id": "B15",
+      "phase": "bilan",
+      "texte": "Confondre MTTR et MDT, c'est oublier le temps passé à attendre la pièce. Bernard, lui, ne l'oublie jamais."
+    },
+    {
+      "id": "B16",
+      "phase": "bilan",
+      "texte": "Le dépannage provisoire fait baisser le MTTR… et la rechute fait baisser le MTBF. Les indicateurs ont de la mémoire."
+    },
+    {
+      "id": "B17",
+      "phase": "bilan",
+      "texte": "Le TRS se mesure au goulot : c'est la machine la plus lente qui fixe la production de toute la ligne."
+    },
+    {
+      "id": "B18",
+      "phase": "chargement",
+      "texte": "Le MTBF n'est pas une promesse, c'est une moyenne. La panne, elle, n'a pas lu la fiche technique."
+    },
+    {
+      "id": "B19",
+      "phase": "chargement",
+      "texte": "β < 1 : la machine fait sa crise de jeunesse. Surveillance et patience : changer la pièce ne la rendrait pas plus sage."
+    },
+    {
+      "id": "B20",
+      "phase": "chargement",
+      "texte": "β = 1 : la panne arrive au hasard. Changer une pièce qui marche ne change pas le risque."
+    }
+  ],
+  "evenements": {
+    "note": "Rattachement par id_evenement. Pas de probabilité, pas de coût, pas de niveau : usine.json fait foi. E08 est cosmétique.",
+    "liste": [
+      {
+        "id_evenement": "E01",
+        "nom": "Coupure électrique courte",
+        "personnage": "tech_elec",
+        "image": "assets/img/evt-coupure-electrique.webp"
+      },
+      {
+        "id_evenement": "E02",
+        "nom": "Technicien malade",
+        "personnage": "chef_prod",
+        "image": "assets/img/evt-technicien-malade.webp"
+      },
+      {
+        "id_evenement": "E03",
+        "nom": "Fournisseur en retard",
+        "personnage": "fournisseur",
+        "image": "assets/img/evt-fournisseur-retard.webp"
+      },
+      {
+        "id_evenement": "E04",
+        "nom": "Pièce livrée fausse",
+        "personnage": "fournisseur",
+        "image": "assets/img/evt-piece-fausse.webp"
+      },
+      {
+        "id_evenement": "E05",
+        "nom": "Audit qualité / hygiène",
+        "personnage": "directrice",
+        "image": "assets/img/evt-audit-qualite.webp"
+      },
+      {
+        "id_evenement": "E06",
+        "nom": "Commande urgente (pic d'été)",
+        "personnage": "chef_prod",
+        "image": "assets/img/evt-commande-urgente.webp"
+      },
+      {
+        "id_evenement": "E07",
+        "nom": "Canicule",
+        "personnage": "chef_prod",
+        "image": "assets/img/evt-canicule.webp"
+      },
+      {
+        "id_evenement": "E08",
+        "nom": "Visite d'un client avec la directrice",
+        "personnage": "directrice",
+        "image": "assets/img/evt-visite-client.webp"
+      }
+    ]
+  },
+  "images": [
+    {
+      "fichier": "assets/img/titre-ligne-l1.webp",
+      "usage": "Écran titre / accueil",
+      "taille": "1920×1080",
+      "ratio": "16:9",
+      "personnages": [],
+      "prompt": "[STYLE COMMUN] Vue large en plongée légère de toute la ligne d'embouteillage L1 en fonctionnement, de la souffleuse à la fardeleuse, convoyeurs chargés de bouteilles PET transparentes remplies d'une boisson orangée, lumière du matin par les verrières, quelques opérateurs en EPI au loin. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/intro-01-souffleuse.webp",
+      "usage": "Intro, écran 1 : La souffleuse",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] La souffleuse rotative de préformes PET : four de préchauffe à lampes infrarouges rougeoyantes derrière un carter transparent, roue de moules en inox, préformes entrant et bouteilles formées sortant. Julien Rocca au premier plan à gauche, désignant la machine de la main, regard vers le spectateur. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/intro-02-convoyeurs.webp",
+      "usage": "Intro, écran 2 : Les convoyeurs",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] Convoyeurs à chaîne à palettes inox transportant des files de bouteilles entre les machines, armoire de commande rénovée avec variateurs neufs porte fermée, guides latéraux réglables. Julien Rocca marchant le long du convoyeur, tablette en main. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/intro-03-remplisseuse.webp",
+      "usage": "Intro, écran 3 : La remplisseuse",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] La remplisseuse rotative à 24 vannes, carrousel en inox sous capot transparent, bouteilles se remplissant de boisson orangée, léger reflet d'eau sur l'inox ; machine mise en valeur comme pièce maîtresse de la ligne. Julien Rocca à côté, main ouverte vers la machine. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/intro-04-boucheuse.webp",
+      "usage": "Intro, écran 4 : La boucheuse",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] La boucheuse rotative : têtes de vissage alignées au-dessus des bouteilles, trémie d'alimentation de bouchons colorés unis, rail de descente des bouchons. Julien Rocca observant une tête de vissage de près. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/intro-05-etiqueteuse.webp",
+      "usage": "Intro, écran 5 : L'étiqueteuse",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] L'étiqueteuse : rouleau d'étiquettes unies sans inscription, brosses de pose, petite cellule photoélectrique avec sa LED, bouteilles défilant étiquetées. Julien Rocca pointant la cellule du doigt. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/intro-06-fardeleuse.webp",
+      "usage": "Intro, écran 6 : La fardeleuse",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] La fardeleuse en bout de ligne : bouteilles regroupées par 6, film plastique transparent, tunnel de rétraction avec lueur chaude, packs filmés sortant sur le convoyeur. Julien Rocca à distance de sécurité du four. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/intro-07-atelier.webp",
+      "usage": "Intro, écran 7 : L'atelier maintenance",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "tech_elec",
+        "tech_meca"
+      ],
+      "prompt": "[STYLE COMMUN] Atelier maintenance lumineux et rangé : établi en bois clair, servante à outils, poste informatique de GMAO (écran sans texte lisible), tableau d'outils mural, porte ouverte vers le magasin de pièces. Sofia Martins accueille le spectateur d'un geste, Lucas Garnier range une clé dynamométrique en arrière-plan. Personnages (apparence fixe) — Sofia Martins : femme d'environ 30 ans, cheveux bruns longs attachés et entièrement rentrés sous la charlotte, combinaison de travail bleu marine propre, gants isolants pendus à la ceinture, multimètre dans une poche, lunettes de protection relevées, chaussures de sécurité. Lucas Garnier : homme d'environ 25 ans, cheveux roux courts rentrés sous la charlotte, rasé de près, combinaison de travail bleu marine, clé dynamométrique à la main, lunettes de protection, chaussures de sécurité. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/phase-planifier.webp",
+      "usage": "Fond de la phase Planifier (planning techniciens)",
+      "taille": "1920×1080",
+      "ratio": "16:9",
+      "personnages": [
+        "tech_elec",
+        "tech_meca"
+      ],
+      "prompt": "[STYLE COMMUN] Bureau du service maintenance attenant à l'atelier : grand tableau de planning magnétique avec aimants de couleur (sans texte lisible), écran de GMAO, vue vitrée sur la ligne. Sofia Martins et Lucas Garnier discutent devant le tableau. Personnages (apparence fixe) — Sofia Martins : femme d'environ 30 ans, cheveux bruns longs attachés et entièrement rentrés sous la charlotte, combinaison de travail bleu marine propre, gants isolants pendus à la ceinture, multimètre dans une poche, lunettes de protection relevées, chaussures de sécurité. Lucas Garnier : homme d'environ 25 ans, cheveux roux courts rentrés sous la charlotte, rasé de près, combinaison de travail bleu marine, clé dynamométrique à la main, lunettes de protection, chaussures de sécurité. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/phase-evenements.webp",
+      "usage": "Fond de la phase Événements (animation de la semaine)",
+      "taille": "1920×1080",
+      "ratio": "16:9",
+      "personnages": [],
+      "prompt": "[STYLE COMMUN] Vue latérale de la ligne en pleine production, bouteilles en mouvement légèrement floutées, voyant vert allumé sur une colonne lumineuse, opérateurs en EPI au poste. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/phase-intervenir.webp",
+      "usage": "Fond de la fenêtre Intervenir",
+      "taille": "1920×1080",
+      "ratio": "16:9",
+      "personnages": [
+        "tech_meca",
+        "tech_elec"
+      ],
+      "prompt": "[STYLE COMMUN] Intervention sur la remplisseuse arrêtée : carter ouvert, Lucas Garnier remplace un joint de vanne avec des outils propres, Sofia Martins à côté vérifie l'absence de tension sur une armoire électrique cadenassée (consignation visible : cadenas et étiquette de consignation unie sans texte), colonne lumineuse orange. Personnages (apparence fixe) — Lucas Garnier : homme d'environ 25 ans, cheveux roux courts rentrés sous la charlotte, rasé de près, combinaison de travail bleu marine, clé dynamométrique à la main, lunettes de protection, chaussures de sécurité. Sofia Martins : femme d'environ 30 ans, cheveux bruns longs attachés et entièrement rentrés sous la charlotte, combinaison de travail bleu marine propre, gants isolants pendus à la ceinture, multimètre dans une poche, lunettes de protection relevées, chaussures de sécurité. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/phase-bilan.webp",
+      "usage": "Fond de l'écran Bilan",
+      "taille": "1920×1080",
+      "ratio": "16:9",
+      "personnages": [
+        "directrice",
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] Petite salle de réunion vitrée donnant sur la ligne, table avec calculatrice, carnet et tablette, graphiques abstraits sans chiffres sur un écran mural. Nadia Ferrand et Julien Rocca regardent l'écran, attentifs et bienveillants. Personnages (apparence fixe) — Nadia Ferrand : femme d'une cinquantaine d'années, cheveux gris coupés court, lunettes à fine monture noire, blouse blanche de visiteur fermée, charlotte blanche, chaussures de sécurité noires, badge sans inscription, tient souvent une tablette. Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/lieu-magasin.webp",
+      "usage": "Écran Magasin",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "magasinier"
+      ],
+      "prompt": "[STYLE COMMUN] Magasin de pièces de rechange : rayonnages métalliques bien rangés, bacs bleus étiquetés sans texte lisible, cartons de pièces, comptoir de sortie. Bernard Aubry derrière le comptoir scanne une pièce. Personnages (apparence fixe) — Bernard Aubry : homme d'une soixantaine d'années, rasé de près, cheveux blancs sous une charlotte, blouse grise de magasinier, lunettes de lecture sur le front, lecteur de codes-barres à la main, chaussures de sécurité. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/lieu-bureau-directrice.webp",
+      "usage": "Fond des réactions de la directrice (colère, félicitations)",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [
+        "directrice"
+      ],
+      "prompt": "[STYLE COMMUN] Bureau de la directrice d'usine, sobre et lumineux, grande fenêtre intérieure vitrée sur la ligne de production, bureau avec tablette et dossier, plante verte. Nadia Ferrand debout près de la vitre, regardant la ligne. Personnages (apparence fixe) — Nadia Ferrand : femme d'une cinquantaine d'années, cheveux gris coupés court, lunettes à fine monture noire, blouse blanche de visiteur fermée, charlotte blanche, chaussures de sécurité noires, badge sans inscription, tient souvent une tablette. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/lieu-gmao.webp",
+      "usage": "Écran GMAO (historique, bons de travail)",
+      "taille": "1600×900",
+      "ratio": "16:9",
+      "personnages": [],
+      "prompt": "[STYLE COMMUN] Gros plan sur un poste de GMAO dans l'atelier : écran affichant des tableaux et des pictogrammes abstraits sans texte lisible, clavier, classeur de bons de travail, tasse posée loin du clavier. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/chargement.webp",
+      "usage": "Écran de chargement (avec une anecdote métier)",
+      "taille": "1920×1080",
+      "ratio": "16:9",
+      "personnages": [],
+      "prompt": "[STYLE COMMUN] Plan rapproché, faible profondeur de champ : rangée de bouteilles PET remplies de boisson orangée sur le convoyeur, reflets lumineux, arrière-plan flou de la ligne. Format 16:9."
+    },
+    {
+      "fichier": "assets/img/portrait-directrice.png",
+      "usage": "Portrait de Nadia Ferrand (bulles de dialogue, réactions)",
+      "taille": "512×512",
+      "ratio": "1:1",
+      "personnages": [
+        "directrice"
+      ],
+      "prompt": "[STYLE COMMUN] Portrait en buste de Nadia Ferrand, directrice d'usine, expression déterminée mais bienveillante, fond uni vert d'eau clair légèrement dégradé, éclairage doux de face. Personnages (apparence fixe) — Nadia Ferrand : femme d'une cinquantaine d'années, cheveux gris coupés court, lunettes à fine monture noire, blouse blanche de visiteur fermée, charlotte blanche, chaussures de sécurité noires, badge sans inscription, tient souvent une tablette. Format 1:1."
+    },
+    {
+      "fichier": "assets/img/portrait-chef-prod.png",
+      "usage": "Portrait de Julien Rocca (bulles de dialogue, réactions)",
+      "taille": "512×512",
+      "ratio": "1:1",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] Portrait en buste de Julien Rocca, chef de production (guide de la visite), sourire accueillant, fond uni vert d'eau clair légèrement dégradé, éclairage doux de face. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 1:1."
+    },
+    {
+      "fichier": "assets/img/portrait-tech-elec.png",
+      "usage": "Portrait de Sofia Martins (bulles de dialogue, réactions)",
+      "taille": "512×512",
+      "ratio": "1:1",
+      "personnages": [
+        "tech_elec"
+      ],
+      "prompt": "[STYLE COMMUN] Portrait en buste de Sofia Martins, technicienne de maintenance, électricité et automatisme, regard calme et concentré, fond uni vert d'eau clair légèrement dégradé, éclairage doux de face. Personnages (apparence fixe) — Sofia Martins : femme d'environ 30 ans, cheveux bruns longs attachés et entièrement rentrés sous la charlotte, combinaison de travail bleu marine propre, gants isolants pendus à la ceinture, multimètre dans une poche, lunettes de protection relevées, chaussures de sécurité. Format 1:1."
+    },
+    {
+      "fichier": "assets/img/portrait-tech-meca.png",
+      "usage": "Portrait de Lucas Garnier (bulles de dialogue, réactions)",
+      "taille": "512×512",
+      "ratio": "1:1",
+      "personnages": [
+        "tech_meca"
+      ],
+      "prompt": "[STYLE COMMUN] Portrait en buste de Lucas Garnier, technicien de maintenance, mécanique et pneumatique, sourire franc et énergique, fond uni vert d'eau clair légèrement dégradé, éclairage doux de face. Personnages (apparence fixe) — Lucas Garnier : homme d'environ 25 ans, cheveux roux courts rentrés sous la charlotte, rasé de près, combinaison de travail bleu marine, clé dynamométrique à la main, lunettes de protection, chaussures de sécurité. Format 1:1."
+    },
+    {
+      "fichier": "assets/img/portrait-magasinier.png",
+      "usage": "Portrait de Bernard Aubry (bulles de dialogue, réactions)",
+      "taille": "512×512",
+      "ratio": "1:1",
+      "personnages": [
+        "magasinier"
+      ],
+      "prompt": "[STYLE COMMUN] Portrait en buste de Bernard Aubry, magasinier pièces de rechange, sourire bonhomme, fond uni vert d'eau clair légèrement dégradé, éclairage doux de face. Personnages (apparence fixe) — Bernard Aubry : homme d'une soixantaine d'années, rasé de près, cheveux blancs sous une charlotte, blouse grise de magasinier, lunettes de lecture sur le front, lecteur de codes-barres à la main, chaussures de sécurité. Format 1:1."
+    },
+    {
+      "fichier": "assets/img/portrait-fournisseur.png",
+      "usage": "Portrait de Claire Dumas (bulles de dialogue, réactions)",
+      "taille": "512×512",
+      "ratio": "1:1",
+      "personnages": [
+        "fournisseur"
+      ],
+      "prompt": "[STYLE COMMUN] Portrait en buste de Claire Dumas, technico-commerciale chez un fournisseur de pièces (fictif), expression professionnelle et rassurante, fond uni vert d'eau clair légèrement dégradé, éclairage doux de face. Personnages (apparence fixe) — Claire Dumas : femme d'environ 35 ans, cheveux noirs coupés au carré, veste de travail vert sapin sans logo, gilet visiteur, charlotte et chaussures de sécurité quand elle vient sur site, tient un carton de pièces. Format 1:1."
+    },
+    {
+      "fichier": "assets/img/portrait-directrice-fachee.png",
+      "usage": "Variante de portrait pour les paliers de colère 2 à 4",
+      "taille": "512×512",
+      "ratio": "1:1",
+      "personnages": [
+        "directrice"
+      ],
+      "prompt": "[STYLE COMMUN] Portrait en buste de Nadia Ferrand, sourcils froncés, bras croisés, contrariée mais pas agressive, fond uni vert d'eau clair légèrement dégradé. Personnages (apparence fixe) — Nadia Ferrand : femme d'une cinquantaine d'années, cheveux gris coupés court, lunettes à fine monture noire, blouse blanche de visiteur fermée, charlotte blanche, chaussures de sécurité noires, badge sans inscription, tient souvent une tablette. Format 1:1."
+    },
+    {
+      "fichier": "assets/img/evt-coupure-electrique.webp",
+      "usage": "Carte événement E01 : Coupure électrique courte",
+      "taille": "800×1000",
+      "ratio": "4:5",
+      "personnages": [
+        "tech_elec"
+      ],
+      "prompt": "[STYLE COMMUN] Ligne arrêtée dans la pénombre : éclairage de secours allumé, colonnes lumineuses éteintes, Sofia Martins avec une lampe frontale devant l'armoire électrique principale fermée. Personnages (apparence fixe) — Sofia Martins : femme d'environ 30 ans, cheveux bruns longs attachés et entièrement rentrés sous la charlotte, combinaison de travail bleu marine propre, gants isolants pendus à la ceinture, multimètre dans une poche, lunettes de protection relevées, chaussures de sécurité. Format 4:5."
+    },
+    {
+      "fichier": "assets/img/evt-technicien-malade.webp",
+      "usage": "Carte événement E02 : Technicien malade",
+      "taille": "800×1000",
+      "ratio": "4:5",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] Atelier maintenance avec un casier vide et une servante à outils inutilisée ; Julien Rocca au téléphone, air compréhensif, tableau de planning en arrière-plan. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 4:5."
+    },
+    {
+      "fichier": "assets/img/evt-fournisseur-retard.webp",
+      "usage": "Carte événement E03 : Fournisseur en retard",
+      "taille": "800×1000",
+      "ratio": "4:5",
+      "personnages": [
+        "fournisseur"
+      ],
+      "prompt": "[STYLE COMMUN] Quai de réception vide, transpalette à l'arrêt, horloge murale sans chiffres ; Claire Dumas au téléphone, air désolé, devant un camion de livraison sans marque au loin. Personnages (apparence fixe) — Claire Dumas : femme d'environ 35 ans, cheveux noirs coupés au carré, veste de travail vert sapin sans logo, gilet visiteur, charlotte et chaussures de sécurité quand elle vient sur site, tient un carton de pièces. Format 4:5."
+    },
+    {
+      "fichier": "assets/img/evt-piece-fausse.webp",
+      "usage": "Carte événement E04 : Pièce livrée fausse",
+      "taille": "800×1000",
+      "ratio": "4:5",
+      "personnages": [
+        "magasinier",
+        "fournisseur"
+      ],
+      "prompt": "[STYLE COMMUN] Comptoir du magasin : carton ouvert, Bernard Aubry compare une pièce reçue avec l'ancienne pièce, visiblement différente ; Claire Dumas présente sur site, s'excusant. Personnages (apparence fixe) — Bernard Aubry : homme d'une soixantaine d'années, rasé de près, cheveux blancs sous une charlotte, blouse grise de magasinier, lunettes de lecture sur le front, lecteur de codes-barres à la main, chaussures de sécurité. Claire Dumas : femme d'environ 35 ans, cheveux noirs coupés au carré, veste de travail vert sapin sans logo, gilet visiteur, charlotte et chaussures de sécurité quand elle vient sur site, tient un carton de pièces. Format 4:5."
+    },
+    {
+      "fichier": "assets/img/evt-audit-qualite.webp",
+      "usage": "Carte événement E05 : Audit qualité / hygiène",
+      "taille": "800×1000",
+      "ratio": "4:5",
+      "personnages": [
+        "directrice"
+      ],
+      "prompt": "[STYLE COMMUN] Auditrice qualité en blouse blanche et charlotte, avec un porte-documents, examinant des bouteilles prélevées près de la remplisseuse ; Nadia Ferrand à ses côtés. Personnages (apparence fixe) — Nadia Ferrand : femme d'une cinquantaine d'années, cheveux gris coupés court, lunettes à fine monture noire, blouse blanche de visiteur fermée, charlotte blanche, chaussures de sécurité noires, badge sans inscription, tient souvent une tablette. Format 4:5."
+    },
+    {
+      "fichier": "assets/img/evt-commande-urgente.webp",
+      "usage": "Carte événement E06 : Commande urgente (pic d'été)",
+      "taille": "800×1000",
+      "ratio": "4:5",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] Quai d'expédition plein de palettes de packs filmés, chariot élévateur électrique en mouvement ; Julien Rocca regarde sa tablette, enthousiaste et un peu inquiet. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 4:5."
+    },
+    {
+      "fichier": "assets/img/evt-canicule.webp",
+      "usage": "Carte événement E07 : Canicule",
+      "taille": "800×1000",
+      "ratio": "4:5",
+      "personnages": [
+        "chef_prod"
+      ],
+      "prompt": "[STYLE COMMUN] Halle de production par une journée de forte chaleur : lumière de fin d'après-midi chaude et dorée, ventilateurs industriels, opérateurs en EPI buvant de l'eau ; Julien Rocca s'éponge le front. Personnages (apparence fixe) — Julien Rocca : homme d'environ 40 ans, barbe courte brune entièrement couverte par un cache-barbe blanc, charlotte blanche, blouse blanche à col bleu acier, casque antibruit autour du cou, chaussures de sécurité, tablette à la main. Format 4:5."
+    },
+    {
+      "fichier": "assets/img/evt-visite-client.webp",
+      "usage": "Carte événement E08 : Visite d'un client avec la directrice",
+      "taille": "800×1000",
+      "ratio": "4:5",
+      "personnages": [
+        "directrice"
+      ],
+      "prompt": "[STYLE COMMUN] Nadia Ferrand fait visiter la ligne à un client en blouse de visiteur, charlotte et chaussures de sécurité, devant la remplisseuse en production ; ambiance détendue. Personnages (apparence fixe) — Nadia Ferrand : femme d'une cinquantaine d'années, cheveux gris coupés court, lunettes à fine monture noire, blouse blanche de visiteur fermée, charlotte blanche, chaussures de sécurité noires, badge sans inscription, tient souvent une tablette. Format 4:5."
+    }
+  ],
+  "blagues_personnages": {
+    "note": "Les blagues v0.5 n'indiquent pas de personnage. Cette attribution ne sert qu'à l'affichage de la bulle.",
+    "par_phase": {
+      "intro": "chef_prod",
+      "planifier": "tech_meca",
+      "evenements": "chef_prod",
+      "intervenir": "tech_elec",
+      "bilan": "magasinier",
+      "chargement": "chef_prod"
+    }
+  }
+}

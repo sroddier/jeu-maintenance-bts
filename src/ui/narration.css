@@ -1,0 +1,156 @@
+.nar-revoir {
+  margin-top: 10px;
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.nar-revoir:hover { background: rgba(255, 255, 255, 0.12); }
+
+.nar-visuel {
+  position: relative;
+  margin: 0 0 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #d7efe9;
+}
+
+.nar-visuel img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.nar-photo,
+.nar-portrait-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+.nar-photo.prete,
+.nar-portrait-photo.prete { opacity: 1; }
+
+.nar-visuel figcaption {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(22, 50, 74, 0.72);
+  color: white;
+  font-size: 0.78rem;
+}
+
+.nar-blague {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0 0 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f4faf8;
+  border: 1px solid #b7ddd6;
+}
+
+.nar-blague-portrait {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #d7efe9;
+}
+
+.nar-blague p { margin: 0; }
+.nar-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--teal-fonce);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nar-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(22, 50, 74, 0.55);
+}
+
+.nar-intro[hidden] { display: none; }
+
+.nar-intro-carte {
+  width: min(760px, 100%);
+  max-height: min(92vh, 920px);
+  overflow: auto;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--carte);
+  box-shadow: 0 16px 50px rgba(22, 50, 74, 0.28);
+}
+
+.nar-intro-carte:focus { outline: none; }
+.nar-progression { margin: 0 0 4px; color: var(--encre-douce); font-size: 0.85rem; }
+.nar-guide { display: flex; gap: 10px; align-items: center; margin: 0 0 8px; }
+.nar-guide img { width: 56px; height: 56px; border-radius: 12px; background: #d7efe9; object-fit: cover; }
+.nar-fait {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #e7f3f2;
+}
+.nar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.nar-bulle {
+  position: fixed;
+  z-index: 40;
+  right: 16px;
+  bottom: 16px;
+  width: min(420px, calc(100vw - 32px));
+  margin: 0;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--carte);
+  border: 1px solid var(--filet);
+  box-shadow: 0 10px 30px rgba(22, 50, 74, 0.18);
+}
+
+.nar-bulle[hidden] { display: none; }
+.nar-bulle-lieu { margin-bottom: 8px; }
+.nar-bulle-corps { display: flex; gap: 12px; align-items: flex-start; }
+.nar-portrait-cadre { position: relative; width: 72px; height: 72px; flex: 0 0 72px; }
+.nar-portrait, .nar-portrait-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #d7efe9;
+}
+.nar-nom { margin: 0; font-weight: 700; }
+.nar-role { margin: 0; color: var(--encre-douce); font-size: 0.85rem; }
+.nar-replique { margin: 6px 0 0; }
+.nar-precision { margin: 6px 0 0; color: var(--encre-douce); font-size: 0.85rem; }
+
+button.nar-fermer {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--carte);
+  color: var(--marine);
+  border: 1px solid var(--filet);
+}
+
+button.nar-fermer:hover { background: #f6f1e8; }
