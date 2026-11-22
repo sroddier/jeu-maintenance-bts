@@ -43,7 +43,10 @@ L'écran d'accueil propose aussi l'**historique d'exercice** (10 semaines, corri
 | `data/usine.json` | Source unique de vérité : équipements, modes, coûts, délais, stocks, politique. Chargé tel quel. |
 | `reference/` | Cadrage métier, schémas, historiques et scripts Python de l'expert. Les tests s'y comparent. |
 | `src/sim/` | Moteur pur, sans DOM. PRNG mulberry32, indicateurs, coûts, partie, score. Réutilisable plus tard pour un recalcul serveur. |
-| `src/ui/` | Interface (TypeScript vanilla). |
+| `src/narration/` | Réactions, blagues, visite client et images. Lit l'état, ne le modifie pas. |
+| `src/ui/` | Interface (TypeScript vanilla). Le branchement narratif est dans `src/ui/narration.ts`. |
+| `public/assets/img/` | Silhouettes SVG de remplacement. Les WebP et PNG définitifs prendront le même nom. |
+| `assets-src/` | PNG ou JPG d'origine, convertis par `npm run images`. |
 | `tests/` | Vitest. |
 
 Le score est isolé dans `src/sim/score.ts` : il ne lit ni le DOM ni le générateur aléatoire. `evaluerPartie` rejoue la graine avec une politique de référence pour la partie « coût ».
@@ -62,7 +65,29 @@ Le score est isolé dans `src/sim/score.ts` : il ne lit ni le DOM ni le généra
 - **Préventif.** Le forfait `cout_eur` (1 000 €) est facturé tel quel. Avec les données actuelles il est égal au kit (600 €) plus 8 h × 50 €. Un test casse si ce lien change.
 - **Score et passage.** Poids du niveau 1 : Ao 50 (les 30 de l'Ao plus les 20 du TRS, réaffectés comme le dit le GDD), coût 25, justesse 25. La courbe d'Ao vaut 0 à 70 %, 40 à l'objectif de 92 %, 50 à partir de 98 %. Le coût vaut 25 points s'il ne dépasse pas la politique de référence (curatif interne, express seulement en rupture, commandes standard jusqu'au stock mini), et 0 s'il atteint le double. Le passage du niveau 1 exige Ao ≥ 92 %, au moins 2 étoiles et au moins 70 % de calculs justes. Pas de plafond de budget à ce niveau. Pour plus tard : le coût global devient un critère au niveau 5 (≤ 90 % de la partie de référence) et le budget devient un critère au niveau 6.
 - **Sous-traitance.** L'attente est le maximum entre le délai de pièce et les 4 h d'arrivée. Avec deux techniciens et une seule machine, l'interne est en général plus court et moins cher. Les deux options restent chiffrées avant confirmation.
-- **Hors de ce prototype.** Serveur, deux tentatives notées, classement, événements spéciaux (la liste est déjà dans les données), règle hors spécialité, taux du dimanche, ligne complète, TRS. L'export CSV tient lieu de secours professeur.
+- **Hors de ce prototype.** Serveur, deux tentatives notées, classement, effets chiffrés des événements spéciaux (la liste est dans `usine.json`), règle hors spécialité, taux du dimanche, ligne complète, TRS. L'export CSV tient lieu de secours professeur.
+
+## Narration et images
+
+Les textes viennent de `data/narratif.json` (intro en 7 écrans, 6 personnages, 18 réactions, 20 anecdotes). Aucune réplique n'est écrite dans le code. Au niveau 1, la disponibilité se dit **Ao**, comme dans le reste du jeu. Le sigle Do reste celui du TRS, au niveau 2.
+
+Les probabilités et les paramètres des événements sont lus dans `data/usine.json` (`evenements.liste`), pas recopiés. Les événements à effet chiffré (E01 à E07) ne sont pas appliqués. Au niveau 1, la liste ne laisse passer que la visite client **E08** (`effet_numerique: false`, `prng_separe`) : une carte, un tirage sur un PRNG séparé (`graine de la partie + 1`), aucun impact sur les pannes ni sur l'Ao.
+
+Les réactions lisent l'état de la partie. La colère de Nadia Ferrand suit l'arrêt de ligne cumulé dans la semaine (2 h, 5 h, 10 h, 20 h), remis à zéro le lundi. Une seule bulle à la fois, trois au plus par phase. La bulle se ferme et ne bloque pas le jeu. Les anecdotes sont tirées une fois par entrée de phase, sans répétition dans la partie. Il n'y a pas de plafond de budget au niveau 1 : les réactions de budget ne s'affichent pas.
+
+Les 31 emplacements sont dans `narratif.json` (`images[]`). Le jeu charge le WebP de `public/assets/img/` (`loading="lazy"`, largeur et hauteur fixées). S'il manque, la silhouette SVG du même nom reste visible.
+
+Pour remplacer une image, on garde le nom de fichier. Quatre d'entre elles pourront changer sans toucher au code : `portrait-chef-prod` (Julien Rocca), `portrait-tech-meca` (Lucas Garnier), `portrait-magasinier` (Bernard Aubry) et `evt-piece-fausse` (carte « pièce fausse »). Déposer le nouveau PNG dans `assets-src/` sous ce nom exact, puis :
+
+```bash
+npm run images
+```
+
+Le script réécrit le WebP correspondant, qualité 80, sans agrandir l'image. Les sources versionnées sont les PNG de `assets-src/`. Les fichiers servis sont les WebP de `public/assets/img/`.
+
+La visite se revoit avec « Revoir la visite ». Elle ne s'ouvre toute seule qu'une fois par navigateur.
+
+Les effets chiffrés, la majoration hors spécialité et le TRS (R06) restent pour une PR ultérieure. Le rappel de Lucas utilise la réapparition lue dans `depannage_provisoire`, sans changer cette durée.
 
 ## Publication
 

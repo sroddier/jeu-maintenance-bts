@@ -29,6 +29,7 @@ import {
   remplisseuse,
   usine,
 } from "../sim/usine";
+import { habillerNarration, installerNarration } from "./narration";
 
 const CLE = "jeu-maintenance-bts-niveau1";
 
@@ -56,6 +57,7 @@ export function monter(element: HTMLElement): void {
   racine.addEventListener("change", onChange);
   const seed = seedDansUrl();
   if (seed) ecrireSeed(seed);
+  installerNarration();
   dessiner();
 }
 
@@ -68,6 +70,7 @@ function dessiner(): void {
     }
   }
   racine.innerHTML = page();
+  habillerNarration(racine, partie, ecran);
 }
 
 function page(): string {
