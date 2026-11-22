@@ -30,7 +30,7 @@ schema_eq = {
   "piece":{"type":"object","required":["ref","designation","prix_unitaire_eur"],"additionalProperties":False,"properties":{
      "ref":{"type":"string","pattern":"^P-[A-Z]{3}-[0-9]{2}$"},"designation":{"type":"string"},"prix_unitaire_eur":NUM0,
      "delai_standard_semaines":NUM0,"stock_initial":{"type":"integer","minimum":0},"stock_mini":{"type":"integer","minimum":0}}},
-  "mode":{"type":"object","required":["id_mode","id_sous_ensemble","designation","loi","beta","eta_h","gamma_h","effet_correctif","mttr_actif_h"],
+  "mode":{"type":"object","required":["id_mode","id_sous_ensemble","designation","loi","beta","eta_h","gamma_h","effet_correctif","mttr_actif_h","depannage_provisoire"],
      "additionalProperties":False,
      "properties":{
        "id_mode":{"type":"string","pattern":"^[A-Z]{3}-M[0-9]+$"},"id_sous_ensemble":{"type":"string"},"designation":{"type":"string"},
@@ -46,7 +46,24 @@ schema_eq = {
        "pieces_corrective":{"type":"array","items":{"type":"string"},"description":"Pièces consommables en correctif pour ce mode"},
        "pieces_preventive":{"type":"array","items":{"type":"string"},"description":"Pièces consommables en préventif pour ce mode"},
        "mode_detection":{"type":"string"},
-       "probabilite_piece_en_stock":{"type":"number","minimum":0,"maximum":1}},
+       "probabilite_piece_en_stock":{"type":"number","minimum":0,"maximum":1},
+       "depannage_provisoire":{"type":"object","additionalProperties":False,
+          "required":["autorise","ratio_reparation_active","duree_reparation_active_h","pieces","reapparition_apres_h","annule_par_curatif_differe"],
+          "description":"Règle du dépannage provisoire (action palliative). Détection et remise en service inchangées.",
+          "properties":{"autorise":{"type":"boolean","description":"false si un palliatif n'a pas de sens métier pour ce mode"},
+                        "ratio_reparation_active":{"type":"number","exclusiveMinimum":0,"maximum":1,"description":"Part de mttr_actif_h (0,4)"},
+                        "duree_reparation_active_h":{"type":"number","minimum":0.25,"multipleOf":0.25,"description":"Valeur figée = ratio × mttr_actif_h, arrondie au ¼ h le plus proche, minimum 0,25 h"},
+                        "pieces":{"type":"array","maxItems":0,"description":"Aucune pièce consommée"},
+                        "reapparition_apres_h":{"type":"number","exclusiveMinimum":0,"description":"La panne revient après ce temps d'ouverture (le mode n'est pas remis à neuf)"},
+                        "annule_par_curatif_differe":{"type":"boolean","description":"true : une réparation curative différée faite le samedi (hors ouverture) annule la réapparition"},
+                        "justification":{"type":["string","null"],"description":"Motif métier quand autorise = false"}},
+          "if":{"properties":{"autorise":{"const":False}}},"then":{"required":["justification"],"properties":{"justification":{"type":"string","minLength":10}}}},
+       "periode_optimale":{"type":"object","required":["modele","cout_preventif_eur","cout_defaillance_moyen_eur"],"additionalProperties":False,
+          "description":"Données du préventif systématique : Cp, Cc et modèle de période optimale",
+          "properties":{"modele":{"enum":["remplacement_selon_age","remplacement_periodique_reparation_minimale"]},
+                        "cout_preventif_eur":{"type":"number","minimum":0,"description":"Cp : coût d'une intervention préventive"},
+                        "cout_defaillance_moyen_eur":{"type":"number","minimum":0,"description":"Cc : coût complet moyen d'une défaillance (direct + indirect)"},
+                        "periode_optimale_h":{"type":"number","exclusiveMinimum":0},"periode_retenue_semaines":{"type":"integer","minimum":1}}}},
      "allOf":[{"if":{"properties":{"loi":{"const":"exponentielle"}}},"then":{"properties":{"beta":{"const":1},"gamma_h":{"const":0},"lambda_par_h":{"type":"number"}}}}]},
   "equipement":{"type":"object",
      "required":["id_equipement","designation","fonction","cadence_nominale_bouteilles_par_h","goulot","penalite_arret_eur_par_h","sous_ensembles","modes"],
@@ -140,3 +157,36 @@ for f in ["historique_pannes.json","historique_pannes_simule.json"]:
             if p["prix_unitaire_eur"]!=px: erreurs.append((ev["id_evenement"],"prix",p["ref"]))
     print(f, "-> contrôle croisé pièces/modes :", "OK" if not erreurs else erreurs, f"({n} lignes de pièces vérifiées)")
     assert not erreurs
+
+# ---- contrôle de la règle du dépannage provisoire ----
+from fractions import Fraction as Fr
+def quart(x):
+    q=Fr(str(x))*4; n=int(q)+(1 if q-int(q)>=Fr(1,2) else 0); return max(Fr(n,4),Fr(1,4))
+tab=[]
+for e in U["equipements"]:
+    for m in e["modes"]:
+        d=m["depannage_provisoire"]
+        att=quart(Fr(str(d["ratio_reparation_active"]))*Fr(str(m["mttr_actif_h"])))
+        assert Fr(str(d["duree_reparation_active_h"]))==att, (m["id_mode"], d["duree_reparation_active_h"], float(att))
+        assert d["pieces"]==[] and d["reapparition_apres_h"]==40 and d["annule_par_curatif_differe"] is True and d["ratio_reparation_active"]==0.4
+        assert d["autorise"] or d["justification"]
+        tab.append((m["id_mode"], m["mttr_actif_h"], d["duree_reparation_active_h"], d["autorise"]))
+print("Règle du dépannage provisoire : durées figées conformes pour", len(tab), "modes")
+# avertissements (NON bloquants) : événements palliatifs des historiques confrontés à la règle
+for f in ["historique_pannes.json","historique_pannes_simule.json"]:
+    H=json.load(open(OUT+f)); avert=[]
+    for ev in H:
+        if not ev.get("reparation_provisoire"): continue
+        eq,m=MODES[ev["id_mode_defaillance"]]; d=m["depannage_provisoire"]
+        if not d["autorise"]: avert.append((ev["id_evenement"],"palliatif non autorisé pour ce mode"))
+        if ev["duree_reparation_active_h"]!=d["duree_reparation_active_h"]:
+            avert.append((ev["id_evenement"],f"réparation active {ev['duree_reparation_active_h']} h au lieu de {d['duree_reparation_active_h']} h"))
+        if ev["pieces"]: avert.append((ev["id_evenement"],"pièces consommées"))
+        if ev["debut_arret_h_ouverture"] is not None:
+            fin=ev["debut_arret_h_ouverture"]+ev["duree_arret_totale_h"]; fin_sem=(int(fin//80)+1)*80
+            if fin_sem-fin>d["reapparition_apres_h"]:
+                suiv=[x for x in H if x["id_equipement"]==eq and x["id_mode_defaillance"]==m["id_mode"] and x["debut_arret_h_ouverture"] is not None and x["debut_arret_h_ouverture"]>=fin]
+                prochain=min((x["debut_arret_h_ouverture"] for x in suiv), default=None)
+                if prochain is None or prochain-fin>d["reapparition_apres_h"]:
+                    avert.append((ev["id_evenement"],f"{fin_sem-fin:g} h d'ouverture entre la fin du dépannage et le samedi (> 40 h) : réapparition attendue vers {fin+40:g} h, non présente (panne suivante du mode à {prochain} h)"))
+    print(f, "-> confrontation des palliatifs à la règle (non bloquant) :", avert if avert else "aucune contradiction")

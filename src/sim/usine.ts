@@ -1,7 +1,29 @@
 import brut from "../../data/usine.json";
-import type { Equipement, ModeDefaillance, Piece, PolitiqueInitiale, Usine } from "./types";
+import type { DepannageProvisoire, Equipement, ModeDefaillance, Piece, PolitiqueInitiale, Usine } from "./types";
 
-export const usine = brut as Usine;
+/** Vérifie la présence des champs. Ne les applique pas : le niveau 1 les ignore. */
+function charger(source: Usine): Usine {
+  if (!source.evenements?.liste?.length) throw new Error("usine.json : evenements.liste est absent");
+  if (!source.organisation.hors_specialite?.niveaux?.length) {
+    throw new Error("usine.json : organisation.hors_specialite est absent");
+  }
+  if (typeof source.couts.taux_main_oeuvre_dimanche_eur_par_h !== "number") {
+    throw new Error("usine.json : taux_main_oeuvre_dimanche_eur_par_h est absent");
+  }
+  for (const eq of source.equipements) {
+    for (const mode of eq.modes) {
+      if (mode.specialite !== "electrique" && mode.specialite !== "mecanique") {
+        throw new Error(`usine.json : specialite absente pour ${mode.id_mode}`);
+      }
+      if (typeof mode.depannage_provisoire?.duree_reparation_active_hors_specialite_h !== "number") {
+        throw new Error(`usine.json : duree hors spécialité absente pour ${mode.id_mode}`);
+      }
+    }
+  }
+  return source;
+}
+
+export const usine = charger(brut as Usine);
 
 const MODES_NIVEAU_1 = ["REM-M1", "REM-M2"] as const;
 
@@ -29,6 +51,33 @@ export function modeParId(id: string, source: Usine = usine): ModeDefaillance {
   const mode = modesNiveau1(source).find((m) => m.id_mode === id);
   if (!mode) throw new Error(`Mode ${id} hors niveau 1`);
   return mode;
+}
+
+/** N'importe quel mode de l'usine, y compris ceux qui ne sont pas joués au niveau 1. */
+export function modeQuelconque(id: string, source: Usine = usine): ModeDefaillance {
+  for (const eq of source.equipements) {
+    const mode = eq.modes.find((m) => m.id_mode === id);
+    if (mode) return mode;
+  }
+  throw new Error(`Mode ${id} introuvable dans usine.json`);
+}
+
+/** Lit l'objet figé. Lève une erreur s'il manque : pas de durée ni de délai par défaut. */
+export function regleDepannage(mode: ModeDefaillance): DepannageProvisoire {
+  const regle = mode.depannage_provisoire;
+  if (!regle || typeof regle.autorise !== "boolean" || typeof regle.duree_reparation_active_h !== "number") {
+    throw new Error(`depannage_provisoire absent pour ${mode.id_mode}`);
+  }
+  return regle;
+}
+
+export function depannageAutorise(mode: ModeDefaillance): boolean {
+  return regleDepannage(mode).autorise;
+}
+
+/** Le choix « dépannage provisoire » n'est proposé que si le mode l'autorise. */
+export function actionsProposees(mode: ModeDefaillance): Array<"curatif" | "palliatif"> {
+  return depannageAutorise(mode) ? ["curatif", "palliatif"] : ["curatif"];
 }
 
 export function pieceParRef(ref: string, source: Usine = usine): Piece {

@@ -18,6 +18,23 @@ export interface Organisation {
   marge_sur_cout_variable_eur_par_bouteille: number;
   cout_rebut_eur_par_bouteille: number;
   coefficient_propagation_arret_hors_goulot: number;
+  /**
+   * Majoration ×1,25 de la réparation active hors spécialité.
+   * Chargée, non appliquée au niveau 1 (niveaux 2 à 6).
+   */
+  hors_specialite: HorsSpecialite;
+}
+
+/** Présent dans usine.json. Le moteur du niveau 1 ne l'applique pas. */
+export interface HorsSpecialite {
+  majoration_reparation_active_pct: number;
+  s_applique_a: string;
+  arrondi: string;
+  minimum_h: number;
+  s_applique_au_depannage_provisoire: boolean;
+  concerne_sous_traitance: boolean;
+  entre_dans_mttr: boolean;
+  niveaux: number[];
 }
 
 export interface CoutsUsine {
@@ -31,6 +48,8 @@ export interface CoutsUsine {
   cout_possession_stock_pct_par_an: number;
   penalite_arret_goulot_eur_par_h: number;
   penalite_arret_autre_eur_par_h: number;
+  /** Chargé, non utilisé au niveau 1. La validation du barème dimanche est encore en attente. */
+  taux_main_oeuvre_dimanche_eur_par_h: number;
 }
 
 export interface PolitiqueInitiale {
@@ -58,6 +77,23 @@ export interface SousEnsemble {
   designation: string;
 }
 
+/** Règle figée dans usine.json. Aucune valeur de repli dans le moteur. */
+export interface DepannageProvisoire {
+  autorise: boolean;
+  /** Part de mttr_actif_h. Vaut 0,4 pour tous les modes. */
+  ratio_reparation_active: number;
+  /** Valeur figée, déjà arrondie au quart d'heure. C'est celle du niveau 1. */
+  duree_reparation_active_h: number;
+  /** Valeur figée hors spécialité. Chargée, ignorée au niveau 1. */
+  duree_reparation_active_hors_specialite_h: number;
+  pieces: string[];
+  /** La panne revient après ce temps d'ouverture. Le mode n'est pas remis à neuf. */
+  reapparition_apres_h: number;
+  /** Un curatif différé le samedi, hors ouverture, annule cette réapparition. */
+  annule_par_curatif_differe: boolean;
+  justification: string | null;
+}
+
 export interface ModeDefaillance {
   id_mode: string;
   id_sous_ensemble: string;
@@ -75,6 +111,21 @@ export interface ModeDefaillance {
   pieces_preventive: string[];
   mode_detection: string;
   probabilite_piece_en_stock: number;
+  /** Spécialité sans majoration. Chargée, ignorée au niveau 1. */
+  specialite: "electrique" | "mecanique";
+  depannage_provisoire: DepannageProvisoire;
+}
+
+/** Événement spécial de usine.json. Aucun n'est tiré au niveau 1. */
+export interface EvenementSpecial {
+  id_evenement: string;
+  designation: string;
+  niveaux: number[];
+  probabilite: number;
+  base_probabilite: string;
+  max_par_partie: number | null;
+  effet_numerique: boolean;
+  parametres: Record<string, unknown>;
 }
 
 export interface Equipement {
@@ -96,6 +147,11 @@ export interface Usine {
   politique_initiale: PolitiqueInitiale[];
   pieces: Piece[];
   equipements: Equipement[];
+  /** Liste chargée. Le niveau 1 ne tire aucun de ces événements. */
+  evenements: {
+    niveau_1?: string;
+    liste: EvenementSpecial[];
+  };
 }
 
 /** Événement réduit, commun à l'historique d'exercice et à la partie. */

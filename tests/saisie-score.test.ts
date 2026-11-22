@@ -24,16 +24,19 @@ describe("saisie des indicateurs", () => {
     expect(evaluerSaisie("mtbf", "180,04", CTX).ok).toBe(true);
     expect(evaluerSaisie("mtbf", "180,2", CTX).ok).toBe(false);
     expect(evaluerSaisie("mttr", "7,5", CTX).ok).toBe(true);
-    expect(evaluerSaisie("do", "90", CTX).ok).toBe(true);
-    expect(evaluerSaisie("do", "89,96", CTX).ok).toBe(true);
+    expect(evaluerSaisie("ao", "90", CTX).ok).toBe(true);
+    expect(evaluerSaisie("ao", "89,96", CTX).ok).toBe(true);
   });
 
-  it("reconnaît Tr/N, le MDT saisi à la place du MTTR, et l'Ai saisie à la place du Do", () => {
+  it("reconnaît Tr/N, le MDT saisi à la place du MTTR, et l'Ai saisie à la place de l'Ao", () => {
     expect(evaluerSaisie("mtbf", "200", CTX).indice).toMatch(/Tr \/ N/);
     expect(evaluerSaisie("mttr", "20", CTX).indice).toMatch(/MDT/);
-    expect(evaluerSaisie("do", "96", CTX).indice).toMatch(/Ai/);
-    expect(evaluerSaisie("do", "100", CTX).indice).toMatch(/100 %/);
-    expect(evaluerSaisie("do", "0,90", CTX).indice).toMatch(/pourcent/);
+    expect(evaluerSaisie("ao", "96", CTX).indice).toMatch(/Ao/);
+    expect(evaluerSaisie("ao", "96", CTX).indice).not.toMatch(/Do/);
+    expect(evaluerSaisie("ao", "100", CTX).indice).toMatch(/100 %/);
+    expect(evaluerSaisie("ao", "0,90", CTX).indice).toMatch(/pourcent/);
+    expect(evaluerSaisie("ao", "10", CTX).correction).toMatch(/Ao = /);
+    expect(evaluerSaisie("ao", "10", CTX).correction).not.toMatch(/Do/);
   });
 
   it("la deuxième erreur porte la correction chiffrée", () => {
@@ -72,7 +75,7 @@ describe("score et note", () => {
 
   it("une partie parfaite atteint 100 et 20/20", () => {
     const score = calculerScore({
-      doPct: 99,
+      aoPct: 99,
       coutGlobal: 100,
       coutReference: 120,
       questions: [{ credit: 1 }, { credit: 1 }],
@@ -85,14 +88,56 @@ describe("score et note", () => {
 
   it("la justesse partielle pèse 25 points", () => {
     const score = calculerScore({
-      doPct: 70,
+      aoPct: 70,
       coutGlobal: 999,
       coutReference: 1,
       questions: [{ credit: 1 }, { credit: 0.5 }, { credit: 0 }],
     });
-    expect(score.pointsDo).toBe(0);
+    expect(score.pointsAo).toBe(0);
     expect(score.pointsCout).toBe(0);
     expect(score.pointsJustesse).toBeCloseTo(12.5, 6);
     expect(score.passage).toBe(false);
+  });
+
+  it("réussit le niveau 1 seulement si Ao ≥ 92 %, au moins 2 étoiles et 70 % de calculs justes", () => {
+    const juste = Array.from({ length: 7 }, () => ({ credit: 1 }));
+    const rate = Array.from({ length: 3 }, () => ({ credit: 0 }));
+    const reussi = calculerScore({
+      aoPct: 92,
+      coutGlobal: 100,
+      coutReference: 100,
+      questions: [...juste, ...rate],
+    });
+    expect(reussi.etoiles).toBeGreaterThanOrEqual(2);
+    expect(reussi.justesseRatio).toBeCloseTo(0.7, 6);
+    expect(reussi.objectifAo).toBe(true);
+    expect(reussi.passage).toBe(true);
+
+    const aoInsuffisant = calculerScore({
+      aoPct: 91.99,
+      coutGlobal: 100,
+      coutReference: 100,
+      questions: [{ credit: 1 }],
+    });
+    expect(aoInsuffisant.passage).toBe(false);
+
+    const uneEtoile = calculerScore({
+      aoPct: 92,
+      coutGlobal: 200,
+      coutReference: 100,
+      questions: [{ credit: 1 }],
+    });
+    expect(uneEtoile.etoiles).toBe(1);
+    expect(uneEtoile.passage).toBe(false);
+
+    const calculs = calculerScore({
+      aoPct: 92,
+      coutGlobal: 100,
+      coutReference: 100,
+      questions: [...Array.from({ length: 6 }, () => ({ credit: 1 })), ...Array.from({ length: 4 }, () => ({ credit: 0 }))],
+    });
+    expect(calculs.justesseRatio).toBeCloseTo(0.6, 6);
+    expect(calculs.etoiles).toBeGreaterThanOrEqual(2);
+    expect(calculs.passage).toBe(false);
   });
 });

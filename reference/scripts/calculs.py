@@ -117,6 +117,46 @@ cpB,ccB=1000,5800
 res=optimize.minimize_scalar(lambda T:CB(T,2,500,cpB,ccB), bounds=(10,2000), method="bounded")
 R["prev_B"]=dict(Cp=cpB,Cc=ccB,beta=2,eta=500,Tstar=round(res.x,1),Cstar=round(res.fun,3),C_corr=round(ccB/(500*GT[2]),3),
                  tab=[(T,round(CB(T,2,500,cpB,ccB),3)) for T in [100,200,300,400,500,800,1500]])
+# Modèle B à la CALCULATRICE : tableau de ∫R donné (arrondi à 0,1 h), R(T) calculé par l'élève (4 décimales), grille T = 1 à 6 tours
+grille=[80,160,240,320,400,480]
+Iex={T: integrate.quad(lambda x:Rw(x,2,500),0,T,epsabs=1e-13,epsrel=1e-13)[0] for T in grille}
+Itab={T: round(Iex[T],1) for T in grille}
+# contrôle indépendant de l'intégrale : ∫0^T exp(-(t/η)²) dt = η·(√π/2)·erf(T/η)
+from scipy.special import erf
+for T in grille: assert abs(Iex[T]-500*math.sqrt(math.pi)/2*erf(T/500))<1e-9
+lignes=[]
+for T in grille:
+    Rex=Rw(T,2,500); Rr=round(Rex,4)
+    Cex=(cpB*Rex+ccB*(1-Rex))/Iex[T]
+    Cel=(cpB*Rr+ccB*(1-Rr))/Itab[T]           # calcul élève (valeurs arrondies)
+    num=cpB*Rr+ccB*(1-Rr)
+    lignes.append(dict(T=T, R=Rr, F=round(1-Rr,4), I_tab=Itab[T], I_exact=round(Iex[T],4), num=round(num,2),
+                       C_eleve=round(Cel,4), C_eleve_arr=round(Cel,2), C_exact=round(Cex,4), C_exact_arr=round(Cex,2), ecart=round(Cel-Cex,4)))
+    assert abs(Cel-Cex)<0.01                     # écart méthode calculatrice / exacte < 0,01 €/h
+    assert abs(round(Cel,2)-round(Cex,2))<=0.011  # arrondis à 0,01 identiques ou à 1 centime près
+Cs=[l["C_eleve"] for l in lignes]; imin=Cs.index(min(Cs))
+assert grille[imin]==240
+srt=sorted(Cs); assert srt[1]-srt[0]>0.35        # minimum net sur la grille (écart au 2e meilleur > 0,35 €/h)
+assert abs(res.x-232.3)<0.1 and abs(res.fun-8.919)<0.001
+Ccorr=ccB/(500*GT[2])                            # T -> ∞ : C -> Cc/MTBF (Γ tabulé)
+assert round(Ccorr,2)==13.09
+# vérification de la limite T -> ∞ par le calcul exact
+assert abs(CB(5000,2,500,cpB,ccB)-ccB/(500*float(G(1.5))))<1e-6
+# variante : méthode des trapèzes sur R(t) tous les 40 h (R arrondi à 4 décimales)
+def trapz40(T):
+    pts=[round(Rw(k*40,2,500),4) for k in range(0,T//40+1)]
+    return 40*(sum(pts)-(pts[0]+pts[-1])/2)
+trap=[dict(T=T, I_trap=round(trapz40(T),2), ecart_pct=round((trapz40(T)-Iex[T])/Iex[T]*100,3)) for T in grille]
+for t_ in trap: assert abs(t_["ecart_pct"])<0.3
+C240_trap=(cpB*round(Rw(240,2,500),4)+ccB*(1-round(Rw(240,2,500),4)))/trapz40(240)
+MOD={m['id_mode']:m for e in U['equipements'] for m in e['modes']}
+assert (MOD['BOU-M1']['periode_optimale']['cout_preventif_eur'],MOD['BOU-M1']['periode_optimale']['cout_defaillance_moyen_eur'])==(cpB,ccB)
+assert (MOD['REM-M1']['periode_optimale']['cout_preventif_eur'],MOD['REM-M1']['periode_optimale']['cout_defaillance_moyen_eur'])==(Cp,Cc)
+R["prev_B_calc"]=dict(Cp=cpB, Cc=ccB, lignes=lignes, Tmin_grille=240, Cmin_grille=lignes[imin]["C_eleve_arr"], Cmin_exact_grille=lignes[imin]["C_exact"],
+    Tstar_continu=round(res.x,1), Cstar_continu=round(res.fun,3), C_corr=round(Ccorr,2), gain_eur_h=round(Ccorr-lignes[imin]["C_eleve"],2),
+    gain_annuel_eur=round((round(Ccorr,2)-lignes[imin]["C_eleve_arr"])*4000), trapezes=trap, C240_trap=round(C240_trap,4),
+    ecart_grille_continu=round(lignes[imin]["C_exact"]-res.fun,4))
+assert R["prev_B_calc"]["Cmin_grille"]==8.92 and R["prev_B_calc"]["gain_annuel_eur"]==16680
 # beta = 1 : pas d'optimum (C décroît avec T) — vérif
 cb1=[CB(T,1,100,180,1400) for T in [50,100,200,400,800]]; assert all(x>y for x,y in zip(cb1,cb1[1:]))
 R["prev_beta1"]=[round(x,3) for x in cb1]
@@ -137,8 +177,21 @@ assert R["trs"]["TRE"]==31.5
 # disponibilité "ligne" si toutes les pannes arrêtaient la ligne (série sans stock tampon)
 R["dispo_serie"]=dict(somme=float((Tr-tot)/Tr*100), produit=round(float(np.prod([ind[k]["Ao_pct"]/100 for k in ind]))*100,2))
 
-# ---------- 9. Coûts (exercice) ----------
-cd=sum(F(e["cout_direct_eur"]) for e in H); ci=sum(F(e["cout_indirect_eur"]) for e in H)
+# ---------- Convention de comptage : rechute après dépannage provisoire ----------
+ids_corr={e["id_evenement"] for e in corr}
+assert {"EX-0002","EX-0013"}<=ids_corr                      # dépannages : événements à part entière
+assert not ({"EX-0201","EX-0202"} & ids_corr)               # curatifs différés du samedi : hors N, ΣTA, MTTR
+assert all(e["hors_temps_ouverture"] and e["type_maintenance"]=="corrective_differee" and F(e["cout_direct_eur"])>0
+           for e in H if e["id_evenement"] in ("EX-0201","EX-0202"))   # ... mais leurs coûts directs comptent
+# exemple fictif : dépannage ETI-M1 à t = 100 h (TA = 0,5 + 0,25 + 0,5 = 1,25 h), rechute 40 h après la fin
+dep=next(m for E in U["equipements"] for m in E["modes"] if m["id_mode"]=="ETI-M1")["depannage_provisoire"]
+fict=[dict(debut=F(100), det=F("0.5"), rep=F(str(dep["duree_reparation_active_h"])), rs=F("0.5"))]
+fin1=fict[0]["debut"]+fict[0]["det"]+fict[0]["rep"]+fict[0]["rs"]
+fict.append(dict(debut=fin1+F(str(dep["reapparition_apres_h"])), det=F("0.5"), rep=F("0.75"), rs=F("0.5")))  # rechute, puis curatif à chaud
+Nf=len(fict); TAf=sum(x["det"]+x["rep"]+x["rs"] for x in fict); TRf=sum(x["rep"] for x in fict)
+assert Nf==2 and fict[1]["debut"]-fin1==40 and TAf==F("3.0") and TRf==1 and TRf/Nf==F("0.5")
+
+cd=sum(F(e["cout_direct_eur"]) for e in H); assert cd>=sum(F(e["cout_direct_eur"]) for e in corr)+460; ci=sum(F(e["cout_indirect_eur"]) for e in H)
 R["couts"]=dict(direct=float(cd), indirect=float(ci), total=float(cd+ci),
                 par_eq={k:(ind[k]["cout_direct_eur"],ind[k]["cout_indirect_eur"],ind[k]["cout_total_eur"]) for k in ind},
                 prev_direct=float(sum(F(e["cout_direct_eur"]) for e in H if e["hors_temps_ouverture"])),

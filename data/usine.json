@@ -15,7 +15,23 @@
     "produit": "Boisson plate aux fruits, bouteille PET 1 L",
     "marge_sur_cout_variable_eur_par_bouteille": 0.12,
     "cout_rebut_eur_par_bouteille": 0.2,
-    "coefficient_propagation_arret_hors_goulot": 1.0
+    "coefficient_propagation_arret_hors_goulot": 1.0,
+    "hors_specialite": {
+      "majoration_reparation_active_pct": 25.0,
+      "s_applique_a": "reparation_active",
+      "arrondi": "quart_heure_le_plus_proche",
+      "minimum_h": 0.25,
+      "s_applique_au_depannage_provisoire": true,
+      "concerne_sous_traitance": false,
+      "entre_dans_mttr": true,
+      "niveaux": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    }
   },
   "couts": {
     "taux_main_oeuvre_eur_par_h": 40.0,
@@ -24,6 +40,7 @@
     "sous_traitance_deplacement_eur": 150.0,
     "sous_traitance_delai_arrivee_h": 4.0,
     "majoration_express_pct": 50.0,
+    "taux_main_oeuvre_dimanche_eur_par_h": 80.0,
     "delai_express_h": 16.0,
     "cout_possession_stock_pct_par_an": 20.0,
     "penalite_arret_goulot_eur_par_h": 1200.0,
@@ -41,6 +58,173 @@
       "cout_eur": 1000.0
     }
   ],
+  "evenements": {
+    "niveau_1": "Aucun événement à effet chiffré (E01 à E07 désactivés) ; E08 cosmétique tiré sur un PRNG séparé.",
+    "liste": [
+      {
+        "id_evenement": "E01",
+        "designation": "Coupure électrique courte",
+        "niveaux": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "probabilite": 0.1,
+        "base_probabilite": "tour",
+        "max_par_partie": 1,
+        "effet_numerique": true,
+        "parametres": {
+          "duree_arret_ligne_h": 1.0,
+          "duree_coupure_reseau_h": 0.5,
+          "duree_redemarrage_h": 0.5,
+          "nb_rebuts_bouteilles": 500,
+          "categorie_nf_e60_182": "arret_induit_externe",
+          "compte_dans_n": false,
+          "compte_dans_somme_ta": false,
+          "reduit_temps_fonctionnement": true,
+          "defaillance_au_redemarrage_compte_dans_n": true
+        }
+      },
+      {
+        "id_evenement": "E02",
+        "designation": "Technicien malade",
+        "niveaux": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "probabilite": 0.08,
+        "base_probabilite": "tour",
+        "max_par_partie": null,
+        "effet_numerique": true,
+        "parametres": {
+          "duree_indisponibilite_tours": 1,
+          "nb_techniciens_concernes": 1
+        }
+      },
+      {
+        "id_evenement": "E03",
+        "designation": "Fournisseur en retard",
+        "niveaux": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "probabilite": 0.1,
+        "base_probabilite": "commande_standard",
+        "max_par_partie": null,
+        "effet_numerique": true,
+        "parametres": {
+          "retard_semaines": 1
+        }
+      },
+      {
+        "id_evenement": "E04",
+        "designation": "Pièce livrée fausse",
+        "niveaux": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "probabilite": 0.03,
+        "base_probabilite": "livraison",
+        "max_par_partie": null,
+        "effet_numerique": true,
+        "parametres": {}
+      },
+      {
+        "id_evenement": "E05",
+        "designation": "Audit qualité / hygiène",
+        "niveaux": [
+          4,
+          5,
+          6
+        ],
+        "probabilite": 1.0,
+        "base_probabilite": "partie",
+        "max_par_partie": 1,
+        "effet_numerique": true,
+        "parametres": {
+          "nb_bouteilles_lot_bloque": 10000,
+          "seuil_tq_pct": 98.0
+        }
+      },
+      {
+        "id_evenement": "E06",
+        "designation": "Commande urgente (pic d'été)",
+        "niveaux": [
+          5,
+          6
+        ],
+        "probabilite": 1.0,
+        "base_probabilite": "partie",
+        "max_par_partie": 1,
+        "effet_numerique": true,
+        "parametres": {
+          "majoration_volume_pct": 20.0,
+          "base_volume": "production_bonne_moyenne_des_tours_precedents",
+          "heures_production_samedi_h": 16.0,
+          "heures_ouverture_tour_h": 96.0,
+          "samedi_compte_dans_tr": true,
+          "creneau_maintenance_remplacement": "dimanche",
+          "si_dimanche_refuse": "report_au_samedi_suivant",
+          "minuteur_depannage_compte_le_samedi": true
+        }
+      },
+      {
+        "id_evenement": "E07",
+        "designation": "Canicule",
+        "niveaux": [
+          4,
+          5,
+          6
+        ],
+        "probabilite": 0.15,
+        "base_probabilite": "tour",
+        "max_par_partie": 1,
+        "effet_numerique": true,
+        "parametres": {
+          "multiplicateur_taux_defaillance": 1.5,
+          "duree_tours": 1,
+          "modes_concernes": [
+            "SOU-M1",
+            "REM-M2",
+            "REM-M3",
+            "ETI-M1",
+            "FAR-M1",
+            "CON-M1"
+          ],
+          "age_inchange": true,
+          "formule": "P = 1 - exp(-k * (H(t + dt) - H(t))), H(t) = ((t - gamma)/eta)^beta ; equivaut a eta' = eta / k^(1/beta) sur le seul increment"
+        }
+      },
+      {
+        "id_evenement": "E08",
+        "designation": "Visite d'un client avec la directrice",
+        "niveaux": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "probabilite": 1.0,
+        "base_probabilite": "partie",
+        "max_par_partie": 1,
+        "effet_numerique": false,
+        "parametres": {
+          "prng_separe": true
+        }
+      }
+    ]
+  },
   "pieces": [
     {
       "ref": "P-SOU-01",
@@ -182,6 +366,7 @@
           "id_mode": "SOU-M1",
           "id_sous_ensemble": "SOU-FOUR",
           "designation": "Claquage de lampe infrarouge",
+          "specialite": "electrique",
           "loi": "exponentielle",
           "beta": 1,
           "eta_h": 400,
@@ -196,12 +381,23 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "automatique (pyromètre)",
-          "probabilite_piece_en_stock": 0.95
+          "probabilite_piece_en_stock": 0.95,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.5,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 0.75,
+            "justification": null
+          }
         },
         {
           "id_mode": "SOU-M2",
           "id_sous_ensemble": "SOU-SOUF",
           "designation": "Fuite / blocage de vanne haute pression",
+          "specialite": "mecanique",
           "loi": "weibull",
           "beta": 2,
           "eta_h": 800,
@@ -216,7 +412,17 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "opérateur (bouteilles mal formées)",
-          "probabilite_piece_en_stock": 0.8
+          "probabilite_piece_en_stock": 0.8,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 1.0,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 1.25,
+            "justification": null
+          }
         }
       ],
       "mtbf_theorique_equipement_h": null
@@ -251,6 +457,7 @@
           "id_mode": "REM-M1",
           "id_sous_ensemble": "REM-VAN",
           "designation": "Fuite de joint de vanne (sous-remplissage)",
+          "specialite": "mecanique",
           "loi": "weibull",
           "beta": 3,
           "eta_h": 300,
@@ -267,12 +474,30 @@
             "P-REM-02"
           ],
           "mode_detection": "opérateur (fuite visible ; pas de contrôleur pondéral en ligne)",
-          "probabilite_piece_en_stock": 0.95
+          "probabilite_piece_en_stock": 0.95,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 1.0,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 1.25,
+            "justification": null
+          },
+          "periode_optimale": {
+            "modele": "remplacement_periodique_reparation_minimale",
+            "cout_preventif_eur": 1000.0,
+            "cout_defaillance_moyen_eur": 4000.0,
+            "periode_optimale_h": 150.0,
+            "periode_retenue_semaines": 2
+          }
         },
         {
           "id_mode": "REM-M2",
           "id_sous_ensemble": "REM-MES",
           "designation": "Dérive / panne de sonde de niveau",
+          "specialite": "electrique",
           "loi": "exponentielle",
           "beta": 1,
           "eta_h": 600,
@@ -287,12 +512,23 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "contrôle qualité (niveaux hors tolérance)",
-          "probabilite_piece_en_stock": 0.0
+          "probabilite_piece_en_stock": 0.0,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 1.25,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 1.5,
+            "justification": null
+          }
         },
         {
           "id_mode": "REM-M3",
           "id_sous_ensemble": "REM-ENT",
           "designation": "Défaillance du motoréducteur du carrousel",
+          "specialite": "mecanique",
           "loi": "weibull",
           "beta": 2,
           "eta_h": 4000,
@@ -307,7 +543,17 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "bruit / vibration (ronde)",
-          "probabilite_piece_en_stock": 0.0
+          "probabilite_piece_en_stock": 0.0,
+          "depannage_provisoire": {
+            "autorise": false,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 8.75,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 11.0,
+            "justification": "Motoréducteur rompu : aucune action provisoire ne rétablit l'entraînement du carrousel, seul le remplacement le fait."
+          }
         }
       ],
       "mtbf_theorique_equipement_h": null
@@ -334,6 +580,7 @@
           "id_mode": "BOU-M1",
           "id_sous_ensemble": "BOU-TET",
           "designation": "Usure d'embrayage de tête de vissage (couple hors tolérance)",
+          "specialite": "mecanique",
           "loi": "weibull",
           "beta": 2,
           "eta_h": 500,
@@ -346,14 +593,34 @@
           "pieces_corrective": [
             "P-BOU-01"
           ],
-          "pieces_preventive": [],
+          "pieces_preventive": [
+            "P-BOU-01"
+          ],
           "mode_detection": "contrôle de couple",
-          "probabilite_piece_en_stock": 0.9
+          "probabilite_piece_en_stock": 0.9,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.75,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 1.0,
+            "justification": null
+          },
+          "periode_optimale": {
+            "modele": "remplacement_selon_age",
+            "cout_preventif_eur": 1000.0,
+            "cout_defaillance_moyen_eur": 5800.0,
+            "periode_optimale_h": 232.3,
+            "periode_retenue_semaines": 3
+          }
         },
         {
           "id_mode": "BOU-M2",
           "id_sous_ensemble": "BOU-ALI",
           "designation": "Bourrage de l'alimentation bouchons",
+          "specialite": "mecanique",
           "loi": "exponentielle",
           "beta": 1,
           "eta_h": 1000,
@@ -366,7 +633,17 @@
           "pieces_corrective": [],
           "pieces_preventive": [],
           "mode_detection": "automatique (détecteur de bourrage)",
-          "probabilite_piece_en_stock": 1.0
+          "probabilite_piece_en_stock": 1.0,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.5,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 0.75,
+            "justification": null
+          }
         }
       ],
       "mtbf_theorique_equipement_h": null
@@ -393,6 +670,7 @@
           "id_mode": "ETI-M1",
           "id_sous_ensemble": "ETI-DET",
           "designation": "Défaut de cellule de détection d'étiquette",
+          "specialite": "electrique",
           "loi": "exponentielle",
           "beta": 1,
           "eta_h": 100,
@@ -407,12 +685,23 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "automatique (défaut machine)",
-          "probabilite_piece_en_stock": 0.9
+          "probabilite_piece_en_stock": 0.9,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.25,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 0.25,
+            "justification": null
+          }
         },
         {
           "id_mode": "ETI-M2",
           "id_sous_ensemble": "ETI-POS",
           "designation": "Usure de la brosse de pose",
+          "specialite": "mecanique",
           "loi": "weibull",
           "beta": 2,
           "eta_h": 1000,
@@ -427,7 +716,17 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "opérateur (étiquette mal posée)",
-          "probabilite_piece_en_stock": 0.9
+          "probabilite_piece_en_stock": 0.9,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.5,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 0.75,
+            "justification": null
+          }
         }
       ],
       "mtbf_theorique_equipement_h": null
@@ -454,6 +753,7 @@
           "id_mode": "FAR-M1",
           "id_sous_ensemble": "FAR-FOUR",
           "designation": "Rupture de résistance du four",
+          "specialite": "electrique",
           "loi": "exponentielle",
           "beta": 1,
           "eta_h": 1000,
@@ -468,12 +768,23 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "automatique (température)",
-          "probabilite_piece_en_stock": 0.9
+          "probabilite_piece_en_stock": 0.9,
+          "depannage_provisoire": {
+            "autorise": false,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.5,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 0.75,
+            "justification": "Résistance coupée : on ne la « dépanne » pas, et shunter ou neutraliser une protection du four serait dangereux. Seul le remplacement convient."
+          }
         },
         {
           "id_mode": "FAR-M2",
           "id_sous_ensemble": "FAR-FILM",
           "designation": "Émoussement de la lame de coupe",
+          "specialite": "mecanique",
           "loi": "weibull",
           "beta": 3,
           "eta_h": 400,
@@ -488,7 +799,17 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "opérateur (film mal coupé)",
-          "probabilite_piece_en_stock": 0.95
+          "probabilite_piece_en_stock": 0.95,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.25,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 0.25,
+            "justification": null
+          }
         }
       ],
       "mtbf_theorique_equipement_h": null
@@ -515,6 +836,7 @@
           "id_mode": "CON-M1",
           "id_sous_ensemble": "CON-CMD",
           "designation": "Défaut de jeunesse après rénovation (variateur, carte E/S, paramétrage)",
+          "specialite": "electrique",
           "loi": "weibull",
           "beta": 0.5,
           "eta_h": 100,
@@ -530,12 +852,23 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "automatique (défaut variateur / défaut bus E/S)",
-          "probabilite_piece_en_stock": 0.9
+          "probabilite_piece_en_stock": 0.9,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.25,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 0.25,
+            "justification": null
+          }
         },
         {
           "id_mode": "CON-M2",
           "id_sous_ensemble": "CON-MEC",
           "designation": "Usure / allongement de chaîne",
+          "specialite": "mecanique",
           "loi": "weibull",
           "beta": 2,
           "eta_h": 2000,
@@ -550,7 +883,17 @@
           ],
           "pieces_preventive": [],
           "mode_detection": "ronde (mesure d'allongement)",
-          "probabilite_piece_en_stock": 0.9
+          "probabilite_piece_en_stock": 0.9,
+          "depannage_provisoire": {
+            "autorise": true,
+            "ratio_reparation_active": 0.4,
+            "duree_reparation_active_h": 0.75,
+            "pieces": [],
+            "reapparition_apres_h": 40.0,
+            "annule_par_curatif_differe": true,
+            "duree_reparation_active_hors_specialite_h": 1.0,
+            "justification": null
+          }
         }
       ],
       "mtbf_theorique_equipement_h": null

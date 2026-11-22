@@ -21,13 +21,17 @@ export {
 } from "./partie";
 export type { ChoixIntervention, Decision, EvenementPartie, Partie, Phase } from "./partie";
 export { graineDepuisTexte } from "./prng";
-export { calculerScore, creditChamp, etoiles, noteSur20, OBJECTIF_DO_PCT, POIDS_NIVEAU_1 } from "./score";
+export { calculerScore, creditChamp, etoiles, noteSur20, OBJECTIF_AO_PCT, POIDS_NIVEAU_1 } from "./score";
 export { evaluerSaisie, parserNombre } from "./saisie";
 export {
+  actionsProposees,
+  depannageAutorise,
   heuresParSemaine,
+  modeQuelconque,
   modesNiveau1,
   piecesNiveau1,
   politiqueRemM1,
+  regleDepannage,
   remplisseuse,
   tauxPossessionSemaine,
   usine,
