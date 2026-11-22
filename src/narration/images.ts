@@ -18,7 +18,12 @@ export function urlPublic(chemin: string): string {
   return joindreBase(import.meta.env.BASE_URL || "/", chemin);
 }
 
-/** Le WebP ou le PNG décrit dans les données. Le SVG de remplacement a le même nom. */
+/** Le WebP généré porte le même nom que la source, quelle que soit l'extension citée. */
+export function cheminWebp(fichier: string): string {
+  return fichier.replace(/\.(webp|png|jpe?g)$/i, ".webp");
+}
+
+/** Silhouette de repli, même nom. */
 export function cheminSvg(fichier: string): string {
   return fichier.replace(/\.(webp|png|jpe?g)$/i, ".svg");
 }

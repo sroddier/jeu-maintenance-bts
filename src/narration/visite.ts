@@ -1,15 +1,22 @@
+import type { EvenementSpecial } from "../sim/types";
+import { usine } from "../sim/usine";
 import { evenementParId } from "./contenu";
-import { semaineVisiteClient } from "./prng";
+import { tirageCanal } from "./prng";
 
 /**
- * E08, visite client. Cosmétique : aucun effet, aucun tirage du PRNG de simulation.
- * E01 à E07 ne sont pas joués : leurs paramètres chiffrés arriveront dans usine.json
- * (`evenements.liste`) et leurs effets feront l'objet d'une PR ultérieure.
- * Au niveau 1, E08 est la seule carte possible.
+ * Lit `usine.json` → `evenements.liste`.
+ * Seuls les événements sans effet chiffré sont affichés. E01 à E07 restent dans les données
+ * et ne sont pas appliqués : leur moteur viendra plus tard.
+ * Au niveau 1, la liste ne retient que E08 (cosmétique, PRNG séparé).
  */
-export function idsEvenementsAffiches(niveau: number): readonly string[] {
-  if (niveau < 1) return [];
-  return ["E08"];
+export function evenementsAffichables(niveau: number, source = usine): EvenementSpecial[] {
+  return source.evenements.liste.filter(
+    (evenement) => evenement.niveaux.includes(niveau) && evenement.effet_numerique === false,
+  );
+}
+
+export function idsEvenementsAffiches(niveau: number): string[] {
+  return evenementsAffichables(niveau).map((evenement) => evenement.id_evenement);
 }
 
 export function carteVisiteClient(
@@ -17,14 +24,18 @@ export function carteVisiteClient(
   tour: number,
   nbTours: number,
   niveau: number,
-): { id_evenement: "E08"; nom: string; personnage: string; image: string; semaine: number } | null {
-  if (!idsEvenementsAffiches(niveau).includes("E08")) return null;
-  const semaine = semaineVisiteClient(seedSimulation, nbTours);
+): { id_evenement: string; nom: string; personnage: string; image: string; semaine: number } | null {
+  const evenement = evenementsAffichables(niveau).find((item) => item.parametres.prng_separe === true);
+  if (!evenement || evenement.max_par_partie === 0 || nbTours < 1) return null;
+  const passage = tirageCanal(seedSimulation, `${evenement.id_evenement}:passage`);
+  if (passage.valeur >= evenement.probabilite) return null;
+  const quand = tirageCanal(seedSimulation, `${evenement.id_evenement}:semaine`);
+  const semaine = 1 + Math.min(nbTours - 1, Math.floor(quand.valeur * nbTours));
   if (tour !== semaine) return null;
-  const texte = evenementParId("E08");
+  const texte = evenementParId(evenement.id_evenement);
   if (!texte) return null;
   return {
-    id_evenement: "E08",
+    id_evenement: evenement.id_evenement,
     nom: texte.nom,
     personnage: texte.personnage,
     image: texte.image,

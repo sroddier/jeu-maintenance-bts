@@ -1,13 +1,11 @@
+import { modesNiveau1 } from "../sim/usine";
 import { blaguePersonnage, personnageParId, reactionParId, reactions, seuilColere, objectifAoPct } from "./contenu";
 import type { EtatNarratif } from "./etat";
 import { PORTRAIT_FACHEE } from "./images";
 
-/**
- * Au-delà de cette avance sur le samedi, Lucas prévient que le dépannage
- * ne tiendra pas. Ce seuil ne modifie pas les durées : le moteur fait toujours
- * tenir le palliatif jusqu'au samedi.
- */
-export const SEUIL_PALLIATIF_H = 40;
+/** Réapparition lue dans usine.json (`depannage_provisoire`), pas une durée recodée. */
+export const SEUIL_PALLIATIF_H = modesNiveau1().find((mode) => mode.depannage_provisoire.autorise)
+  ?.depannage_provisoire.reapparition_apres_h ?? 0;
 
 const FAMILLE: Record<string, number> = {
   "colère directrice": 70,
@@ -163,7 +161,7 @@ function candidatsDe(
 function candidatsMultiples(id: string, etat: EtatNarratif, famille: string, vues: ReadonlySet<string>): Candidat[] | null {
   if (id === "R07") {
     return etat.palliatifs
-      .filter((item) => item.heuresAvantSamedi > SEUIL_PALLIATIF_H && !vues.has(`R07@${item.cle}`))
+      .filter((item) => item.heuresAvantSamedi > item.reapparitionApresH && !vues.has(`R07@${item.cle}`))
       .map((item) => ({ id, cle: `R07@${item.cle}`, famille, precision: item.cle, masquerAussi: [] }));
   }
   if (id === "R08") {
@@ -205,11 +203,11 @@ function correspond(id: string, etat: EtatNarratif): boolean {
     case "R11":
       return false;
     case "R12":
-      return etat.depensesEur + 1e-9 >= etat.budgetEur * 0.75;
+      return etat.budgetEur > 0 && etat.depensesEur + 1e-9 >= etat.budgetEur * 0.75;
     case "R13":
-      return etat.depensesEur + 1e-9 >= etat.budgetEur * 0.9;
+      return etat.budgetEur > 0 && etat.depensesEur + 1e-9 >= etat.budgetEur * 0.9;
     case "R14":
-      return etat.depensesEur > etat.budgetEur + 1e-9;
+      return etat.budgetEur > 0 && etat.depensesEur > etat.budgetEur + 1e-9;
     case "R15":
       return etat.preventifRealise && (etat.phase === "evenements" || etat.phase === "bilan");
     case "R16":

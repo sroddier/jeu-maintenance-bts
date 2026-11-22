@@ -1,4 +1,4 @@
-import { mkdir, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -48,5 +48,11 @@ for (const fichier of fichiers) {
     .resize({ width: largeurMax(base), withoutEnlargement: true })
     .webp({ quality: 80 })
     .toFile(sortie);
-  console.log(`${path.relative(source, fichier)} → ${path.relative(".", sortie)}`);
+  const poids = (await stat(sortie)).size;
+  console.log(`${path.relative(source, fichier)} → ${path.relative(".", sortie)} (${Math.round(poids / 1024)} Ko)`);
 }
+const total = (await Promise.all((await lister(source)).map(async (fichier) => {
+  const base = path.basename(fichier, path.extname(fichier));
+  return (await stat(path.join(destination, `${base}.webp`))).size;
+}))).reduce((somme, taille) => somme + taille, 0);
+console.log(`Total WebP : ${(total / 1024 / 1024).toFixed(1)} Mo (${Math.round(total / 1024)} Ko), qualité 80`);

@@ -8,6 +8,7 @@ import {
   IMAGE_MAGASIN,
   IMAGE_TITRE,
   cheminSvg,
+  cheminWebp,
   imageDePhase,
   slotParFichier,
   urlPublic,
@@ -208,15 +209,7 @@ function creerAnecdote(blague: Blague, phase: string): HTMLElement {
   bloc.dataset.blague = blague.id;
   const personnageId = personnageBlague(phase);
   const personnage = personnageId ? personnageParId(personnageId) : undefined;
-  if (personnage) {
-    const portrait = document.createElement("img");
-    portrait.className = "nar-blague-portrait";
-    portrait.src = urlPublic(cheminSvg(personnage.portrait));
-    portrait.width = 64;
-    portrait.height = 64;
-    portrait.alt = "";
-    bloc.append(portrait);
-  }
+  if (personnage) bloc.append(creerPortrait(personnage.portrait, 64, ""));
   const texte = document.createElement("p");
   const titre = document.createElement("span");
   titre.className = "nar-kicker";
@@ -226,6 +219,34 @@ function creerAnecdote(blague: Blague, phase: string): HTMLElement {
   texte.append(titre, corps);
   bloc.append(texte);
   return bloc;
+}
+
+function creerPortrait(fichier: string, taille: number, alt: string): HTMLElement {
+  const cadre = document.createElement("span");
+  cadre.className = "nar-portrait-cadre";
+  cadre.style.width = `${taille}px`;
+  cadre.style.height = `${taille}px`;
+  cadre.style.flex = `0 0 ${taille}px`;
+  const silhouette = document.createElement("img");
+  silhouette.className = "nar-portrait";
+  silhouette.src = urlPublic(cheminSvg(fichier));
+  silhouette.alt = alt;
+  silhouette.width = taille;
+  silhouette.height = taille;
+  const photo = document.createElement("img");
+  photo.className = "nar-portrait-photo";
+  photo.src = urlPublic(cheminWebp(fichier));
+  photo.alt = "";
+  photo.width = taille;
+  photo.height = taille;
+  photo.loading = "lazy";
+  photo.decoding = "async";
+  photo.addEventListener("load", () => {
+    if (photo.naturalWidth > 0) photo.classList.add("prete");
+  });
+  photo.addEventListener("error", () => photo.remove());
+  cadre.append(silhouette, photo);
+  return cadre;
 }
 
 function creerVisuel(fichier: string, classe: string): HTMLElement {
@@ -244,14 +265,17 @@ function creerVisuel(fichier: string, classe: string): HTMLElement {
   silhouette.height = height;
   const photo = document.createElement("img");
   photo.className = "nar-photo";
-  photo.src = urlPublic(fichier);
+  photo.src = urlPublic(cheminWebp(fichier));
   photo.alt = "";
   photo.width = width;
   photo.height = height;
   photo.loading = "lazy";
   photo.decoding = "async";
   photo.addEventListener("load", () => {
-    if (photo.naturalWidth > 0) photo.classList.add("prete");
+    if (photo.naturalWidth > 0) {
+      photo.classList.add("prete");
+      legende.hidden = true;
+    }
   });
   photo.addEventListener("error", () => photo.remove());
   const legende = document.createElement("figcaption");
@@ -282,27 +306,7 @@ function peindreBulle(bulle: Bulle | null): void {
   if (bulle.lieu) bulleEl.append(creerVisuel(bulle.lieu, "nar-bulle-lieu"));
   const corps = document.createElement("div");
   corps.className = "nar-bulle-corps";
-  if (bulle.portrait) {
-    const portrait = document.createElement("img");
-    portrait.className = "nar-portrait";
-    portrait.src = urlPublic(cheminSvg(bulle.portrait));
-    portrait.width = 72;
-    portrait.height = 72;
-    portrait.alt = personnage?.nom ?? "";
-    const photo = document.createElement("img");
-    photo.className = "nar-portrait-photo";
-    photo.src = urlPublic(bulle.portrait);
-    photo.alt = "";
-    photo.width = 72;
-    photo.height = 72;
-    photo.loading = "lazy";
-    photo.addEventListener("load", () => photo.classList.add("prete"));
-    photo.addEventListener("error", () => photo.remove());
-    const cadre = document.createElement("span");
-    cadre.className = "nar-portrait-cadre";
-    cadre.append(portrait, photo);
-    corps.append(cadre);
-  }
+  if (bulle.portrait) corps.append(creerPortrait(bulle.portrait, 72, personnage?.nom ?? ""));
   const mots = document.createElement("div");
   const nom = document.createElement("p");
   nom.className = "nar-nom";
@@ -369,14 +373,9 @@ function peindreIntro(): void {
   if (guide) {
     const qui = document.createElement("p");
     qui.className = "nar-guide";
-    const portrait = document.createElement("img");
-    portrait.src = urlPublic(cheminSvg(guide.portrait));
-    portrait.width = 56;
-    portrait.height = 56;
-    portrait.alt = "";
     const nom = document.createElement("span");
     nom.textContent = `${guide.nom} · ${guide.role}`;
-    qui.append(portrait, nom);
+    qui.append(creerPortrait(guide.portrait, 56, ""), nom);
     carte.append(qui);
   }
   for (const paragraphe of ecran.texte) {

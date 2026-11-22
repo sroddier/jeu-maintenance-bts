@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { choisirBlague } from "../src/narration/blagues";
 import {
@@ -12,15 +12,14 @@ import {
   reactions,
 } from "../src/narration/contenu";
 import { arretDansSemaine, heureAlerteVendredi, lireEtat, type EtatNarratif } from "../src/narration/etat";
-import { joindreBase, slotsImages } from "../src/narration/images";
+import { joindreBase, cheminWebp, slotsImages } from "../src/narration/images";
 import { evaluerReactions, memoireVide, niveauInclus, SEUIL_PALLIATIF_H } from "../src/narration/reactions";
-import { graineNarrative, semaineVisiteClient } from "../src/narration/prng";
+import { graineNarrative } from "../src/narration/prng";
 import { idsEvenementsAffiches, carteVisiteClient } from "../src/narration/visite";
 import { demarrer } from "../src/sim/partie";
 import { graineDepuisTexte } from "../src/sim/prng";
-import { OBJECTIF_DO_PCT } from "../src/sim/score";
+import { OBJECTIF_AO_PCT } from "../src/sim/score";
 import { heuresParSemaine, remplisseuse, usine } from "../src/sim/usine";
-import narratif from "../data/narratif.json";
 
 function etat(partiel: Partial<EtatNarratif> = {}): EtatNarratif {
   return {
@@ -67,8 +66,8 @@ describe("réactions", () => {
     expect(ids({ phase: "bilan", aoSemainePct: 92 })).toContain("R05");
     expect(ids({ phase: "bilan", trsPct: 70 })).not.toContain("R06");
     expect(ids({ niveau: 2, phase: "bilan", trsPct: 65 })).toContain("R06");
-    expect(ids({ palliatifs: [{ cle: "PA-1", heuresAvantSamedi: SEUIL_PALLIATIF_H }] })).not.toContain("R07");
-    expect(ids({ palliatifs: [{ cle: "PA-1", heuresAvantSamedi: SEUIL_PALLIATIF_H + 1 }] })).toContain("R07");
+    expect(ids({ palliatifs: [{ cle: "PA-1", heuresAvantSamedi: SEUIL_PALLIATIF_H, reapparitionApresH: SEUIL_PALLIATIF_H }] })).not.toContain("R07");
+    expect(ids({ palliatifs: [{ cle: "PA-1", heuresAvantSamedi: SEUIL_PALLIATIF_H + 1, reapparitionApresH: SEUIL_PALLIATIF_H }] })).toContain("R07");
     expect(ids({ apresVendredi13: true, palliatifsSansCuratif: [{ cle: "PA-2" }] })).toContain("R08");
     expect(ids({ curatifsSansPiece: [{ cle: "PA-3", ref: "P-REM-03" }] })).toContain("R09");
     expect(ids({ stocksSousMini: [{ ref: "P-REM-03" }] })).toContain("R10");
@@ -141,17 +140,21 @@ describe("réactions", () => {
 });
 
 describe("visite client et blagues", () => {
-  it("n'affiche que E08, sur un PRNG séparé de la simulation", () => {
+  it("n'affiche que E08, lu dans usine.json, sur un PRNG séparé", () => {
+    expect(usine.evenements.liste.map((evenement) => evenement.id_evenement)).toEqual([
+      "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08",
+    ]);
+    expect(idsEvenementsAffiches(1)).toEqual(
+      usine.evenements.liste.filter((evenement) => evenement.niveaux.includes(1) && !evenement.effet_numerique).map((evenement) => evenement.id_evenement),
+    );
     expect(idsEvenementsAffiches(1)).toEqual(["E08"]);
     expect(idsEvenementsAffiches(4)).toEqual(["E08"]);
     expect(graineNarrative(2026)).toBe(2027);
     expect(graineNarrative(2026)).not.toBe(graineDepuisTexte("2026"));
-    const semaine = semaineVisiteClient(2026, 8);
-    expect(semaineVisiteClient(2026, 8)).toBe(semaine);
-    expect(semaine).toBeGreaterThanOrEqual(1);
-    expect(semaine).toBeLessThanOrEqual(8);
-    expect(carteVisiteClient(2026, semaine, 8, 1)?.id_evenement).toBe("E08");
-    expect(carteVisiteClient(2026, semaine === 1 ? 2 : 1, 8, 1)).toBeNull();
+    const tours = [1, 2, 3, 4, 5, 6, 7, 8].filter((tour) => carteVisiteClient(2026, tour, 8, 1));
+    expect(tours).toHaveLength(1);
+    expect(carteVisiteClient(2026, tours[0]!, 8, 1)?.id_evenement).toBe("E08");
+    expect(carteVisiteClient(2026, tours[0]!, 8, 1)?.nom).toBe("Visite d'un client avec la directrice");
     const partie = demarrer("2026", "camille");
     const avant = structuredClone(partie);
     carteVisiteClient(partie.seed, 1, 8, 1);
@@ -184,7 +187,8 @@ describe("cohérence avec usine.json", () => {
       const texte = `${reaction?.replique ?? ""} ${reaction?.condition ?? ""}`;
       expect(contientNombre(texte, paliersColere[index]!.seuil_h * penalite)).toBe(true);
     }
-    expect(objectifAoPct(1)).toBe(OBJECTIF_DO_PCT);
+    expect(objectifAoPct(1)).toBe(OBJECTIF_AO_PCT);
+    expect(SEUIL_PALLIATIF_H).toBe(40);
     expect(ecransIntro).toHaveLength(7);
     expect(boutonPasser).toBe("Passer la visite");
     expect(contientNombre(ecran("SOU").fait_cle, cadence("SOU"))).toBe(true);
@@ -209,8 +213,7 @@ describe("cohérence avec usine.json", () => {
       expect(Object.keys(evenement).sort()).toEqual(["id_evenement", "image", "nom", "personnage"]);
       expect(personnages.some((personnage) => personnage.id === evenement.personnage)).toBe(true);
     }
-    const brut = JSON.stringify(narratif.evenements);
-    expect(brut).not.toMatch(/probabilite|frequence|cout_eur|niveaux|effet/i);
+    expect(JSON.stringify(evenementsTexte)).not.toMatch(/probabilite|frequence|cout_eur/);
   });
 
   it("relie les 31 images à une silhouette", () => {
@@ -218,8 +221,10 @@ describe("cohérence avec usine.json", () => {
     expect(slots).toHaveLength(31);
     const fichiers = new Set(readdirSync("public/assets/img"));
     for (const slot of slots) {
-      const nom = slot.fichier.split("/").pop()?.replace(/\.(webp|png)$/i, ".svg");
-      expect(fichiers.has(nom ?? "")).toBe(true);
+      const base = slot.fichier.split("/").pop()?.replace(/\.(webp|png)$/i, "") ?? "";
+      expect(fichiers.has(`${base}.svg`), base).toBe(true);
+      expect(existsSync(`assets-src/${base}.png`), base).toBe(true);
+      expect(existsSync(`public/assets/img/${cheminWebp(slot.fichier).split("/").pop() ?? ""}`), base).toBe(true);
       expect(slot.width).toBeGreaterThan(0);
       expect(slot.height).toBeGreaterThan(0);
     }
@@ -236,6 +241,7 @@ describe("cohérence avec usine.json", () => {
     const avant = structuredClone(partie);
     const lu = lireEtat(partie);
     expect(lu.stocksSousMini.map((stock) => stock.ref)).toContain("P-REM-03");
+    expect(lu.budgetEur).toBe(0);
     expect(lu.arretSemaineH).toBe(0);
     expect(evaluerReactions(lu, memoireVide()).reactions.map((reaction) => reaction.id)).toEqual(["R10"]);
     expect(partie).toEqual(avant);

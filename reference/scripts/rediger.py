@@ -10,7 +10,7 @@ def fr(x, d=None):
             d = 0 if float(x).is_integer() else (1 if round(x,1)==x else (2 if round(x,2)==x else 4))
         s=f"{x:,.{d}f}".replace(","," ").replace(".",",")
     return s
-I=R["indicateurs"]; T=R["trs"]; W=R["weibull"]; PA=R["prev_A"]; PB=R["prev_B"]; C=R["couts"]; CF=R["calc_fiab"]; GT=R["gamma_table"]
+I=R["indicateurs"]; T=R["trs"]; W=R["weibull"]; PA=R["prev_A"]; PB=R["prev_B"]; PBC=R["prev_B_calc"]; C=R["couts"]; CF=R["calc_fiab"]; GT=R["gamma_table"]
 EQ={e["id_equipement"]:e for e in U["equipements"]}
 NOMS={"SOU":"Souffleuse","REM":"Remplisseuse","BOU":"Boucheuse","ETI":"Étiqueteuse","FAR":"Fardeleuse","CON":"Convoyeurs"}
 ORD=["SOU","CON","REM","BOU","ETI","FAR"]
@@ -86,12 +86,12 @@ Alignée sur la boucle du GDD (1 tour = 1 semaine = 80 h d'ouverture ; phases Pl
 | 2 | La ligne et son goulot | 1re | cadences, goulot, Ai/Ao, disponibilité d'une ligne en série, TRS = Do × Tp × Tq, coût d'arrêt | C41, C51 |
 | 3 | Anticiper l'usure | 1re → 2e | lois exponentielle et Weibull, R(t), λ(t), MTBF de Weibull, préventif systématique / conditionnel / prévisionnel, stock mini | C21, C22, C23, C52 |
 | 4 | Où agir d'abord ? | 2e | Pareto (N, temps d'arrêt, coûts), ABC du stock, ajustement de Weibull, choix de politique selon β | C51, C52 |
-| 5 | Optimiser et maîtriser les risques | 2e | période optimale de préventif, AMDEC (C = F × G × D), coût global | C31, C51, C52, C53 |
+| 5 | Optimiser et maîtriser les risques | 2e | période optimale (2 modèles : réparation minimale, remplacement selon l'âge), AMDEC (C = F × G × D), coût global | C31, C51, C52, C53 |
 | 6 | Bilan annuel du service | 2e | TRS/TRG/TRE, coûts directs et indirects, budget, compte rendu et soutenance | C24, C33, C51, C53 |
 
 ### Niveau 1 — Premier poste : la remplisseuse tombe en panne (1re année)
 - **Objectifs** : distinguer une action **palliative** (dépannage, réparation provisoire) d'une action **curative** (réparation durable), et un correctif **immédiat** d'un correctif **différé**. Lire un historique GMAO, séparer temps de bon fonctionnement (TBF) et temps d'arrêt (TA), et calculer MTBF, MTTR et MDT.
-- **Mécanique de jeu côté métier** : 1 machine (la remplisseuse, goulot), 2 techniciens. Le préventif « joints toutes les 4 semaines » est **imposé et non modifiable**. À chaque panne, le joueur choisit dépannage provisoire (rapide, la panne revient) ou réparation (plus long, durable), interne ou sous-traitance, et attente ou commande express de la pièce. En phase Bilan, il saisit MTBF, MTTR et MDT.
+- **Mécanique de jeu côté métier** : 1 machine (la remplisseuse, goulot), 2 techniciens. Le préventif « joints toutes les 4 semaines » est **imposé et non modifiable**. À chaque panne, le joueur choisit dépannage provisoire (rapide, la panne revient) ou réparation (plus long, durable). Le dépannage suit la règle du § 3.2 : réparation active = 40 % de celle du mode arrondie au ¼ h, sans pièce, et réapparition après 40 h d'ouverture sauf curatif différé le samedi. Il choisit aussi interne ou sous-traitance, et attente ou commande express de la pièce. En phase Bilan, il saisit MTBF, MTTR et MDT.
 - **Compétences** : C11 (hypothèses de panne : choix guidé du sous-ensemble défaillant), C12 et C13 (rétablir, remettre en service), C24 (bon de travail renseigné dans la GMAO), C51 (indicateurs de fiabilité et de maintenabilité).
 - **Critères d'évaluation** : indicateurs justes (tolérances, § 7) ; décomposition correcte du TA (détection, attente, réparation, remise en service) ; BT complet ; pas de dépannage provisoire laissé sans correctif différé.
 - **Objectif chiffré / passage** : Ao de la remplisseuse ≥ 92 % sur la partie ; ≥ 2★ et ≥ 70 % de calculs justes (règle du GDD).
@@ -118,10 +118,10 @@ Alignée sur la boucle du GDD (1 tour = 1 semaine = 80 h d'ouverture ; phases Pl
 - **Passage** : coût indirect des arrêts réduit d'au moins 20 % par rapport à la partie de référence « tout correctif ».
 
 ### Niveau 5 — Optimiser et maîtriser les risques (2e année)
-- **Objectifs** : calculer une **période optimale** de remplacement préventif ; mener une **AMDEC** sur la remplisseuse (C = F × G × D), hiérarchiser et proposer des actions qui font baisser F, G ou D ; raisonner en **coût global**.
-- **Mécanique** : le joueur règle la période de remplacement des joints de vannes et voit la courbe coût par heure ; il cote 4 modes AMDEC et choisit des améliorations (contrôleur pondéral en ligne, capteur de vibration, etc.) avec leur coût et leur effet sur F, G ou D.
+- **Objectifs** : calculer une **période optimale** de remplacement préventif avec **les deux modèles** (réparation minimale : joints de la remplisseuse, T* = 150 h par formule ; remplacement selon l'âge : têtes de la boucheuse, tableau de C(T) sur 6 valeurs de T, minimum à 240 h), et savoir choisir le modèle selon l'effet de la réparation ; mener une **AMDEC** sur la remplisseuse (C = F × G × D), hiérarchiser et proposer des actions qui font baisser F, G ou D ; raisonner en **coût global**.
+- **Mécanique** : le joueur règle la période de remplacement des joints de vannes (modèle A) et des têtes de vissage (modèle B, en tours), et voit la courbe du coût par heure comparée à la ligne « tout correctif » Cc/MTBF ; il cote 4 modes AMDEC et choisit des améliorations (contrôleur pondéral en ligne, capteur de vibration, etc.) avec leur coût et leur effet sur F, G ou D.
 - **Compétences** : C31 (« le besoin est analysé, les données technico-économiques sont repérées ; le choix de la solution est pertinent et argumenté »), C51, C52, C53 (planification).
-- **Critères** : T* juste ; criticités justes ; actions qui ciblent les modes au-dessus du seuil ; coût global en baisse.
+- **Critères** : T* (modèle A) et tableau de C(T) (modèle B) justes, avec le bon modèle choisi ; criticités justes ; actions qui ciblent les modes au-dessus du seuil ; coût global en baisse.
 - **Passage** : coût global ≤ 90 % de la partie de référence ; ≥ 2★.
 
 ### Niveau 6 — Bilan annuel du service (2e année, synthèse notée)
@@ -172,6 +172,30 @@ A(f"""
 - **β = 1 (SOU-M1, REM-M2, BOU-M2, ETI-M1, FAR-M1)** : pannes aléatoires (électronique, lampes, bourrages). Le taux est **constant** : changer une pièce qui fonctionne ne réduit pas le risque. La bonne réponse est le **correctif bien organisé** (pièce en stock, détection rapide) ou le **conditionnel** si un signe avant-coureur existe.
 - **β = 2 ou 3 (SOU-M2, REM-M1, REM-M3, BOU-M1, ETI-M2, FAR-M2, CON-M2)** : usure. Le **préventif systématique** devient rentable si Cp ≪ Cc (§ 6.8). Le **conditionnel** est préféré quand une grandeur mesurable annonce la panne (vibrations du motoréducteur REM-M3, allongement de chaîne CON-M2).
 - **γ > 0 (FAR-M2, γ = 100 h)** : une lame neuve ne s'émousse pas avant 100 h de coupe (durée sans défaillance).
+
+#### Dépannage provisoire (action palliative) : règle du jeu
+
+Chaque mode porte un objet `depannage_provisoire` dans `usine.json`. Règle validée :
+- **Durée de réparation active** = 40 % de la réparation active du mode (`mttr_actif_h`), **arrondie au ¼ h le plus proche**, avec un minimum de 0,25 h. Cette valeur est calculée une fois puis **figée** dans `duree_reparation_active_h`. La détection, l'attente logistique et la remise en service ne changent pas.
+- **Aucune pièce** n'est consommée (`pieces = []`).
+- **Pas de remise à neuf** : la panne **revient après 40 h d'ouverture** (`reapparition_apres_h`). Elle ne revient pas si la **réparation curative différée** est faite le samedi, hors temps d'ouverture et donc sans perte de production (`annule_par_curatif_differe = true`). Conséquence pour le joueur : un dépannage n'évite une nouvelle panne que s'il a lieu dans les 40 dernières heures d'ouverture de la semaine (2 jours d'ouverture sur 5). Plus tôt dans la semaine, il faut un curatif à chaud ou accepter la rechute.
+- **Convention de comptage** : Une rechute après dépannage provisoire compte comme une nouvelle défaillance. C'est un nouvel événement de l'historique : N + 1, son TA s'ajoute à ΣTA et sa réparation active entre dans le MTTR. Son TBF est le temps de bon fonctionnement depuis la fin du dépannage, soit 40 h. Le dépannage provisoire lui-même est un événement à part entière, avec son TA et sa réparation active figée. Le curatif différé fait le samedi est hors temps d'ouverture : il ne compte ni dans N, ni dans ΣTA, ni dans le MTTR, mais ses coûts directs (pièces et main-d'œuvre en heures sup) comptent.
+- *Justification pédagogique* : la machine a de nouveau perdu sa fonction requise (défaillance au sens de la NF EN 13306). Faire apparaître la rechute dans N et ΣTA, c'est montrer le vrai coût du palliatif sur le MTBF et l'Ao.
+
+| Mode | Réparation active du mode (h) | 0,4 × MTTR (h) | **Dépannage figé (h)** | Autorisé |
+|---|---|---|---|---|""")
+for k in ORD:
+    for m in EQ[k]["modes"]:
+        d=m["depannage_provisoire"]
+        A(f"| {m['id_mode']} | {fr(m['mttr_actif_h'])} | {fr(round(0.4*m['mttr_actif_h'],4))} | **{fr(d['duree_reparation_active_h'])}** | {'oui' if d['autorise'] else 'non'} |")
+A("\n**Modes sans palliatif (`autorise = false`)**, une ligne de justification chacun :")
+for k in ORD:
+    for m in EQ[k]["modes"]:
+        if not m["depannage_provisoire"]["autorise"]: A(f"- **{m['id_mode']}** : {m['depannage_provisoire']['justification']}")
+A(f"""
+Le palliatif est **autorisé sur BOU-M2** (bourrage de la boucheuse), avec la règle standard (0,5 h, sans pièce, réapparition après 40 h) : c'est **la décision de Steph**.
+
+Arrondi : au ¼ h le plus proche, une valeur à mi-chemin étant arrondie vers le haut (aucun mode n'est dans ce cas). Exemple : ETI-M1, 0,4 × 0,75 = 0,30 h → **0,25 h**. Contrôle automatique dans `scripts/schemas.py`.
 
 ### 3.3 Grille de coûts (définitive pour le jeu)
 
@@ -281,6 +305,10 @@ A(f"""## 5. Formules et terminologie (NF EN 13306:2018, FD X60-000, NF E60-182, 
 | MUT | durée moyenne de disponibilité = MTBF au sens du jeu | MUT (*mean up time*) |
 | MTTF | durée moyenne de fonctionnement **avant la (première) défaillance** d'un bien non réparable ou remis à neuf : MTTF = ∫₀^∞ R(t) dt | MTTF (*mean operating time to failure*) |
 
+**Convention de comptage du dépannage provisoire (§ 3.2)** : Une rechute après dépannage provisoire compte comme une nouvelle défaillance. C'est un nouvel événement de l'historique : N + 1, son TA s'ajoute à ΣTA et sa réparation active entre dans le MTTR. Son TBF est le temps de bon fonctionnement depuis la fin du dépannage, soit 40 h. Le dépannage provisoire lui-même est un événement à part entière, avec son TA et sa réparation active figée. Le curatif différé fait le samedi est hors temps d'ouverture : il ne compte ni dans N, ni dans ΣTA, ni dans le MTTR, mais ses coûts directs (pièces et main-d'œuvre en heures sup) comptent.
+
+*Justification pédagogique* : la machine a de nouveau perdu sa fonction requise (défaillance au sens de la NF EN 13306). Faire apparaître la rechute dans N et ΣTA, c'est montrer le vrai coût du palliatif sur le MTBF et l'Ao.
+
 > **Nuances terminologiques importantes** (à afficher dans l'aide du jeu) :
 > 1. Dans la NF EN 13306 et l'IEC 60050-192, **MTBF** (*mean time between failures*) désigne la moyenne des temps **entre** défaillances, **arrêts compris**, soit MTBF_norme = MUT + MDT. La moyenne des seuls temps de fonctionnement s'appelle **MOTBF**. L'usage scolaire et industriel français appelle « MTBF » ce que la norme appelle MOTBF. Le jeu garde l'usage BTS (MTBF = ΣTBF/N) et l'écrit dans l'aide.
 > 2. Dans la NF EN 13306 et l'IEC 60050-192, **MTTR** signifie *mean time to restoration* (temps moyen **jusqu'au rétablissement**, attentes comprises). L'IEC note « mean time to repair » comme terme **déconseillé**. L'usage BTS appelle « MTTR » le temps moyen de **réparation active** (ce que la norme appelle MRT). Le jeu garde l'usage BTS (MTTR = réparation active) et appelle **MDT** le temps d'arrêt total moyen : le GDD fait déjà ce choix (« As-tu retiré le temps d'attente des pièces ? »).
@@ -326,9 +354,25 @@ La NF EN 13306 définit la disponibilité comme une **aptitude** (« être en é
 
   **C(T) = [Cp + Cc · (T/η)^β] / T** ; dC/dT = 0 ⇒ **T* = η · [Cp / (Cc · (β − 1))]^(1/β)**, qui n'existe que si **β > 1**.
 
-**Modèle B — remplacement selon l'âge** (renouvellement à chaque panne ; calcul numérique, pour le moteur de jeu et le prof) :
+**Modèle B — remplacement selon l'âge** (le composant est **remis à neuf à chaque panne** ; on le remplace préventivement quand il atteint l'âge T, ou à la panne si elle survient avant) :
 
-  **C(T) = [Cp · R(T) + Cc · F(T)] / ∫₀^T R(t) dt**, à minimiser numériquement. Si T → ∞, C → Cc / MTBF (tout correctif).
+  **C(T) = [Cp · R(T) + Cc · F(T)] / ∫₀^T R(t) dt**
+
+Numérateur : coût moyen d'un cycle (préventif avec la probabilité R(T), correctif avec la probabilité F(T)). Dénominateur : durée moyenne d'un cycle. L'intégrale n'a pas de primitive élémentaire pour β ≠ 1 (pour β = 2, elle s'écrit avec la fonction erf, hors programme). **À la calculatrice**, on donne aux élèves un **tableau de ∫₀^T R(t) dt** pour quelques T ronds (1 à 6 tours). Ils calculent R(T), puis C(T), et repèrent le minimum sur la grille. Variante sans tableau : méthode des trapèzes sur un tableau de R(t) tous les 40 h (écart inférieur à 0,15 %). Si T → ∞ : R → 0 et ∫R → MTBF, donc **C → Cc / MTBF** (coût du tout correctif). Le préventif n'est rentable que si min C(T) < Cc/MTBF.
+
+**Quel modèle utiliser ?**
+
+| | Modèle A — remplacement périodique et réparation minimale | Modèle B — remplacement selon l'âge |
+|---|---|---|
+| Hypothèse sur la panne | la réparation remet le bien en service **sans le rajeunir** (« aussi mauvais qu'avant ») : on répare 1 élément sur n | la réparation remet le composant **à neuf** (« aussi bon que neuf ») : on change la pièce défaillante |
+| Exemple de l'usine | jeu de joints des 24 vannes (REM-M1) | tête de vissage de la boucheuse (BOU-M1) |
+| Préventif | à dates fixes (tous les T), quoi qu'il arrive | à l'âge T ; une panne remet le compteur à zéro |
+| Coût par heure | [Cp + Cc·(T/η)^β] / T | [Cp·R(T) + Cc·F(T)] / ∫₀^T R |
+| Calcul | formule explicite de T* | tableau de C(T) sur une grille de T, avec un tableau de ∫R |
+| Condition d'intérêt | β > 1 | β > 1 et min C(T) < Cc/MTBF |
+| Limite T → ∞ | C → ∞ (les pannes s'accélèrent sans fin) | C → Cc/MTBF (tout correctif) |
+
+Dans les deux cas : β ≤ 1 ⇒ aucun optimum, le systématique est inutile.
 
 Dans les deux modèles, Cp = coût d'une intervention préventive (pièces + main-d'œuvre, et perte de production éventuelle) et Cc = coût complet d'une défaillance (direct + indirect). On ne fait du systématique que si **β > 1 et Cc > Cp** (en pratique Cc ≫ Cp).
 
@@ -393,6 +437,7 @@ A(f"""| **Total** | | 1,5 | 46 | 30 | 2,5 | **80** |
 - **Ai = MTBF / (MTBF + MTTR) = 180 / 187,5 = 96 %**
 - Interprétation : 6 points d'écart entre Ai et Ao, dus à la **logistique** (46 h d'attente de pièces, dont 30 h pour le motoréducteur non stocké). Le levier principal est le stock, pas la technique.
 - Palliatif / curatif : sur l'étiqueteuse, EX-0002 et EX-0013 sont des **dépannages provisoires** (palliatif, correctif immédiat). Ils sont suivis des remplacements de la cellule **EX-0201 et EX-0202** (curatif, correctif **différé** au samedi).
+- ⚠ **Écart avec la règle du dépannage provisoire (§ 3.2)**, signalé et **non corrigé**, car ces données sont fournies : EX-0002 et EX-0013 ont 0,5 h de réparation active au lieu de 0,25 h. De plus, ils ont lieu 47 h (EX-0002) et 56 h (EX-0013) d'ouverture avant le samedi. Avec la règle, la panne aurait dû revenir vers 73 h et 464 h, avant le curatif du samedi, et l'historique ne contient pas ces rechutes. **Décision de Steph** : EX-0002 et EX-0013 sont gardés tels quels, comme données d'atelier. Les corrigés ci-dessus restent justes pour l'historique tel qu'il est fourni.
 
 ### 6.3 Indicateurs des 6 machines (niveau 2)
 
@@ -457,7 +502,7 @@ Relevé fictif sur 3 ans des TBF des **têtes de vissage BOU-M1** (6 valeurs, en
 for i,(t,f,x,y) in enumerate(zip(W['t'],W['F_bernard'],W['X'],W['Y']),1):
     A(f"| {i} | {t} | {fr(f,4)} | {fr(x,4)} | {fr(y,4)} |")
 A(f"""
-Régression Y = βX + b (calculatrice) : **β = {fr(W['beta_reg'],3)} ≈ 2,0** ; **η = exp(−b/β) = {fr(W['eta_reg'],1)} h ≈ 500 h** ; r = {fr(W['r'],4)}. Les points sont alignés, donc γ = 0. Conclusion : β ≈ 2 > 1, **usure** → préventif systématique envisageable (§ 6.8, modèle B) ou conditionnel (contrôle de couple).
+Régression Y = βX + b (calculatrice) : **β = {fr(W['beta_reg'],3)} ≈ 2,0** ; **η = exp(−b/β) = {fr(W['eta_reg'],1)} h ≈ 500 h** ; r = {fr(W['r'],4)}. Les points sont alignés, donc γ = 0. Conclusion : β ≈ 2 > 1, **usure** → préventif systématique envisageable (§ 6.8, modèle B : remplacement selon l'âge à 240 h) ou conditionnel (contrôle de couple).
 *Remarque pour le prof* : le maximum de vraisemblance (hors programme) donne β ≈ {fr(W['beta_mle'],1)} et η ≈ {fr(W['eta_mle'],0)} h sur ces 6 valeurs. 6 points, c'est peu ; la conclusion « usure » ne change pas. Seule la méthode des rangs médians est attendue.
 
 ### 6.8 Période optimale de préventif (niveau 5)
@@ -473,9 +518,27 @@ Régression Y = βX + b (calculatrice) : **β = {fr(W['beta_reg'],3)} ≈ 2,0** 
 
 Décision : remplacer les joints **toutes les 2 semaines** (160 h ≈ T*, avec C = 10,04 €/h : la courbe est plate autour de l'optimum, donc on arrondit au rythme des tours). La politique actuelle (4 semaines = 320 h, C = 18,30 €/h) coûte environ (18,30 − 10,04) × 4 000 h ≈ **33 000 € par an** de plus.
 
-**Contre-exemple β = 1** (ETI-M1, modèle B, Cp = 180 €, Cc = 1 400 €, η = 100 h) : C(50) = {fr(R['prev_beta1'][0],2)} ; C(100) = {fr(R['prev_beta1'][1],2)} ; C(200) = {fr(R['prev_beta1'][2],2)} ; C(400) = {fr(R['prev_beta1'][3],2)} ; C(800) = {fr(R['prev_beta1'][4],2)} €/h. C(T) **décroît** vers Cc/η = 14 €/h : **le systématique ne se justifie jamais** pour β = 1.
 
-**Têtes de vissage BOU-M1, modèle B** (renouvellement, calcul numérique pour le moteur ; hors calculatrice) : β = 2, η = 500 h, Cp = 1 000 €, Cc = 900 + 100 + 4 h × 1 200 = 5 800 €. Optimum **T* ≈ {fr(PB['Tstar'],0)} h** (≈ 3 semaines), C* = {fr(PB['Cstar'],2)} €/h, contre {fr(PB['C_corr'],2)} €/h en tout correctif (Cc/MTBF = 5 800/443,1).
+**Têtes de vissage BOU-M1, modèle B : remplacement selon l'âge** (corrigé calculatrice). Une tête défaillante est remplacée par une tête neuve (renouvellement).
+- Données : β = 2 ; η = 500 h ; γ = 0 ; MTBF = 500 × 0,8862 = 443,1 h.
+- Cp = tête 900 € + 2 h × 50 € (samedi, sans perte de production) = **1 000 €**.
+- Cc = tête 900 € + 2,5 h × 40 € de main-d'œuvre + 4 h d'arrêt × 1 200 € = **5 800 €**.
+- Consigne : calculer R(T) = exp[−(T/500)²] à 4 décimales, puis C(T) = [1 000·R(T) + 5 800·(1 − R(T))] / I(T), avec **I(T) = ∫₀^T R(t) dt donné** (arrondi à 0,1 h). Donner C(T) à 0,01 €/h près et repérer le minimum.
+
+| T (h) | """+" | ".join(f"{l['T']} ({l['T']//80} tour{'s' if l['T']>80 else ''})" for l in PBC['lignes'])+""" |
+|---|"""+"---|"*6+"""
+| **I(T) donné** (h) | """+" | ".join(fr(l['I_tab'],1) for l in PBC['lignes'])+""" |
+| R(T) | """+" | ".join(fr(l['R'],4) for l in PBC['lignes'])+""" |
+| Numérateur 1 000·R + 5 800·F (€) | """+" | ".join(fr(l['num'],2) for l in PBC['lignes'])+""" |
+| **C(T) attendu** (€/h) | """+" | ".join(("**"+fr(l['C_eleve_arr'],2)+"**") if l['T']==240 else fr(l['C_eleve_arr'],2) for l in PBC['lignes'])+""" |
+| C(T) exact, intégration fine (€/h) | """+" | ".join(fr(l['C_exact'],4) for l in PBC['lignes'])+""" |
+
+- **Minimum sur la grille : T = 240 h (3 tours), C = 8,92 €/h.** Les voisins sont nettement plus chers : 9,48 €/h à 160 h et 9,29 €/h à 320 h.
+- **Vérification de rentabilité** : tout correctif = Cc/MTBF = 5 800/443,1 = **13,09 €/h** > 8,92 €/h. Le préventif à 3 semaines est rentable. Il fait gagner 4,17 €/h, soit environ **16 680 € par an** (4 000 h).
+- **Contrôle de la méthode** (script) : I(T) recalculé par intégration numérique fine et vérifié par la forme exacte η·(√π/2)·erf(T/η). L'écart entre le C(T) « calculatrice » (R à 4 décimales, I à 0,1 h) et le C(T) exact est au plus de """+fr(max(abs(l['ecart']) for l in PBC['lignes']),4)+""" €/h (au plus 0,04 % en relatif). Un seul arrondi à 0,01 diffère : 10,63 contre 10,64 à 480 h. L'optimum continu (minimisation numérique) est **T* = """+fr(PBC['Tstar_continu'],1)+""" h, C* = """+fr(PBC['Cstar_continu'],3)+""" €/h** : la grille par tours ne coûte que """+fr(PBC['ecart_grille_continu'],4)+""" €/h de plus.
+- Variante « trapèzes » (R(t) tous les 40 h, arrondi à 4 décimales) : I(240) = """+fr(PBC['trapezes'][2]['I_trap'],2)+""" h au lieu de 222,78 h (écart """+fr(PBC['trapezes'][2]['ecart_pct'],3)+""" %) ; C(240) = """+fr(PBC['C240_trap'],2)+""" €/h. Même conclusion.
+
+**Contre-exemple β = 1** (ETI-M1, modèle B, Cp = 180 €, Cc = 1 400 €, η = 100 h) : C(50) = 16,77 ; C(100) = 15,05 ; C(200) = 14,28 ; C(400) = 14,03 ; C(800) = 14,00 €/h. C(T) **décroît** vers Cc/η = 14 €/h : **le systématique ne se justifie jamais** pour β = 1.
 
 ### 6.9 AMDEC de la remplisseuse (niveau 5)
 
@@ -522,7 +585,10 @@ Principe : les données d'exercice sont construites pour que les résultats soie
 | β, η (régression à la calculatrice) | β à 0,01 près ; η à 1 h près | 2,005 ; 499,6 | β ∈ [1,95 ; 2,05] ; η ∈ [490 ; 510] | rangs i/n au lieu de Bernard : à accepter si la consigne le permet |
 | β, η (papier d'Allan Plait) | β à 0,1 près ; η à 10 h près | 2,0 ; 500 | β ∈ [1,8 ; 2,2] ; η ∈ [475 ; 525] | — |
 | T* (modèle A) | en h, entier | 150 | ±1 h | Cp et Cc inversés → 300 × (4/2)^(1/3) ≈ 378 |
-| C(T*) | €/h, à 0,01 près | 10,00 | ±0,05 | — |
+| C(T*) (modèle A) | €/h, à 0,01 près | 10,00 | ±0,05 | — |
+| C(T) (modèle B, tableau) | €/h, à 0,01 près | 14,14 ; 9,48 ; 8,92 ; 9,29 ; 9,94 ; 10,63 | ±0,02 €/h (couvre les arrondis de R et l'écart de 10,63 à 10,64 à 480 h) | Cp et Cc inversés ; F(T) pris pour R(T) ; division par T au lieu de I(T) → 8,28 à 240 h |
+| T optimal sur la grille (modèle B) | h | 240 | aucune tolérance | — |
+| Coût du tout correctif Cc/MTBF | €/h, à 0,01 près | 13,09 | ±0,02 | division par η au lieu du MTBF → 11,60 |
 | Pareto / ABC : % et % cumulés | 1 décimale | exacts | ±0,05 point | — |
 | Classes A/B/C | lettre | exacte | **aucune tolérance** | élément frontière mal classé (règle « cumul qui l'inclut ») |
 | Criticité AMDEC | entier | exact | aucune | somme F + G + D au lieu du produit |
@@ -539,9 +605,9 @@ A(f"""## 8. Proposition de schéma JSON (draft 2020-12)
 
 Deux schémas, écrits dans `schema_equipement.json` et `schema_historique.json`. Règles de nommage : **unité en suffixe** (`_h` heures d'ouverture, `_eur` euros HT, `_par_h` par heure, `_pct` pourcentage, `_bouteilles_par_h`) ; identifiants courts et stables (`REM`, `REM-M1`, `P-REM-02`) ; dates **ISO 8601 avec décalage** (`2026-01-13T09:00:00+01:00`) ; types de maintenance selon la NF EN 13306 (`corrective_immediate`, `corrective_differee`, `preventive_systematique`, `preventive_conditionnelle`, `preventive_previsionnelle`, `amelioration`).
 
-**Validation** (`scripts/schemas.py`, `jsonschema` 4.26, `Draft202012Validator` avec contrôle des formats `date-time`) : `usine.json` → **VALIDE** ; `historique_pannes.json` → **VALIDE** ; `historique_pannes_simule.json` → **VALIDE**. Contrôles complémentaires, impossibles à exprimer en JSON Schema et faits par le script : TA = détection + attente + réparation + remise en service ; coût total = direct + indirect ; pas de chevauchement de pannes dans l'historique d'exercice ; **contrôle croisé pièces/modes** (dans les deux historiques, chaque pièce citée existe au catalogue avec le bon prix, et appartient aux `pieces_corrective` du mode pour un correctif, ou aux `pieces_corrective` ∪ `pieces_preventive` pour un préventif ; le mode correspond bien à l'équipement et au sous-ensemble de l'événement).
+**Validation** (`scripts/schemas.py`, `jsonschema` 4.26, `Draft202012Validator` avec contrôle des formats `date-time`) : `usine.json` → **VALIDE** ; `historique_pannes.json` → **VALIDE** ; `historique_pannes_simule.json` → **VALIDE**. Contrôles complémentaires, impossibles à exprimer en JSON Schema et faits par le script : TA = détection + attente + réparation + remise en service ; coût total = direct + indirect ; pas de chevauchement de pannes dans l'historique d'exercice ; **contrôle croisé pièces/modes** (dans les deux historiques, chaque pièce citée existe au catalogue avec le bon prix, et appartient aux `pieces_corrective` du mode pour un correctif, ou aux `pieces_corrective` ∪ `pieces_preventive` pour un préventif ; le mode correspond bien à l'équipement et au sous-ensemble de l'événement) ; **règle du dépannage provisoire** (pour chaque mode, `duree_reparation_active_h` = arrondi au ¼ h de `ratio_reparation_active` × `mttr_actif_h`, minimum 0,25 h : 13 modes conformes). Les palliatifs des historiques sont aussi comparés à la règle, à titre d'**avertissement non bloquant** : 0 écart dans l'historique simulé, et EX-0002 et EX-0013 signalés dans l'historique d'exercice (§ 6.2).
 
-**(a) Équipements** : l'objet racine `usine.json` contient `meta`, `organisation`, `couts`, `politique_initiale`, `pieces[]` et `equipements[]`. Chaque équipement a `id_equipement`, `designation`, `fonction`, `cadence_nominale_bouteilles_par_h`, `goulot`, `penalite_arret_eur_par_h`, `sous_ensembles[]` et `modes[]`. Chaque mode a `id_mode`, `id_sous_ensemble`, `loi` (exponentielle | weibull), `beta`, `eta_h`, `gamma_h`, `lambda_par_h`, `mtbf_theorique_h`, `effet_correctif` (renouvellement | reparation_minimale), `mttr_actif_h`, `sigma_log_reparation`, `pieces_corrective[]`, `pieces_preventive[]`, `mode_detection` et `probabilite_piece_en_stock`. Règle conditionnelle : loi exponentielle ⇒ β = 1 et γ = 0.
+**(a) Équipements** : l'objet racine `usine.json` contient `meta`, `organisation`, `couts`, `politique_initiale`, `pieces[]` et `equipements[]`. Chaque équipement a `id_equipement`, `designation`, `fonction`, `cadence_nominale_bouteilles_par_h`, `goulot`, `penalite_arret_eur_par_h`, `sous_ensembles[]` et `modes[]`. Chaque mode a `id_mode`, `id_sous_ensemble`, `loi` (exponentielle | weibull), `beta`, `eta_h`, `gamma_h`, `lambda_par_h`, `mtbf_theorique_h`, `effet_correctif` (renouvellement | reparation_minimale), `mttr_actif_h`, `sigma_log_reparation`, `pieces_corrective[]`, `pieces_preventive[]`, `mode_detection`, `probabilite_piece_en_stock` et `depannage_provisoire`. Ce dernier est un objet obligatoire avec `autorise` (booléen), `ratio_reparation_active` (nombre, 0,4), `duree_reparation_active_h` (nombre, multiple de 0,25, ≥ 0,25), `pieces` (tableau vide imposé), `reapparition_apres_h` (nombre, 40), `annule_par_curatif_differe` (booléen) et `justification` (texte, obligatoire si `autorise = false`). Règle conditionnelle : loi exponentielle ⇒ β = 1 et γ = 0.
 
 **(b) Historique** : un tableau d'événements. Les colonnes du CSV (séparateur `;`, décimales avec point, booléens `oui`/`non`, pièces au format `REF×quantité` séparées par `|`, sous la forme `P-REM-01x2`) reprennent dans l'ordre les propriétés du schéma : {', '.join('`'+c+'`' for c in cols)}.
 
@@ -568,7 +634,7 @@ Deux schémas, écrits dans `schema_equipement.json` et `schema_historique.json`
 3. **NF EN 13306:2018** : texte payant non consulté en entier. Les définitions (MOTBF/MTBF, MTTR = *mean time to restoration*, MRT) s'appuient sur l'IEC 60050-192 et sur des extraits de l'EN 13306. Les **intitulés français exacts** (par exemple « réparation provisoire ») sont à vérifier sur l'exemplaire AFNOR.
 4. **FD X60-000** : cité pour le cadre de la fonction maintenance et les niveaux d'intervention ; son contenu détaillé n'a pas été consulté.
 5. **Grilles AMDEC, seuils de criticité, seuils ABC 80/95 %, règle P-F/2, seuil vibratoire de 4,5 mm/s** : ce sont des **conventions** (d'entreprise ou d'usage), pas des exigences normatives. Je les présente comme telles.
-6. **Modèle A de période optimale** (réparation minimale, T* explicite) : il est rigoureux pour REM-M1 parce que ce mode est modélisé en réparation minimale. Pour un composant remis à neuf à chaque panne, le bon modèle est le modèle B (numérique). À trancher : quel modèle est enseigné en classe ?
+6. **Période optimale** : décision de Steph, les **deux modèles** sont enseignés (A : réparation minimale ; B : remplacement selon l'âge, à la calculatrice avec le tableau de ∫R). Il reste à vérifier dans les « Repères pour la formation » s'ils sont attendus à l'examen.
 7. **Écarts avec le GDD** : (a) pénalité unique de 1 200 €/h pour une ligne en série, au lieu de 800 / 1 200 €/h (GDD v0) ou 1 000 €/h (GDD v0.1) ; (b) rebut à 0,20 €/bouteille au lieu de 5 € ; (c) MO à 40 €/h (heures sup. 50 €/h) au lieu de 45 €/h (56 €/h), pour des calculs ronds ; (d) cadences de 11 000 à 15 000 b/h hors goulot, au lieu de 12 000 pour toutes dans le GDD v0.1 ; (e) mes paramètres de fiabilité diffèrent de ceux, provisoires, du tableau du GDD v0.1 (§ 4). Il faut **une seule source de vérité** : je propose `usine.json`.
 8. **Prix des pièces, taux horaires, marge de 0,12 €/bouteille** : ordres de grandeur réalistes mais **fictifs**, sans devis réels.
 9. **Historique simulé** : les jours fériés sont ignorés ; les pannes de machines différentes peuvent s'y chevaucher (machines simulées indépendamment). Le vieillissement continue pendant les arrêts induits par les autres machines, ce qui est une approximation.

@@ -20,6 +20,7 @@ import {
   piecesNiveau1,
   politiqueRemM1,
   prixExpress,
+  regleDepannage,
   tauxPossessionSemaine,
   usine,
 } from "./usine";
@@ -103,6 +104,12 @@ export interface Differe {
   rem: number;
 }
 
+/** Réapparition figée après un dépannage provisoire, en heures d'ouverture absolues. */
+export interface Reapparition {
+  modeId: string;
+  heure: number;
+}
+
 export interface LigneRecit {
   tour: number;
   heure: number | null;
@@ -138,7 +145,7 @@ export type Decision =
   | { type: "tour-suivant" };
 
 export interface Partie {
-  version: 1;
+  version: 2;
   seedLabel: string;
   seed: number;
   pseudo: string;
@@ -153,6 +160,7 @@ export interface Partie {
   prochainAge: Record<string, number>;
   suspendus: string[];
   differes: Differe[];
+  reapparitions: Reapparition[];
   indisponibleJusqua: number | null;
   dernierRedemarrage: number;
   stock: Lot[];
@@ -188,7 +196,7 @@ export function demarrer(seedLabel: string, pseudo: string): Partie {
     prochainAge[mode.id_mode] = tirage.age;
   }
   return {
-    version: 1,
+    version: 2,
     seedLabel: seedLabel.trim(),
     seed,
     pseudo: pseudo.trim(),
@@ -203,6 +211,7 @@ export function demarrer(seedLabel: string, pseudo: string): Partie {
     prochainAge,
     suspendus: [],
     differes: [],
+    reapparitions: [],
     indisponibleJusqua: null,
     dernierRedemarrage: 0,
     stock: piecesNiveau1().map((piece) => ({
@@ -306,14 +315,18 @@ export function devisIntervention(p: Partie, choix: ChoixIntervention): DevisInt
   if (!p.panne) return devisVide("Aucune panne à traiter.");
   const mode = modeParId(p.panne.modeId);
   if (choix.nature === "palliatif") {
+    const regle = regleDepannage(mode);
+    if (!regle.autorise) return devisVide(`Dépannage provisoire impossible pour ${mode.id_mode}.`);
+    // Pas de pièce : pas d'attente magasin. La détection et la remise en service restent celles de la panne.
+    // La durée hors spécialité et les événements spéciaux ne s'appliquent pas au niveau 1.
     const attente = choix.intervenant === "sous_traitance" ? usine.couts.sous_traitance_delai_arrivee_h : 0;
     return chiffrer(p, {
       detection: p.panne.detection,
       attente,
-      reparation: NIVEAU_1.reparationPalliativeH,
-      remise: NIVEAU_1.remisePalliativeH,
+      reparation: regle.duree_reparation_active_h,
+      remise: p.panne.remise,
       pieces: [],
-      rebuts: NIVEAU_1.rebutsPalliatif,
+      rebuts: 0,
       intervenant: choix.intervenant,
       depuisStock: false,
       hors: false,
@@ -401,7 +414,7 @@ export function evaluerPartie(p: Partie): { synthese: Synthese; reference: Synth
     bilan.champs.map((champ) => ({ credit: creditChampScore(champ) })),
   );
   const score = calculerScore({
-    doPct: synthese.indicateurs.Ao,
+    aoPct: synthese.indicateurs.Ao,
     coutGlobal: synthese.coutGlobal,
     coutReference: reference.coutGlobal,
     questions,
@@ -523,24 +536,28 @@ function appliquerIntervention(p: Partie, choix: ChoixIntervention, decision: De
   p.panne = null;
 
   if (choix.nature === "palliatif") {
+    const regle = regleDepannage(mode);
     if (!p.suspendus.includes(mode.id_mode)) p.suspendus.push(mode.id_mode);
-    if (choix.curatifDiffere && !p.differes.some((d) => d.modeId === mode.id_mode)) {
+    if (!devis.tronque) {
+      const fin = p.indisponibleJusqua ?? panne.heure;
+      poserReapparition(p, mode.id_mode, round4(fin + regle.reapparition_apres_h));
+    }
+    if (choix.curatifDiffere && regle.annule_par_curatif_differe && !p.differes.some((d) => d.modeId === mode.id_mode)) {
       p.differes.push({ modeId: mode.id_mode, rep: panne.reparation, rem: panne.remise });
       p.recit.push({
         tour: p.tour,
         heure: panne.heure,
-        texte: "Curatif différé noté pour samedi. Il exige la pièce en stock, sinon la panne revient lundi.",
+        texte: `Curatif différé noté pour samedi, hors ouverture : pas de perte de production, coûts directs comptés. Il annule la réapparition (${regle.reapparition_apres_h} h d'ouverture après la fin du dépannage) si la pièce est en stock.`,
       });
     } else if (!choix.curatifDiffere) {
       p.recit.push({
         tour: p.tour,
         heure: panne.heure,
-        texte: "Dépannage provisoire sans curatif différé : la même panne reviendra lundi matin.",
+        texte: `Dépannage provisoire : le mode n'est pas remis à neuf. La panne revient après ${regle.reapparition_apres_h} h d'ouverture.`,
       });
     }
   } else if (devis.effetApplique) {
-    p.suspendus = p.suspendus.filter((id) => id !== mode.id_mode);
-    p.differes = p.differes.filter((d) => d.modeId !== mode.id_mode);
+    solderMode(p, mode.id_mode);
     appliquerEffetCuratif(p, mode);
   }
 
@@ -619,11 +636,6 @@ function simuler(p: Partie): Partie {
     p.suite = "bilan";
     return p;
   }
-  if (relanceImmediate(p)) {
-    ouvrirPanne(p, p.suspendus[0], true);
-    p.suite = "intervenir";
-    return p;
-  }
   const fin = p.semaineDebut + heuresParSemaine();
   let garde = 0;
   while (p.heure < fin - EPS && garde++ < 20000) {
@@ -633,8 +645,9 @@ function simuler(p: Partie): Partie {
       return p;
     }
     const enArret = p.indisponibleJusqua !== null && p.heure < p.indisponibleJusqua - EPS;
-    if (!enArret && delaiAvantPanne(p) <= EPS) {
-      ouvrirPanne(p, modeLePlusUrgent(p), false);
+    const incident = incidentImminent(p);
+    if (!enArret && incident.delai <= EPS) {
+      ouvrirIncident(p, incident);
       p.suite = "intervenir";
       return p;
     }
@@ -643,11 +656,10 @@ function simuler(p: Partie): Partie {
     let cible = limite;
     if (livraison !== null && livraison < cible) cible = livraison;
     if (!enArret) {
-      const dtPanne = delaiAvantPanne(p);
       const dtCible = cible - p.heure;
-      if (dtPanne < dtCible - EPS) {
-        avancerMarche(p, dtPanne);
-        ouvrirPanne(p, modeLePlusUrgent(p), false);
+      if (incident.delai < dtCible - EPS) {
+        avancerMarche(p, incident.delai);
+        ouvrirIncident(p, incident);
         p.suite = "intervenir";
         return p;
       }
@@ -674,37 +686,54 @@ function simuler(p: Partie): Partie {
   return p;
 }
 
-function relanceImmediate(p: Partie): boolean {
-  return (
-    p.suspendus.length > 0 &&
-    p.panne === null &&
-    p.heure <= p.semaineDebut + EPS &&
-    (p.indisponibleJusqua === null || p.indisponibleJusqua <= p.heure + EPS)
-  );
+interface Incident {
+  delai: number;
+  modeId: string;
+  rechute: boolean;
 }
 
-function delaiAvantPanne(p: Partie): number {
-  let min = Number.POSITIVE_INFINITY;
-  for (const mode of modesNiveau1()) {
-    if (p.suspendus.includes(mode.id_mode)) continue;
-    min = Math.min(min, p.prochainAge[mode.id_mode] - p.age[mode.id_mode]);
-  }
-  return min;
-}
-
-function modeLePlusUrgent(p: Partie): string {
-  let meilleur = "";
+/** Prochaine défaillance : loi du mode, ou réapparition figée après dépannage. */
+function incidentImminent(p: Partie): Incident {
   let delai = Number.POSITIVE_INFINITY;
+  let modeId = "";
+  let rechute = false;
   for (const mode of modesNiveau1()) {
     if (p.suspendus.includes(mode.id_mode)) continue;
     const d = p.prochainAge[mode.id_mode] - p.age[mode.id_mode];
     if (d < delai) {
       delai = d;
-      meilleur = mode.id_mode;
+      modeId = mode.id_mode;
+      rechute = false;
     }
   }
-  if (!meilleur) throw new Error("Pas de mode en panne");
-  return meilleur;
+  for (const reapparition of p.reapparitions) {
+    const d = reapparition.heure - p.heure;
+    if (d < delai + EPS) {
+      delai = d;
+      modeId = reapparition.modeId;
+      rechute = true;
+    }
+  }
+  return { delai, modeId, rechute };
+}
+
+function ouvrirIncident(p: Partie, incident: Incident): void {
+  if (!incident.modeId) throw new Error("Pas de mode en panne");
+  if (incident.rechute) {
+    p.reapparitions = p.reapparitions.filter((r) => r.modeId !== incident.modeId);
+  }
+  ouvrirPanne(p, incident.modeId, incident.rechute);
+}
+
+function poserReapparition(p: Partie, modeId: string, heure: number): void {
+  p.reapparitions = p.reapparitions.filter((r) => r.modeId !== modeId);
+  p.reapparitions.push({ modeId, heure });
+}
+
+function solderMode(p: Partie, modeId: string): void {
+  p.suspendus = p.suspendus.filter((id) => id !== modeId);
+  p.differes = p.differes.filter((d) => d.modeId !== modeId);
+  p.reapparitions = p.reapparitions.filter((r) => r.modeId !== modeId);
 }
 
 function avancerMarche(p: Partie, dt: number): void {
@@ -730,7 +759,7 @@ function ouvrirPanne(p: Partie, modeId: string, rechute: boolean): void {
     tour: p.tour,
     heure: p.heure,
     texte: rechute
-      ? `${quand(p.heure)} — la panne revient (${mode.designation}). Le dépannage provisoire n'a pas été soldé.`
+      ? `${quand(p.heure)} — la panne revient (${mode.designation}) après ${regleDepannage(mode).reapparition_apres_h} h d'ouverture. Nouvelle défaillance : le dépannage n'a pas remis le mode à neuf.`
       : `${quand(p.heure)} — ${mode.designation}. Détection : ${mode.mode_detection}. La ligne s'arrête.`,
   });
 }
@@ -744,6 +773,7 @@ function cloturerSamedi(p: Partie): void {
     if (kit && quantiteStock(p, kit) >= 1) {
       p.differes = p.differes.filter((d) => d.modeId !== "REM-M1");
       p.suspendus = p.suspendus.filter((id) => id !== "REM-M1");
+      p.reapparitions = p.reapparitions.filter((r) => r.modeId !== "REM-M1");
       const pieces = consommer(p, kit, 1);
       p.age[modeM1.id_mode] = 0;
       const tirage = tirageReparationMinimale(p.rng, modeM1, 0);
@@ -777,7 +807,7 @@ function cloturerSamedi(p: Partie): void {
       p.recit.push({
         tour: p.tour,
         heure: null,
-        texte: `Samedi — curatif différé de ${mode.designation} annulé : ${ref} manque au magasin. La panne revient lundi.`,
+        texte: `Samedi — curatif différé de ${mode.designation} annulé : ${ref} manque au magasin. La panne revient ${regleDepannage(mode).reapparition_apres_h} h d'ouverture après la fin du dépannage.`,
       });
       continue;
     }
@@ -794,7 +824,7 @@ function cloturerSamedi(p: Partie): void {
       pieces,
       rebuts: 0,
     });
-    p.suspendus = p.suspendus.filter((id) => id !== mode.id_mode);
+    solderMode(p, mode.id_mode);
     appliquerEffetCuratif(p, mode);
     pousserEvenement(p, {
       mode,
@@ -818,7 +848,7 @@ function cloturerSamedi(p: Partie): void {
     p.recit.push({
       tour: p.tour,
       heure: null,
-      texte: `Samedi — curatif différé réalisé (${mode.designation}), hors ouverture, ${formatEuros(cout.coutDirect)}.`,
+      texte: `Samedi — curatif différé réalisé (${mode.designation}), hors ouverture, coût direct ${formatEuros(cout.coutDirect)}. Il ne compte ni dans N, ni dans ΣTA, ni dans le MTTR.`,
     });
   }
   const valeur = round2(p.stock.reduce((s, lot) => s + lot.qte * lot.prixUnitaire, 0));
@@ -855,7 +885,7 @@ function creerBilan(p: Partie): BilanTour {
     champs.push(nouveauChamp("mtbf", "MTBF (h)", ind.MTBF));
     champs.push(nouveauChamp("mttr", "MTTR (h)", ind.MTTR));
   }
-  champs.push(nouveauChamp("do", "Do — disponibilité opérationnelle (%)", ind.Ao));
+  champs.push(nouveauChamp("ao", "Ao — disponibilité opérationnelle (%)", ind.Ao));
   return {
     tour: p.tour,
     tr,

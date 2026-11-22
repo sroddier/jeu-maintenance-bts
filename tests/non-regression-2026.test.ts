@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { choisirBlague } from "../src/narration/blagues";
 import { lireEtat } from "../src/narration/etat";
 import { evaluerReactions, memoireVide } from "../src/narration/reactions";
-import { semaineVisiteClient } from "../src/narration/prng";
+import { carteVisiteClient } from "../src/narration/visite";
 import { NIVEAU_1 } from "../src/sim/niveau1";
 import { appliquer, demarrer, evaluerPartie, jouer, politiqueReference, type Partie } from "../src/sim/partie";
 
@@ -28,12 +28,12 @@ function jouerEnLisantLaNarration(seed: string): Partie {
   let partie = demarrer(seed, "simulation");
   let memoire = memoireVide();
   let vues: string[] = [];
-  const semaine = semaineVisiteClient(partie.seed, NIVEAU_1.nbTours);
   while (partie.phase !== "termine") {
     const etat = lireEtat(partie);
     memoire = evaluerReactions(etat, memoire).memoire;
     vues = choisirBlague(partie.seed, etat.phase, vues).vues;
-    if (etat.tour === semaine) vues = choisirBlague(partie.seed, "chargement", vues).vues;
+    carteVisiteClient(partie.seed, etat.tour, NIVEAU_1.nbTours, etat.niveau);
+    if (etat.phase === "evenements") vues = choisirBlague(partie.seed, "chargement", vues).vues;
     partie = appliquer(partie, politiqueReference(partie));
     if (partie.erreur) throw new Error(partie.erreur);
   }

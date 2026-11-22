@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import resultats from "../reference/scripts/resultats.json";
 import { calculerCout } from "../src/sim/couts";
 import { evenementsExercice, pannesRemplisseuseExercice, TR_EXERCICE_H } from "../src/sim/exercice";
-import { indicateursEquipement, sommesCouts } from "../src/sim/indicateurs";
+import { estArretCompte, indicateursEquipement, sommesCouts } from "../src/sim/indicateurs";
 import { usine } from "../src/sim/usine";
 
 const EQUIPEMENTS = ["SOU", "REM", "BOU", "ETI", "FAR", "CON"] as const;
@@ -82,6 +82,30 @@ describe("recalcul des coûts depuis usine.json", () => {
       expect(cout.coutMainOeuvre, ev.id_evenement).toBeCloseTo(ev.cout_main_oeuvre_eur, 2);
       expect(cout.coutPieces, ev.id_evenement).toBeCloseTo(ev.cout_pieces_eur, 2);
     }
+  });
+
+  it("les lignes d'exercice à 0 h d'attente et les dépannages fournis ne sont pas régénérés", () => {
+    const parId = Object.fromEntries(evenementsExercice().map((e) => [e.id_evenement, e]));
+    expect(parId["EX-0004"]?.duree_attente_logistique_h).toBe(0);
+    expect(parId["EX-0016"]?.duree_attente_logistique_h).toBe(0);
+    expect(parId["EX-0002"]?.reparation_provisoire).toBe(true);
+    expect(parId["EX-0002"]?.duree_reparation_active_h).toBe(0.5);
+    expect(parId["EX-0002"]?.duree_attente_logistique_h).toBe(1.5);
+    expect(parId["EX-0013"]?.reparation_provisoire).toBe(true);
+    expect(parId["EX-0013"]?.duree_reparation_active_h).toBe(0.5);
+    expect(parId["EX-0013"]?.duree_attente_logistique_h).toBe(2.5);
+    expect(parId["EX-0201"]?.hors_temps_ouverture).toBe(true);
+    expect(parId["EX-0201"]?.type_maintenance).toBe("corrective_differee");
+    expect(parId["EX-0201"]?.cout_direct_eur).toBeGreaterThan(0);
+    expect(parId["EX-0202"]?.hors_temps_ouverture).toBe(true);
+    expect(parId["EX-0202"]?.cout_direct_eur).toBeGreaterThan(0);
+    const eti = indicateursEquipement(evenementsExercice(), "ETI", TR_EXERCICE_H);
+    const comptes = evenementsExercice().filter((e) => e.id_equipement === "ETI" && estArretCompte(e));
+    expect(eti.N).toBe(comptes.length);
+    expect(comptes.map((e) => e.id_evenement)).not.toEqual(expect.arrayContaining(["EX-0201", "EX-0202"]));
+    expect(comptes.map((e) => e.id_evenement)).toEqual(expect.arrayContaining(["EX-0002", "EX-0013"]));
+    const hors = (parId["EX-0201"]?.cout_direct_eur ?? 0) + (parId["EX-0202"]?.cout_direct_eur ?? 0);
+    expect(sommesCouts(evenementsExercice()).direct).toBeGreaterThanOrEqual(eti.coutDirect + hors);
   });
 
   it("EX-0017 coûte 72 550 € et EX-0004 coûte 4 000 €", () => {

@@ -1,6 +1,6 @@
-import { NIVEAU_1, quantiteCorrective } from "../sim/niveau1";
+import { quantiteCorrective } from "../sim/niveau1";
 import { quantiteEnCommande, quantiteStock, type Partie } from "../sim/partie";
-import { heuresParSemaine, modeParId, piecesNiveau1, usine } from "../sim/usine";
+import { heuresParSemaine, modeParId, piecesNiveau1, regleDepannage, usine } from "../sim/usine";
 
 export interface BilanNarratif {
   tousJustesPremierCoup: boolean;
@@ -24,7 +24,7 @@ export interface EtatNarratif {
   apresVendredi13: boolean;
   preventifRealise: boolean;
   bilan: BilanNarratif | null;
-  palliatifs: { cle: string; heuresAvantSamedi: number }[];
+  palliatifs: { cle: string; heuresAvantSamedi: number; reapparitionApresH: number }[];
   palliatifsSansCuratif: { cle: string }[];
   curatifsSansPiece: { cle: string; ref: string }[];
   stocksSousMini: { ref: string }[];
@@ -69,7 +69,7 @@ export function lireEtat(partie: Partie, niveau = 1): EtatNarratif {
     aoSemainePct: ((heures - arret) / heures) * 100,
     trsPct: null,
     depensesEur: Math.round((partie.evenements.reduce((somme, ev) => somme + ev.cout_total_eur, 0) + partie.possessionCumulee) * 100) / 100,
-    budgetEur: NIVEAU_1.budgetEur,
+    budgetEur: 0,
     apresVendredi13: partie.heure + 1e-9 >= debut + heureAlerteVendredi(),
     preventifRealise: partie.evenements.some((ev) => ev.tour === partie.tour && ev.type_maintenance === "preventive_systematique"),
     bilan,
@@ -116,12 +116,13 @@ export function cleEtat(etat: EtatNarratif): string {
   ].join("|");
 }
 
-function palliatifsDe(partie: Partie, heures: number): { cle: string; heuresAvantSamedi: number }[] {
+function palliatifsDe(partie: Partie, heures: number): { cle: string; heuresAvantSamedi: number; reapparitionApresH: number }[] {
   return partie.evenements
     .filter((ev) => ev.reparation_provisoire && ev.debut_arret_h_ouverture !== null)
     .map((ev) => ({
       cle: ev.id_evenement,
       heuresAvantSamedi: ev.tour * heures - (ev.debut_arret_h_ouverture ?? 0),
+      reapparitionApresH: regleDepannage(modeParId(ev.id_mode_defaillance)).reapparition_apres_h,
     }));
 }
 

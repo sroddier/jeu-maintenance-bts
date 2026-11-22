@@ -17,13 +17,15 @@ import {
   type Decision,
   type Partie,
 } from "../sim/partie";
-import { OBJECTIF_DO_PCT } from "../sim/score";
+import { OBJECTIF_AO_PCT } from "../sim/score";
 import { evaluerSaisie } from "../sim/saisie";
 import {
+  actionsProposees,
   heuresParSemaine,
   pieceParRef,
   piecesNiveau1,
   politiqueRemM1,
+  regleDepannage,
   remplisseuse,
   usine,
 } from "../sim/usine";
@@ -154,7 +156,7 @@ function tableauDeBord(): string {
       .join("")}</div>
     <div class="chiffres" style="margin-top:12px">
       <div class="chiffre"><b>${NIVEAU_1.nbTechniciens}</b><span>techniciens internes, ${formatEuros(usine.couts.taux_main_oeuvre_eur_par_h)}/h</span></div>
-      <div class="chiffre"><b>${formatEuros(cout)}</b><span>coût engagé · budget provisoire ${formatEuros(NIVEAU_1.budgetEur)}</span></div>
+      <div class="chiffre"><b>${formatEuros(cout)}</b><span>coût engagé · pas de plafond au niveau 1</span></div>
       <div class="chiffre"><b>${formatEuros(remplisseuse().penalite_arret_eur_par_h)}</b><span>par heure d'arrêt de ligne</span></div>
       <div class="chiffre"><b>${formatHeures(p.tour * heuresParSemaine())}</b><span>temps requis en fin de cette semaine</span></div>
     </div>
@@ -226,6 +228,9 @@ function phaseIntervenir(): string {
   const panne = p.panne;
   if (!panne) return `<section class="carte"><p>Pas de panne en cours.</p></section>`;
   const mode = remplisseuse().modes.find((m) => m.id_mode === panne.modeId)!;
+  const actions = actionsProposees(mode);
+  if (!actions.includes(brouillon.nature)) brouillon = { ...brouillon, nature: "curatif" };
+  const regle = regleDepannage(mode);
   const ref = mode.pieces_corrective[0] ?? "";
   const qte = quantiteCorrective(mode.id_mode);
   const stock = ref ? quantiteStock(p, ref) : 0;
@@ -251,7 +256,16 @@ function phaseIntervenir(): string {
       <form data-form="intervention">
         <fieldset><legend>Action</legend>
           ${radio("nature", "curatif", "Réparation curative", "La pièce est changée. L'effet dépend du mode : la sonde repart à neuf, un joint fuyard ne remet pas les 24 vannes à neuf.")}
-          ${radio("nature", "palliatif", "Dépannage provisoire", "0,5 h de réparation, pas de pièce. La panne n'est pas éliminée : sans curatif samedi, elle revient lundi.")}
+          ${
+            actions.includes("palliatif")
+              ? radio(
+                  "nature",
+                  "palliatif",
+                  "Dépannage provisoire",
+                  `${formatHeures(regle.duree_reparation_active_h)} de réparation active, sans pièce. Détection et remise en service inchangées. La panne revient après ${formatHeures(regle.reapparition_apres_h)} d'ouverture, sauf curatif différé le samedi.`,
+                )
+              : ""
+          }
         </fieldset>
         <fieldset><legend>Qui intervient ?</legend>
           ${radio("intervenant", "interne", titreInterne, "Un technicien sur place, dès que la pièce est là.")}
@@ -287,7 +301,7 @@ function blocPalliatif(): string {
   const coche = brouillon.curatifDiffere ? "checked" : "";
   const taux = formatEuros(usine.couts.taux_main_oeuvre_heures_sup_eur_par_h);
   return `<fieldset><legend>Après le dépannage</legend>
-    <label class="ligne"><input type="checkbox" name="curatifDiffere" ${coche}> Planifier le curatif samedi (hors ouverture, ${taux}/h, sans arrêt de ligne). Il faut la pièce en stock samedi.</label>
+    <label class="ligne"><input type="checkbox" name="curatifDiffere" ${coche}> Planifier le curatif samedi (hors ouverture, ${taux}/h, sans perte de production). Les coûts directs sont comptés. Il faut la pièce en stock samedi.</label>
   </fieldset>`;
 }
 
@@ -315,8 +329,8 @@ function phaseBilan(): string {
     .join("");
   return `<section class="carte"><h2>Bilan de la semaine ${bilan.tour}</h2>
     <p>Temps requis Tr = ${formatHeures(bilan.tr)}. Pannes correctives pendant l'ouverture : N = ${bilan.n}. ΣTA = ${formatHeures(bilan.sommeTA)}. Σ réparations actives = ${formatHeures(bilan.sommeReparation)}.</p>
-    ${bilan.n === 0 ? `<p class="ok">Aucune panne pendant l'ouverture : MTBF et MTTR ne sont pas définis. Do = 100 % tant que ΣTA = 0.</p>` : ""}
-    <p class="muted">Do = (Tr − ΣTA) / Tr × 100. Au niveau 1 c'est la disponibilité opérationnelle de la remplisseuse (notée aussi Ao). Le Do du TRS, qui retire en plus les changements de format, est au programme du niveau 2.</p>
+    ${bilan.n === 0 ? `<p class="ok">Aucune panne pendant l'ouverture : MTBF et MTTR ne sont pas définis. Ao = 100 % tant que ΣTA = 0.</p>` : ""}
+    <p class="muted">Ao = (Tr − ΣTA) / Tr × 100. C'est la disponibilité opérationnelle de la remplisseuse. Le Do du TRS est au programme du niveau 2.</p>
     ${
       fini
         ? `${champs}<div class="actions"><button type="button" data-action="tour-suivant">${p.tour >= NIVEAU_1.nbTours ? "Voir la note" : "Semaine suivante"}</button></div>`
@@ -334,15 +348,16 @@ function bilanFinal(): string {
   const etoiles = "★★★".slice(0, score.etoiles) + "☆☆☆".slice(0, 3 - score.etoiles);
   return `<main class="page"><section class="carte">
     <p class="kicker">Fin de partie · graine ${esc(p.seedLabel)}</p>
+    <p class="palier ${score.passage ? "oui" : "non"}">${score.passage ? "niveau réussi" : "niveau non réussi"}</p>
     <p class="etoiles" aria-label="${score.etoiles} étoiles sur 3">${etoiles}</p>
     <p class="note">${formatNombre(score.note20, 1)} <span style="font-size:1rem">/ 20</span></p>
-    <p>Score ${formatNombre(score.total, 1)} / 100. Disponibilité ${formatNombre(score.pointsDo, 1)} pts · coût ${formatNombre(score.pointsCout, 1)} pts · calculs ${formatNombre(score.pointsJustesse, 1)} pts.</p>
-    <p>${score.objectifDo ? `Disponibilité ${formatPourcent(s.indicateurs.Ao)} : l'objectif de ${OBJECTIF_DO_PCT} % est atteint.` : `Disponibilité ${formatPourcent(s.indicateurs.Ao)} : l'objectif de ${OBJECTIF_DO_PCT} % n'est pas atteint.`} ${score.passage ? "Le palier de passage est atteint sur cette tentative." : `Le palier de passage demande en plus au moins 2 étoiles et 70 % de calculs justes (ici ${formatNombre(score.justesseRatio * 100, 0)} %).`}</p>
+    <p>Score ${formatNombre(score.total, 1)} / 100. Ao ${formatNombre(score.pointsAo, 1)} pts · coût ${formatNombre(score.pointsCout, 1)} pts · calculs ${formatNombre(score.pointsJustesse, 1)} pts.</p>
+    <p>${score.objectifAo ? `Ao ${formatPourcent(s.indicateurs.Ao)} : l'objectif de ${OBJECTIF_AO_PCT} % est atteint.` : `Ao ${formatPourcent(s.indicateurs.Ao)} : l'objectif de ${OBJECTIF_AO_PCT} % n'est pas atteint.`} Critères du niveau 1 : Ao ≥ ${OBJECTIF_AO_PCT} %, au moins 2 étoiles, au moins 70 % de calculs justes (ici ${formatNombre(score.justesseRatio * 100, 0)} %).</p>
     <div class="chiffres">
       <div class="chiffre"><b>${s.indicateurs.MTBF === null ? "—" : formatHeures(s.indicateurs.MTBF)}</b><span>MTBF</span></div>
       <div class="chiffre"><b>${s.indicateurs.MTTR === null ? "—" : formatHeures(s.indicateurs.MTTR)}</b><span>MTTR</span></div>
       <div class="chiffre"><b>${s.indicateurs.MDT === null ? "—" : formatHeures(s.indicateurs.MDT)}</b><span>MDT</span></div>
-      <div class="chiffre"><b>${formatPourcent(s.indicateurs.Ao)}</b><span>Do</span></div>
+      <div class="chiffre"><b>${formatPourcent(s.indicateurs.Ao)}</b><span>Ao</span></div>
       <div class="chiffre"><b>${formatEuros(s.coutGlobal)}</b><span>coût global</span></div>
       <div class="chiffre"><b>${formatEuros(evaluation.reference.coutGlobal)}</b><span>coût de la politique de référence</span></div>
     </div>
@@ -387,7 +402,7 @@ function ecranExercice(): string {
       <tbody>${lignes}</tbody>
       <tfoot><tr><th colspan="2">Totaux</th><td class="num" colspan="4"></td><td class="num">${formatNombre(bilan.sommeTA, 2)}</td></tr></tfoot>
     </table></div>
-    <p class="muted">Σ réparations actives = ${formatHeures(bilan.sommeReparation)}. MTBF = (Tr − ΣTA) / N. MTTR = Σ réparations / N. Do = (Tr − ΣTA) / Tr × 100.</p>
+    <p class="muted">Σ réparations actives = ${formatHeures(bilan.sommeReparation)}. MTBF = (Tr − ΣTA) / N. MTTR = Σ réparations / N. Ao = (Tr − ΣTA) / Tr × 100.</p>
     ${fini ? champs : `<form data-form="exercice">${champs}<div class="actions"><button type="submit">Vérifier</button></div></form>`}
     <div class="actions"><button type="button" class="secondaire" data-action="accueil">Retour à l'accueil</button></div>
   </section></main>`;
@@ -427,7 +442,7 @@ function aide(): string {
   return `<details class="aide"><summary>Rappel des formules (usage BTS)</summary>
     <p>TA = détection + attente logistique + réparation active + remise en service. ΣTBF = Tr − ΣTA.</p>
     <p>MTBF = ΣTBF / N. MTTR = Σ réparations actives / N. MDT = ΣTA / N.</p>
-    <p>Do = (Tr − ΣTA) / Tr. Ai = MTBF / (MTBF + MTTR). L'écart entre Ai et Do, c'est la logistique.</p>
+    <p>Ao = (Tr − ΣTA) / Tr. Ai = MTBF / (MTBF + MTTR). L'écart entre Ai et Ao, c'est la logistique. Le Do du TRS n'est pas calculé au niveau 1.</p>
     <p class="muted">La norme NF EN 13306 appelle MTBF le temps moyen entre défaillances, arrêts compris. En BTS, MTBF désigne le temps moyen de bon fonctionnement.</p>
   </details>`;
 }
@@ -658,7 +673,7 @@ function lireSauvegarde(): Partie | null {
     const brut = localStorage.getItem(CLE);
     if (!brut) return null;
     const lu = JSON.parse(brut) as Partie;
-    if (lu.version !== 1 || !lu.seedLabel || !lu.phase) return null;
+    if (lu.version !== 2 || !lu.seedLabel || !lu.phase) return null;
     return lu;
   } catch {
     return null;

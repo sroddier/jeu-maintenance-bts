@@ -15,11 +15,11 @@ export function exporterCsv(p: Partie, quand = new Date()): string {
   lignes.push(["synthese", "score", num(score.total)]);
   lignes.push(["synthese", "note_sur_20", num(score.note20)]);
   lignes.push(["synthese", "etoiles", String(score.etoiles)]);
-  lignes.push(["synthese", "points_do", num(score.pointsDo)]);
+  lignes.push(["synthese", "points_ao", num(score.pointsAo)]);
   lignes.push(["synthese", "points_cout", num(score.pointsCout)]);
   lignes.push(["synthese", "points_justesse", num(score.pointsJustesse)]);
   lignes.push(["synthese", "justesse_ratio", num(score.justesseRatio)]);
-  lignes.push(["synthese", "do_pct", num(synthese.indicateurs.Ao)]);
+  lignes.push(["synthese", "ao_pct", num(synthese.indicateurs.Ao)]);
   lignes.push(["synthese", "mtbf_h", num(synthese.indicateurs.MTBF)]);
   lignes.push(["synthese", "mttr_h", num(synthese.indicateurs.MTTR)]);
   lignes.push(["synthese", "mdt_h", num(synthese.indicateurs.MDT)]);
@@ -31,8 +31,9 @@ export function exporterCsv(p: Partie, quand = new Date()): string {
   lignes.push(["synthese", "cout_possession_eur", num(synthese.possession)]);
   lignes.push(["synthese", "cout_global_eur", num(synthese.coutGlobal)]);
   lignes.push(["synthese", "cout_reference_eur", num(reference.coutGlobal)]);
-  lignes.push(["synthese", "objectif_do_92", score.objectifDo ? "oui" : "non"]);
+  lignes.push(["synthese", "objectif_ao_92", score.objectifAo ? "oui" : "non"]);
   lignes.push(["synthese", "passage", score.passage ? "oui" : "non"]);
+  lignes.push(["synthese", "niveau_1", score.passage ? "niveau réussi" : "niveau non réussi"]);
   lignes.push(["synthese", "nb_preventifs", String(synthese.nbPreventifs)]);
   lignes.push([]);
   lignes.push(ENTETE_EVENEMENT);

@@ -27,12 +27,12 @@ Une partie dure **8 tours**. Un tour est une semaine de **80 h d'ouverture** (lu
 
 1. **Planifier.** Les deux techniciens sont sur la remplisseuse. Le remplacement des 24 joints est imposé toutes les 4 semaines, le samedi, s'il y a un kit en stock. On peut commander des pièces en délai standard (2 semaines) ou en express (16 h d'ouverture, +50 %).
 2. **Événements.** La semaine se déroule. Les pannes sont tirées avec la graine (loi de Weibull pour les joints, loi exponentielle pour la sonde).
-3. **Intervenir.** Pour chaque panne : réparation curative ou dépannage provisoire ; interne ou sous-traitance ; pièce prise au magasin, en express ou en délai standard. Les coûts et les délais viennent de `data/usine.json`.
-4. **Bilan.** Calculatrice en main : MTBF, MTTR et Do (disponibilité opérationnelle). La première erreur donne un indice, la deuxième affiche la correction. Tolérance : ±0,05 h et ±0,05 point. La virgule et le point sont acceptés.
+3. **Intervenir.** Pour chaque panne : réparation curative ou dépannage provisoire (si le mode l'autorise) ; interne ou sous-traitance ; pièce prise au magasin, en express ou en délai standard. Les coûts, les délais et la règle de dépannage viennent de `data/usine.json`.
+4. **Bilan.** Calculatrice en main : MTBF, MTTR et Ao. Ao = (Tr − ΣTA) / Tr. La première erreur donne un indice, la deuxième affiche la correction. Tolérance : ±0,05 h et ±0,05 point. La virgule et le point sont acceptés.
 
-Le dépannage provisoire ne supprime pas la défaillance. Un curatif différé le samedi (pièce en stock, hors ouverture) l'évite. Sinon la panne revient le lundi.
+Le dépannage provisoire ne remet pas le mode à neuf et ne consomme pas de pièce. La réparation active est la valeur figée du mode (1 h pour REM-M1). La détection et la remise en service restent celles de la panne. La même panne revient après 40 h d'ouverture. Un curatif différé le samedi (pièce en stock, hors ouverture, sans perte de production) annule cette réapparition : il n'entre pas dans N, ni dans ΣTA, ni dans le MTTR, mais ses coûts directs sont comptés. Une rechute est une nouvelle défaillance. Si `autorise` vaut faux (REM-M3, FAR-M1), le choix n'est pas proposé.
 
-En fin de partie : score sur 100, étoiles à 60 / 75 / 90, note sur 20 = score ÷ 5 arrondie au demi-point. Export CSV pour le professeur (séparateur `;`). La partie en cours est reprise via le navigateur (`localStorage`) après un rafraîchissement.
+En fin de partie : score sur 100, étoiles à 60 / 75 / 90, note sur 20 = score ÷ 5 arrondie au demi-point. Le niveau 1 est réussi lorsque l'Ao est d'au moins 92 %, avec au moins 2 étoiles et au moins 70 % de calculs justes. Le bilan affiche « niveau réussi » ou « niveau non réussi », et le CSV reprend ce libellé. Export CSV pour le professeur (séparateur `;`). La partie en cours est reprise via le navigateur (`localStorage`) après un rafraîchissement.
 
 L'écran d'accueil propose aussi l'**historique d'exercice** (10 semaines, corrigés de l'expert) pour s'entraîner au calcul.
 
@@ -53,35 +53,41 @@ Le score est isolé dans `src/sim/score.ts` : il ne lit ni le DOM ni le généra
 
 ## Écarts et choix de conception
 
-`usine.json` prime sur le GDD lorsqu'ils diffèrent. Les valeurs de game design absentes du fichier (8 tours, 2 techniciens, budget affiché de 15 000 €, poids du score) restent celles du GDD, provisoires, et sont regroupées dans `src/sim/niveau1.ts`.
+`usine.json` prime sur le GDD lorsqu'ils diffèrent. Les valeurs de game design absentes du fichier (8 tours, 2 techniciens, poids du score) restent celles du GDD, provisoires, et sont regroupées dans `src/sim/niveau1.ts`. Il n'y a pas de plafond de budget au niveau 1.
 
-- **Do saisi par l'élève.** La consigne du prototype demande MTBF, MTTR et Do (disponibilité opérationnelle). Dans le cadrage métier, cette disponibilité est l'**Ao** : `(Tr − ΣTA) / Tr`. Ce n'est pas le Do du TRS (`Tf / Tr`, 75 % sur l'exercice de 10 semaines). L'aide de l'écran le dit. Les tests vérifient les deux nombres et ne les confondent pas. Le MDT n'est pas saisi ; il est cité dans la correction quand le MTTR est confondu avec lui.
-- **REM-M3** (motoréducteur) n'est pas joué au niveau 1.
+- **Ao saisi par l'élève.** Au niveau 1, l'indicateur de disponibilité est l'**Ao** : `(Tr − ΣTA) / Tr`. Le sigle Do est réservé au TRS du niveau 2 (`Tf / Tr`, 75 % sur l'exercice de 10 semaines). L'aide, la saisie, la correction et le CSV disent Ao. Les tests vérifient les deux nombres et ne les confondent pas. Le MDT n'est pas saisi ; il est cité dans la correction quand le MTTR est confondu avec lui.
+- **REM-M3** (motoréducteur) n'est pas joué au niveau 1. Son dépannage provisoire est interdit dans les données, comme celui de FAR-M1 : le choix serait masqué.
 - **Générateur.** Le GDD impose mulberry32. L'historique simulé de l'expert a été produit avec le PCG64 de NumPy : une même graine ne rejoue pas ce fichier bit à bit. Les indicateurs calculés sur un historique donné, eux, collent à `reference/scripts/resultats.json`.
-- **Attente si la pièce est en stock : 0,25 h**, comme le GDD et `donnees.py`. Dans l'historique d'exercice construit à la main, certaines pannes stockées ont une attente de 0 h (EX-0004, EX-0016). Le recalcul des coûts reprend l'attente écrite dans l'historique ; le jeu, lui, applique 0,25 h.
-- **Quantité et rebuts.** `usine.json` ne dit pas combien de pièces ni de rebuts par panne. Le jeu suit l'exercice et `donnees.py` : 2 kits P-REM-01 et 1 200 rebuts pour une fuite de joint ; 1 sonde et 600 rebuts pour REM-M2. Le dépannage provisoire, absent des données, coûte 0,5 h + 0,25 h et 200 rebuts, et tient jusqu'au samedi.
+- **Attente si la pièce est en stock : 0,25 h**, comme le GDD et `donnees.py`. L'historique d'exercice est affiché et noté tel quel, sans être régénéré. EX-0004 et EX-0016 gardent une attente de 0 h. EX-0002 et EX-0013 restent des dépannages provisoires à 0,5 h de réparation active (écart signalé dans le cadrage, données d'atelier conservées). EX-0201 et EX-0202 restent les curatifs différés du samedi, hors N, ΣTA et MTTR, avec leurs coûts directs.
+- **Dépannage provisoire.** Chaque mode porte `depannage_provisoire` dans `usine.json` (durée active figée, aucune pièce, réapparition après 40 h d'ouverture, annulée par un curatif différé le samedi). Le moteur ne pose plus de durée par défaut. REM-M1 : 1 h de réparation active.
+- **Champs chargés, pas encore exploités.** `evenements.liste`, la `specialite` de chaque mode, `depannage_provisoire.duree_reparation_active_hors_specialite_h`, `organisation.hors_specialite` (majoration ×1,25 de la réparation active) et `couts.taux_main_oeuvre_dimanche_eur_par_h` sont dans `usine.json` et passent le schéma. Le moteur du niveau 1 les ignore : aucun événement spécial n'est tiré, et la durée de dépannage reste la durée de spécialité. E04 (pièce livrée fausse), la liste canicule, le taux du dimanche et le volume de la commande urgente attendent encore la validation de Steph. Leur moteur fera l'objet d'une PR ultérieure.
+- **Quantité et rebuts.** `usine.json` ne dit pas combien de pièces ni de rebuts par panne curative. Le jeu suit l'exercice et `donnees.py` : 2 kits P-REM-01 et 1 200 rebuts pour une fuite de joint ; 1 sonde et 600 rebuts pour REM-M2. Le dépannage provisoire ne consomme pas de pièce et ne compte pas de rebut.
 - **Préventif.** Le forfait `cout_eur` (1 000 €) est facturé tel quel. Avec les données actuelles il est égal au kit (600 €) plus 8 h × 50 €. Un test casse si ce lien change.
-- **Score.** Poids du niveau 1 : disponibilité 50 (les 30 de l'Ao plus les 20 du TRS, réaffectés comme le dit le GDD), coût 25, justesse 25. La courbe de disponibilité vaut 0 à 70 %, 40 à l'objectif de 92 %, 50 à partir de 98 %. Le coût vaut 25 points s'il ne dépasse pas la politique de référence (curatif interne, express seulement en rupture, commandes standard jusqu'au stock mini), et 0 s'il atteint le double. Le budget de 15 000 € est affiché et n'est pas un plafond de note : une seule attente de sonde dépasse déjà ce montant via les 1 200 €/h d'arrêt.
+- **Score et passage.** Poids du niveau 1 : Ao 50 (les 30 de l'Ao plus les 20 du TRS, réaffectés comme le dit le GDD), coût 25, justesse 25. La courbe d'Ao vaut 0 à 70 %, 40 à l'objectif de 92 %, 50 à partir de 98 %. Le coût vaut 25 points s'il ne dépasse pas la politique de référence (curatif interne, express seulement en rupture, commandes standard jusqu'au stock mini), et 0 s'il atteint le double. Le passage du niveau 1 exige Ao ≥ 92 %, au moins 2 étoiles et au moins 70 % de calculs justes. Pas de plafond de budget à ce niveau. Pour plus tard : le coût global devient un critère au niveau 5 (≤ 90 % de la partie de référence) et le budget devient un critère au niveau 6.
 - **Sous-traitance.** L'attente est le maximum entre le délai de pièce et les 4 h d'arrivée. Avec deux techniciens et une seule machine, l'interne est en général plus court et moins cher. Les deux options restent chiffrées avant confirmation.
-- **Hors de ce prototype.** Serveur, deux tentatives notées, classement, ligne complète, TRS. L'export CSV tient lieu de secours professeur. Les événements chiffrés (E01 à E07) ne sont pas simulés.
+- **Hors de ce prototype.** Serveur, deux tentatives notées, classement, effets chiffrés des événements spéciaux (la liste est dans `usine.json`), règle hors spécialité, taux du dimanche, ligne complète, TRS. L'export CSV tient lieu de secours professeur.
 
 ## Narration et images
 
-Les textes viennent de `data/narratif.json` (intro en 7 écrans, 6 personnages, 18 réactions, 20 anecdotes, titres des événements). Aucune réplique n'est écrite dans le code.
+Les textes viennent de `data/narratif.json` (intro en 7 écrans, 6 personnages, 18 réactions, 20 anecdotes). Aucune réplique n'est écrite dans le code. Au niveau 1, la disponibilité se dit **Ao**, comme dans le reste du jeu. Le sigle Do reste celui du TRS, au niveau 2.
 
-`usine.json` reste la seule source des cadences, des coûts, des délais et des stocks. Les probabilités et les paramètres chiffrés des événements sont attendus dans `usine.json` (`evenements.liste`, autre PR) et ne sont pas recopiés. Cette couche n'applique aucun effet chiffré. Au niveau 1, seule la visite client **E08** peut apparaître : une carte, un tirage sur un PRNG séparé (`graine de la partie + 1`), aucun impact sur les pannes ni sur les corrigés.
+Les probabilités et les paramètres des événements sont lus dans `data/usine.json` (`evenements.liste`), pas recopiés. Les événements à effet chiffré (E01 à E07) ne sont pas appliqués. Au niveau 1, la liste ne laisse passer que la visite client **E08** (`effet_numerique: false`, `prng_separe`) : une carte, un tirage sur un PRNG séparé (`graine de la partie + 1`), aucun impact sur les pannes ni sur l'Ao.
 
-Les réactions lisent l'état de la partie. La colère de Nadia Ferrand suit l'arrêt de ligne cumulé dans la semaine (2 h, 5 h, 10 h, 20 h), remis à zéro le lundi. Une seule bulle à la fois, trois au plus par phase. La bulle se ferme et ne bloque pas le jeu. Les anecdotes sont tirées une fois par entrée de phase, sans répétition dans la partie.
+Les réactions lisent l'état de la partie. La colère de Nadia Ferrand suit l'arrêt de ligne cumulé dans la semaine (2 h, 5 h, 10 h, 20 h), remis à zéro le lundi. Une seule bulle à la fois, trois au plus par phase. La bulle se ferme et ne bloque pas le jeu. Les anecdotes sont tirées une fois par entrée de phase, sans répétition dans la partie. Il n'y a pas de plafond de budget au niveau 1 : les réactions de budget ne s'affichent pas.
 
-Les 31 emplacements sont dans `narratif.json` (`images[]`). Tant que le WebP ou le PNG n'est pas là, le jeu montre la silhouette SVG (`public/assets/img/`, fond vert d'eau), avec `width`, `height` et `loading="lazy"` sur l'image définitive. Le chef d'équipe dépose les sources dans `assets-src/` puis lance :
+Les 31 emplacements sont dans `narratif.json` (`images[]`). Le jeu charge le WebP de `public/assets/img/` (`loading="lazy"`, largeur et hauteur fixées). S'il manque, la silhouette SVG du même nom reste visible.
+
+Pour remplacer une image, on garde le nom de fichier. Quatre d'entre elles pourront changer sans toucher au code : `portrait-chef-prod` (Julien Rocca), `portrait-tech-meca` (Lucas Garnier), `portrait-magasinier` (Bernard Aubry) et `evt-piece-fausse` (carte « pièce fausse »). Déposer le nouveau PNG dans `assets-src/` sous ce nom exact, puis :
 
 ```bash
 npm run images
 ```
 
+Le script réécrit le WebP correspondant, qualité 80, sans agrandir l'image. Les sources versionnées sont les PNG de `assets-src/`. Les fichiers servis sont les WebP de `public/assets/img/`.
+
 La visite se revoit avec « Revoir la visite ». Elle ne s'ouvre toute seule qu'une fois par navigateur.
 
-Ce qui reste hors simulation, pour une PR ultérieure : effets de E01 à E07, règle des +25 % de durée hors spécialité, durée réelle du dépannage provisoire (le moteur le fait encore tenir jusqu'au samedi ; Lucas ne fait que prévenir au-delà de 40 h), TRS (R06 reste inactif au niveau 1).
+Les effets chiffrés, la majoration hors spécialité et le TRS (R06) restent pour une PR ultérieure. Le rappel de Lucas utilise la réapparition lue dans `depannage_provisoire`, sans changer cette durée.
 
 ## Publication
 

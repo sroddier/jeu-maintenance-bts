@@ -2,14 +2,16 @@
   "meta": {
     "version": "0.5",
     "date": "2026-11-21",
+    "revision": "2026-11-22 21h00",
     "source_parametres": "usine.json (fait foi)",
     "langue": "fr",
-    "note": "Textes et images. Les paramètres d'usine (cadences, coûts, délais, stocks) restent dans usine.json. Les probabilités et les paramètres chiffrés des événements E01–E08 sont dans usine.json (evenements.liste), apportés par une autre PR : ils ne sont pas recopiés ici. Aucun effet chiffré n'est appliqué par cette couche. Au niveau 1, seule la visite client E08 est affichée."
+    "note": "Textes et images, révision du 22/11/2026 21h00. Les probabilités et les paramètres des événements sont lus dans usine.json (evenements.liste) et ne sont pas recopiés. Aucun effet chiffré n'est appliqué. Au niveau 1, la disponibilité se dit Ao."
   },
   "style_images": {
     "preambule": "Illustration semi-réaliste en peinture numérique propre, rendu net et lisible, cadrage de jeu vidéo éducatif. Décor : usine agroalimentaire moderne et propre, ligne d'embouteillage de boisson plate aux fruits en bouteilles PET transparentes de 1 L, machines en inox brossé, carters transparents, sol en résine gris clair, murs blancs. Palette cohérente : blanc, inox, bleu acier, vert d'eau, touches d'orange sécurité (boutons d'arrêt d'urgence, marquages au sol jaunes et noirs) ; lumière naturelle douce venant de verrières en hauteur complétée par un éclairage LED blanc neutre, ombres douces. Personnes avec les EPI d'hygiène alimentaire corrects : charlotte couvrant tous les cheveux, blouse ou combinaison propre, chaussures de sécurité, cache-barbe si barbe, aucun bijou ; bouchons d'oreille ou casque antibruit près des machines en marche. Ambiance bienveillante, professionnelle, réaliste. Aucun texte, aucun chiffre lisible, aucun logo, aucune marque, aucune étiquette lisible sur les bouteilles (étiquettes unies sans inscription). Pas de style photo, pas de style manga.",
     "dossier": "assets/img/"
   },
+  "regle_hors_specialite": "Spécialité de chaque mode : champ `specialite` de usine.json (électrique → Sofia, mécanique → Lucas). Hors spécialité : +25 % sur la seule réparation active (pas sur la détection, l'attente ni la remise en service), arrondi au ¼ h le plus proche, minimum 0,25 h ; exemples 2 h → 2,5 h, 22 h → 27,5 h ; pas de majoration si un spécialiste est dans l'équipe ni en sous-traitance ; entre dans le MTTR et dans les heures de main-d'œuvre (validé par l'Expert méthodes, cadrage § 3.4). Inactif au niveau 1 (deux techniciens polyvalents).",
   "personnages": [
     {
       "id": "directrice",
@@ -511,7 +513,7 @@
     }
   ],
   "evenements": {
-    "note": "Rattachement par id_evenement. Pas de probabilité, pas de coût, pas de niveau : usine.json fait foi. E08 est cosmétique.",
+    "note": "Rattachement par id_evenement : nom, personnage, image. Valeurs (probabilités, niveaux, effets) : usine.json evenements.liste.",
     "liste": [
       {
         "id_evenement": "E01",
@@ -873,7 +875,7 @@
     }
   ],
   "blagues_personnages": {
-    "note": "Les blagues v0.5 n'indiquent pas de personnage. Cette attribution ne sert qu'à l'affichage de la bulle.",
+    "note": "Les blagues n'indiquent pas de personnage. Attribution d'affichage seulement.",
     "par_phase": {
       "intro": "chef_prod",
       "planifier": "tech_meca",
