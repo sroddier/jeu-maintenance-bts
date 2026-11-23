@@ -159,6 +159,10 @@ input[type="text"], input[type="number"], select {
 .aide summary { cursor: pointer; color: var(--teal-fonce); }
 .aide p { margin: 8px 0 0; }
 .muted { color: var(--encre-douce); }
+.rappel-pseudo { margin: 4px 0 0; font-weight: 600; color: var(--marine); }
+.statut-envoi { margin: 8px 0 0; }
+.lien-prof { margin: 18px 0 0; text-align: right; font-size: 0.85rem; }
+.lien-prof a { color: var(--encre-douce); }
 .hors-ligne { color: var(--encre-douce); font-style: italic; }
 
 .devis { background: #f4f7f8; border-radius: 12px; padding: 12px; }
