@@ -2,7 +2,7 @@
 
 Prototype jouable d'un jeu sérieux pour le BTS Maintenance des systèmes (lycée Antonin Artaud, Marseille). L'élève dirige la maintenance de la **remplisseuse** de la ligne L1 de « Boissons des Calanques », une usine fictive.
 
-Huit semaines, deux techniciens, deux modes de défaillance (fuite de joint, sonde de niveau). Tout se joue dans le navigateur, sans serveur.
+Huit semaines, deux techniciens, deux modes de défaillance (fuite de joint, sonde de niveau). La partie se joue dans le navigateur. Le classement en ligne est décrit dans [supabase/README.md](supabase/README.md).
 
 ## Lancer en local
 
@@ -43,6 +43,9 @@ L'écran d'accueil propose aussi l'**historique d'exercice** (10 semaines, corri
 | `data/usine.json` | Source unique de vérité : équipements, modes, coûts, délais, stocks, politique. Chargé tel quel. |
 | `reference/` | Cadrage métier, schémas, historiques et scripts Python de l'expert. Les tests s'y comparent. |
 | `src/sim/` | Moteur pur, sans DOM. PRNG mulberry32, indicateurs, coûts, partie, score. Réutilisable plus tard pour un recalcul serveur. |
+| `src/online/` | Envoi du score en fin de partie et file hors ligne. Lit le résultat, ne modifie pas la simulation. |
+| `supabase/` | Script SQL du classement et mode d'emploi pour le professeur. |
+| `prof.html` | Page du professeur (connexion, tableau, export CSV). |
 | `src/narration/` | Réactions, blagues, visite client et images. Lit l'état, ne le modifie pas. |
 | `src/ui/` | Interface (TypeScript vanilla). Le branchement narratif est dans `src/ui/narration.ts`. |
 | `public/assets/img/` | Silhouettes SVG de remplacement. Les WebP et PNG définitifs prendront le même nom. |
@@ -65,7 +68,7 @@ Le score est isolé dans `src/sim/score.ts` : il ne lit ni le DOM ni le généra
 - **Préventif.** Le forfait `cout_eur` (1 000 €) est facturé tel quel. Avec les données actuelles il est égal au kit (600 €) plus 8 h × 50 €. Un test casse si ce lien change.
 - **Score et passage.** Poids du niveau 1 : Ao 50 (les 30 de l'Ao plus les 20 du TRS, réaffectés comme le dit le GDD), coût 25, justesse 25. La courbe d'Ao vaut 0 à 70 %, 40 à l'objectif de 92 %, 50 à partir de 98 %. Le coût vaut 25 points s'il ne dépasse pas la politique de référence (curatif interne, express seulement en rupture, commandes standard jusqu'au stock mini), et 0 s'il atteint le double. Le passage du niveau 1 exige Ao ≥ 92 %, au moins 2 étoiles et au moins 70 % de calculs justes. Pas de plafond de budget à ce niveau. Pour plus tard : le coût global devient un critère au niveau 5 (≤ 90 % de la partie de référence) et le budget devient un critère au niveau 6.
 - **Sous-traitance.** L'attente est le maximum entre le délai de pièce et les 4 h d'arrivée. Avec deux techniciens et une seule machine, l'interne est en général plus court et moins cher. Les deux options restent chiffrées avant confirmation.
-- **Hors de ce prototype.** Serveur, deux tentatives notées, classement, effets chiffrés des événements spéciaux (la liste est dans `usine.json`), règle hors spécialité, taux du dimanche, ligne complète, TRS. L'export CSV tient lieu de secours professeur.
+- **Hors de ce prototype.** Deux tentatives notées et recalcul du score sur un serveur. Le classement simple (le jeu envoie le score déjà calculé) est décrit dans `supabase/README.md`. Effets chiffrés des événements spéciaux (la liste est dans `usine.json`), règle hors spécialité, taux du dimanche, ligne complète, TRS. L'export CSV tient lieu de secours professeur.
 
 ## Narration et images
 

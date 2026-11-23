@@ -1,0 +1,56 @@
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="search"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #c9bfb0;
+  background: white;
+}
+
+.barre-prof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filtres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+button.compact {
+  min-height: 40px;
+  padding: 6px 12px;
+}
+
+button.tri {
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--encre-douce);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+button.tri:hover {
+  background: transparent;
+  color: var(--marine);
+}
+
+th.num button.tri { text-align: right; width: 100%; }
+
+.confirmation {
+  background: var(--ambre-fond);
+}
+
+.lien-retour { margin: 0; }
+.lien-retour a { color: #d5e2ee; }

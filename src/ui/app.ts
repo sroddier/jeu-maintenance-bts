@@ -30,6 +30,13 @@ import {
   usine,
 } from "../sim/usine";
 import { habillerNarration, installerNarration } from "./narration";
+import { resultatDepuisPartie } from "../online/depuis-partie";
+import { deposerResultat, renvoyerFile, type ResultatDepot } from "../online/envoi";
+import { dejaEnvoye, mettreEnFile } from "../online/file";
+import { idPartieCourante, lirePseudo, memoriserPseudo, nouvelIdPartie } from "../online/identite";
+import { MESSAGE_PSEUDO, RAPPEL_PSEUDO, pseudoValide, normaliserPseudo } from "../online/pseudo";
+import { stockageNavigateur } from "../online/stockage";
+import { clientEleve } from "../online/supabase";
 
 const CLE = "jeu-maintenance-bts-niveau1";
 
@@ -47,8 +54,12 @@ let ecran: Ecran = "accueil";
 let partie: Partie | null = null;
 let exercice: BilanTour | null = null;
 let flash = "";
+let erreurAccueil = "";
+let brouillonAccueil = { pseudo: "", seed: "" };
 let brouillon: Brouillon = brouillonInitial();
 let panneCle = "";
+let statutEnvoi: "inconnu" | "en_cours" | "envoye" | "en_attente" | "pseudo" | "refuse" = "inconnu";
+let idEnvoiDemande = "";
 
 export function monter(element: HTMLElement): void {
   racine = element;
@@ -59,6 +70,19 @@ export function monter(element: HTMLElement): void {
   if (seed) ecrireSeed(seed);
   installerNarration();
   dessiner();
+  try {
+    void renvoyerFile(clientEleve(), stockageNavigateur())
+      .then((bilan) => {
+        if (bilan.envoyes.length === 0 || partie?.phase !== "termine") return;
+        if (dejaEnvoye(stockageNavigateur(), idPartieCourante(stockageNavigateur()))) {
+          statutEnvoi = "envoye";
+          dessiner();
+        }
+      })
+      .catch(() => undefined);
+  } catch {
+    /* le classement ne bloque pas la partie */
+  }
 }
 
 function dessiner(): void {
@@ -69,8 +93,83 @@ function dessiner(): void {
       brouillon = brouillonInitial();
     }
   }
+  suivreEnvoi();
   racine.innerHTML = page();
   habillerNarration(racine, partie, ecran);
+}
+
+function commencer(seed: string, pseudo: string): void {
+  const stockage = stockageNavigateur();
+  memoriserPseudo(stockage, pseudo);
+  nouvelIdPartie(stockage);
+  idEnvoiDemande = "";
+  statutEnvoi = "inconnu";
+  flash = "";
+  ecrireSeed(seed);
+  partie = demarrer(seed, pseudo);
+  ecran = "jeu";
+  sauver();
+  dessiner();
+}
+
+function suivreEnvoi(): void {
+  if (ecran !== "jeu" || !partie || partie.phase !== "termine") return;
+  const stockage = stockageNavigateur();
+  const id = idPartieCourante(stockage);
+  if (idEnvoiDemande === id) return;
+  idEnvoiDemande = id;
+  if (!pseudoValide(partie.pseudo)) {
+    statutEnvoi = "pseudo";
+    return;
+  }
+  const ligne = resultatDepuisPartie(partie, id);
+  if (!ligne) {
+    statutEnvoi = "refuse";
+    return;
+  }
+  if (dejaEnvoye(stockage, id)) {
+    statutEnvoi = "envoye";
+    return;
+  }
+  statutEnvoi = "en_cours";
+  let client;
+  try {
+    client = clientEleve();
+  } catch {
+    mettreEnFile(stockage, ligne);
+    statutEnvoi = "en_attente";
+    return;
+  }
+  void deposerResultat(ligne, client, stockage)
+    .then((statut) => {
+      if (idPartieCourante(stockageNavigateur()) !== id) return;
+      statutEnvoi = statutAffiche(statut);
+      dessiner();
+    })
+    .catch(() => {
+      if (idPartieCourante(stockageNavigateur()) !== id) return;
+      statutEnvoi = "en_attente";
+      dessiner();
+    });
+}
+
+function statutAffiche(statut: ResultatDepot): "envoye" | "en_attente" | "refuse" {
+  if (statut === "envoye") return "envoye";
+  if (statut === "refuse") return "refuse";
+  return "en_attente";
+}
+
+function texteStatut(): string {
+  if (statutEnvoi === "envoye") return "Score envoyé au prof";
+  if (statutEnvoi === "en_attente") return "Hors ligne : score gardé, renvoi automatique plus tard";
+  if (statutEnvoi === "en_cours") return "Envoi du score…";
+  if (statutEnvoi === "pseudo") return `${MESSAGE_PSEUDO} ${RAPPEL_PSEUDO}`;
+  if (statutEnvoi === "refuse") return "Score non envoyé : la ligne a été refusée.";
+  return "";
+}
+
+function lienProf(): string {
+  return `${import.meta.env.BASE_URL}prof.html`;
 }
 
 function page(): string {
@@ -88,16 +187,20 @@ function bandeau(): string {
 
 function accueil(): string {
   const sauvegarde = lireSauvegarde();
-  const seed = seedDansUrl();
+  const seed = brouillonAccueil.seed || seedDansUrl();
+  const pseudo = brouillonAccueil.pseudo || lirePseudo(stockageNavigateur());
   return `<main class="page">
     <section class="carte">
       <h2>La remplisseuse tombe en panne</h2>
       <p>Tu diriges la maintenance de la remplisseuse, le goulot de la ligne. Huit semaines, deux techniciens. Chaque semaine : planifier, vivre les pannes, décider de l'intervention, puis calculer au brouillon le MTBF, le MTTR et la disponibilité opérationnelle.</p>
       <p class="muted">Usine fictive, construite pour le BTS Maintenance des systèmes. Les coûts et les lois viennent du fichier usine, pas d'un barème caché.</p>
-      <form data-form="accueil">
-        <div class="champ"><label>Pseudo <input name="pseudo" required maxlength="40" autocomplete="nickname" placeholder="ex. camille"></label></div>
+      <form data-form="accueil" novalidate>
+        ${erreurAccueil ? `<p class="alerte rouge" role="alert">${esc(erreurAccueil)}</p>` : ""}
+        <div class="champ"><label>Pseudo <input name="pseudo" required minlength="3" maxlength="20" autocomplete="nickname" placeholder="ex. camille" value="${esc(pseudo)}"></label>
+          <p class="rappel-pseudo">${esc(RAPPEL_PSEUDO)}</p>
+          <p class="muted">3 à 20 caractères : lettres, chiffres, espace, tiret ou underscore.</p></div>
         <div class="champ"><label>Graine de la partie <input name="seed" required value="${esc(seed)}" placeholder="ex. 2026"></label>
-          <p class="muted">La même graine rejoue les mêmes pannes. Le professeur peut l'imposer dans l'adresse : <span>?seed=2026</span>.</p></div>
+          <p class="muted">La même graine rejoue les mêmes pannes. Le professeur peut l'imposer dans l'adresse, par exemple <span>?seed=2026.</span></p></div>
         <div class="actions"><button type="submit">Commencer la semaine 1</button></div>
       </form>
     </section>
@@ -116,6 +219,7 @@ function accueil(): string {
       <p>Dix semaines déjà jouées, quatre pannes de remplisseuse, Tr = 800 h. Les indicateurs se calculent à la main, avec la même tolérance que dans la partie.</p>
       <button type="button" class="secondaire" data-action="exercice">Ouvrir l'exercice</button>
     </section>
+    <p class="lien-prof"><a href="${esc(lienProf())}">Espace prof</a></p>
   </main>`;
 }
 
@@ -361,7 +465,8 @@ function bilanFinal(): string {
       <div class="chiffre"><b>${formatEuros(s.coutGlobal)}</b><span>coût global</span></div>
       <div class="chiffre"><b>${formatEuros(evaluation.reference.coutGlobal)}</b><span>coût de la politique de référence</span></div>
     </div>
-    <p class="muted">Coût direct ${formatEuros(s.coutDirect)}, indirect ${formatEuros(s.coutIndirect)}, possession du stock ${formatEuros(s.possession)}. La note de classe (meilleure de deux tentatives) attend le serveur : ici, l'export sert au professeur.</p>
+    <p class="muted">Coût direct ${formatEuros(s.coutDirect)}, indirect ${formatEuros(s.coutIndirect)}, possession du stock ${formatEuros(s.possession)}. L'export CSV reste disponible. Le classement envoie ce score ; la note de classe, meilleure de deux tentatives, viendra plus tard.</p>
+    ${texteStatut() ? `<p class="muted statut-envoi" role="status">${esc(texteStatut())}</p>` : ""}
     <div class="actions">
       <button type="button" data-action="export">Exporter le CSV</button>
       <button type="button" class="secondaire" data-action="rejouer">Rejouer cette graine</button>
@@ -484,19 +589,22 @@ function onSubmit(event: Event): void {
   event.preventDefault();
   const data = new FormData(form);
   if (form.dataset.form === "accueil") {
-    const pseudo = String(data.get("pseudo") ?? "").trim();
+    const pseudo = normaliserPseudo(String(data.get("pseudo") ?? ""));
     const seed = String(data.get("seed") ?? "").trim();
-    if (!pseudo || !seed) {
-      flash = "Le pseudo et la graine sont obligatoires.";
+    brouillonAccueil = { pseudo, seed };
+    if (!pseudoValide(pseudo)) {
+      erreurAccueil = MESSAGE_PSEUDO;
       dessiner();
       return;
     }
-    flash = "";
-    ecrireSeed(seed);
-    partie = demarrer(seed, pseudo);
-    ecran = "jeu";
-    sauver();
-    dessiner();
+    if (!seed) {
+      erreurAccueil = "La graine est obligatoire.";
+      dessiner();
+      return;
+    }
+    erreurAccueil = "";
+    brouillonAccueil = { pseudo: "", seed: "" };
+    commencer(seed, pseudo);
     return;
   }
   if (!partie) return;
@@ -565,12 +673,7 @@ function onClick(event: Event): void {
   }
   if (action === "export" && partie) telecharger();
   if (action === "rejouer" && partie) {
-    const seed = partie.seedLabel;
-    const pseudo = partie.pseudo;
-    partie = demarrer(seed, pseudo);
-    ecran = "jeu";
-    sauver();
-    dessiner();
+    commencer(partie.seedLabel, partie.pseudo);
   }
 }
 
