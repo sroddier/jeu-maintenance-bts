@@ -30,6 +30,7 @@ import {
   usine,
 } from "../sim/usine";
 import { habillerNarration, installerNarration } from "./narration";
+import { QUANTITE_MAX, QUANTITE_MIN, bornerQuantite, filtrerChiffres } from "./quantite";
 import { resultatDepuisPartie } from "../online/depuis-partie";
 import { deposerResultat, renvoyerFile, type ResultatDepot } from "../online/envoi";
 import { dejaEnvoye, mettreEnFile } from "../online/file";
@@ -65,6 +66,8 @@ export function monter(element: HTMLElement): void {
   racine = element;
   racine.addEventListener("submit", onSubmit);
   racine.addEventListener("click", onClick);
+  racine.addEventListener("focusin", onFocusQuantite);
+  racine.addEventListener("input", onSaisieQuantite);
   racine.addEventListener("change", onChange);
   const seed = seedDansUrl();
   if (seed) ecrireSeed(seed);
@@ -290,12 +293,12 @@ function phasePlanifier(): string {
       const encours = quantiteEnCommande(p, piece.ref);
       return `<tr>
         <td><strong>${esc(piece.ref)}</strong><br><span class="muted">${esc(piece.designation)}</span></td>
-        <td class="num">${stock}</td>
-        <td class="num">${piece.stock_mini}</td>
-        <td class="num">${formatEuros(piece.prix_unitaire_eur)}</td>
-        <td class="num">${encours}</td>
-        <td><input name="qte-${esc(piece.ref)}" type="number" min="0" max="20" step="1" value="0" inputmode="numeric" aria-label="Quantité ${esc(piece.ref)}"></td>
-        <td><select name="delai-${esc(piece.ref)}" aria-label="Délai ${esc(piece.ref)}">
+        <td class="num" data-label="Stock">${stock}</td>
+        <td class="num" data-label="Mini">${piece.stock_mini}</td>
+        <td class="num" data-label="Prix">${formatEuros(piece.prix_unitaire_eur)}</td>
+        <td class="num" data-label="En commande">${encours}</td>
+        <td class="qte" data-label="Quantité">${champQuantite(piece.ref)}</td>
+        <td class="delai" data-label="Délai"><select name="delai-${esc(piece.ref)}" aria-label="Délai ${esc(piece.ref)}">
           <option value="standard">Standard (${piece.delai_standard_semaines} sem.)</option>
           <option value="express">Express (${formatHeures(usine.couts.delai_express_h)}, +${formatNombre(usine.couts.majoration_express_pct, 0)} %)</option>
         </select></td>
@@ -607,6 +610,13 @@ function onSubmit(event: Event): void {
     commencer(seed, pseudo);
     return;
   }
+  // L'exercice s'ouvre depuis l'accueil : il n'y a pas encore de partie.
+  if (form.dataset.form === "exercice" && exercice) {
+    const valeurs: Record<string, string> = {};
+    for (const champ of exercice.champs) if (!champ.resolu) valeurs[champ.id] = String(data.get(champ.id) ?? "");
+    soumettreExercice(valeurs);
+    return;
+  }
   if (!partie) return;
   if (form.dataset.form === "planning") {
     const commandes = piecesNiveau1().map((piece) => ({
@@ -633,16 +643,72 @@ function onSubmit(event: Event): void {
       if (!champ.resolu) valeurs[champ.id] = String(data.get(champ.id) ?? "");
     }
     agir({ type: "saisie", valeurs });
-    return;
-  }
-  if (form.dataset.form === "exercice" && exercice) {
-    const valeurs: Record<string, string> = {};
-    for (const champ of exercice.champs) if (!champ.resolu) valeurs[champ.id] = String(data.get(champ.id) ?? "");
-    soumettreExercice(valeurs);
   }
 }
 
+function onFocusQuantite(event: Event): void {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !input.closest("[data-qte]")) return;
+  input.select();
+}
+
+function onSaisieQuantite(event: Event): void {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !input.closest("[data-qte]")) return;
+  const chiffres = filtrerChiffres(input.value);
+  if (chiffres !== input.value) {
+    const fin = input.selectionStart ?? chiffres.length;
+    input.value = chiffres;
+    input.setSelectionRange(Math.min(fin, chiffres.length), Math.min(fin, chiffres.length));
+  }
+  majBoutonsQuantite(input);
+}
+
+function borneChamp(input: HTMLInputElement, nom: "min" | "max", defaut: number): number {
+  const n = Number(input.getAttribute(nom));
+  return Number.isFinite(n) ? n : defaut;
+}
+
+function ajusterQuantite(bouton: HTMLButtonElement): void {
+  const input = bouton.closest("[data-qte]")?.querySelector("input");
+  if (!(input instanceof HTMLInputElement) || bouton.disabled) return;
+  const delta = Number(bouton.dataset.qteDelta);
+  if (delta !== -1 && delta !== 1) return;
+  const courant = input.value.trim() === "" ? 0 : Number(input.value);
+  const base = Number.isFinite(courant) ? courant : 0;
+  input.value = String(
+    bornerQuantite(base + delta, borneChamp(input, "min", QUANTITE_MIN), borneChamp(input, "max", QUANTITE_MAX)),
+  );
+  majBoutonsQuantite(input);
+}
+
+function majBoutonsQuantite(input: HTMLInputElement): void {
+  const zone = input.closest("[data-qte]");
+  if (!zone) return;
+  const plancher = borneChamp(input, "min", QUANTITE_MIN);
+  const plafond = borneChamp(input, "max", QUANTITE_MAX);
+  const valeur = input.value.trim() === "" ? plancher : Number(input.value);
+  const moins = zone.querySelector<HTMLButtonElement>('[data-qte-delta="-1"]');
+  const plus = zone.querySelector<HTMLButtonElement>('[data-qte-delta="1"]');
+  if (moins) moins.disabled = !Number.isFinite(valeur) || valeur <= plancher;
+  if (plus) plus.disabled = Number.isFinite(valeur) && valeur >= plafond;
+}
+
+function champQuantite(ref: string): string {
+  const nom = esc(ref);
+  return `<div class="pas-a-pas" data-qte>
+    <button type="button" class="secondaire pas-qte" data-qte-delta="-1" aria-label="Diminuer la quantité de ${nom}" disabled>−</button>
+    <input name="qte-${nom}" type="text" inputmode="numeric" pattern="[0-9]*" min="${QUANTITE_MIN}" max="${QUANTITE_MAX}" value="0" autocomplete="off" enterkeyhint="done" aria-label="Quantité ${nom}">
+    <button type="button" class="secondaire pas-qte" data-qte-delta="1" aria-label="Augmenter la quantité de ${nom}">+</button>
+  </div>`;
+}
+
 function onClick(event: Event): void {
+  const pas = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-qte-delta]");
+  if (pas) {
+    ajusterQuantite(pas);
+    return;
+  }
   const bouton = (event.target as HTMLElement).closest<HTMLElement>("[data-action]");
   if (!bouton) return;
   const action = bouton.dataset.action;
