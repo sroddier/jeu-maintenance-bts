@@ -22,7 +22,7 @@ export interface LigneCsv {
   dateParis: string;
 }
 
-const ENTETE = ["Pseudo", "Graine", "Niveau", "Score", "Ao", "Étoiles", "% calculs justes", "Date (Paris)"];
+const ENTETE = ["Prénom", "Graine", "Niveau", "Score", "Ao", "Étoiles", "% calculs justes", "Date (Paris)"];
 
 /** Point-virgule, UTF-8 avec BOM, virgule décimale : Excel en français l'ouvre directement. */
 export function exporterCsvProf(lignes: readonly LigneCsv[]): string {

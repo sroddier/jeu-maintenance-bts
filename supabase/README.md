@@ -2,6 +2,12 @@
 
 Le jeu envoie le score à la fin de la partie. Le professeur le retrouve sur la page **Espace prof**. La simulation, les corrigés et le calcul du score ne changent pas.
 
+L'élève saisit son prénom et l'initiale de son nom, par exemple Karim B. La colonne en base s'appelle toujours `pseudo` : elle n'est pas renommée.
+
+## Avant de mettre en ligne cette version
+
+Avant de mettre en ligne cette version, recoller supabase/schema.sql dans le SQL Editor et cliquer sur Run (sans risque, le script est rejouable et ne supprime aucun résultat) : sinon un prénom avec un point comme Karim B. serait refusé par la base et resterait en attente dans le navigateur.
+
 L'adresse du projet et la clé publique sont déjà dans `src/online/config.ts`. Elles sont prévues pour être dans le navigateur : ce ne sont pas des mots de passe. Il ne faut pas y ajouter de clé d'administration.
 
 ## Avant de commencer
@@ -37,7 +43,7 @@ Un élève ne peut qu'ajouter une ligne. Il ne peut pas lire, modifier ni suppri
 
 1. En local : `npm install`, puis `npm run dev`, puis ouvre [http://localhost:5173/jeu-maintenance-bts/](http://localhost:5173/jeu-maintenance-bts/).
 2. Une fois le site publié : [https://sroddier.github.io/jeu-maintenance-bts/](https://sroddier.github.io/jeu-maintenance-bts/). La page prof est [https://sroddier.github.io/jeu-maintenance-bts/prof.html](https://sroddier.github.io/jeu-maintenance-bts/prof.html).
-3. À l'accueil, le pseudo rappelle « N'utilise pas ton vrai nom ». Il fait 3 à 20 caractères. Le navigateur le propose à nouveau la fois suivante.
+3. À l'accueil, l'élève saisit son prénom et l'initiale de son nom, par exemple Karim B. Le champ fait 3 à 20 caractères (lettres, chiffres, espace, tiret, underscore ou point, au moins une lettre). Le navigateur le propose à nouveau la fois suivante.
 4. Joue jusqu'au bilan final (score, Ao, étoiles, pourcentage de calculs justes).
 5. Sous le bilan, un texte discret dit **Score envoyé au prof**.
 6. Si le réseau ou la table manque, le texte dit **Hors ligne : score gardé, renvoi automatique plus tard**. Le score repart tout seul au prochain chargement de la page, ou à la fin de la partie suivante. La sauvegarde de la partie et le bouton « Exporter le CSV » restent ceux d'avant.
@@ -47,8 +53,8 @@ Un élève ne peut qu'ajouter une ligne. Il ne peut pas lire, modifier ni suppri
 1. En bas de l'accueil du jeu, clique sur **Espace prof**.
 2. Connecte-toi avec `stephane.roddier@ac-aix-marseille.fr` et le mot de passe créé dans Supabase (menu Authentication). Ce n'est pas forcément le mot de passe de l'académie.
 3. Il n'y a pas de lien pour créer un compte.
-4. Le tableau montre le pseudo, la graine, le niveau, le score, l'Ao, les étoiles, le pourcentage de calculs justes et la date en heure de Paris.
-5. Clique sur un titre de colonne pour trier. Le filtre pseudo et les deux dates limitent les lignes affichées.
+4. Le tableau montre le prénom, la graine, le niveau, le score, l'Ao, les étoiles, le pourcentage de calculs justes et la date en heure de Paris.
+5. Clique sur un titre de colonne pour trier. Le filtre par prénom et les deux dates limitent les lignes affichées.
 6. **Exporter en CSV** télécharge les lignes affichées. Le fichier est en UTF-8 avec un BOM, les colonnes sont séparées par des points-virgules, les décimales utilisent une virgule. Excel en français l'ouvre directement.
 7. **Supprimer** demande une confirmation. C'est prévu pour effacer une partie de test.
 8. **Actualiser** relit la table.

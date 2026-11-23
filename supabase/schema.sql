@@ -34,7 +34,7 @@ comment on column public.resultats.created_at is
   'Heure d''arrivée sur le serveur. La page prof l''affiche en heure de Paris.';
 
 comment on column public.resultats.pseudo is
-  'Pseudonyme de 3 à 20 caractères. Pas le nom civil de l''élève.';
+  'Prénom et initiale du nom, par exemple Karim B.';
 
 comment on column public.resultats.seed is
   'Graine affichée dans le jeu (texte, par exemple 2026).';
@@ -55,7 +55,7 @@ alter table public.resultats drop constraint if exists resultats_pseudo_chk;
 alter table public.resultats add constraint resultats_pseudo_chk check (
   char_length(pseudo) between 3 and 20
   and pseudo = btrim(pseudo)
-  and pseudo ~ '^[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ _-]+$'
+  and pseudo ~ '^[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ _.-]+$'
   and pseudo ~ '[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ]'
 );
 
@@ -115,7 +115,7 @@ create policy resultats_insertion
   with check (
     char_length(pseudo) between 3 and 20
     and pseudo = btrim(pseudo)
-    and pseudo ~ '^[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ _-]+$'
+    and pseudo ~ '^[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ _.-]+$'
     and pseudo ~ '[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ]'
     and char_length(seed) between 1 and 80
     and seed = btrim(seed)

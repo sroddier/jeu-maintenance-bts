@@ -2,7 +2,7 @@
 
 Prototype jouable d'un jeu sérieux pour le BTS Maintenance des systèmes (lycée Antonin Artaud, Marseille). L'élève dirige la maintenance de la **remplisseuse** de la ligne L1 de « Boissons des Calanques », une usine fictive.
 
-Huit semaines, deux techniciens, deux modes de défaillance (fuite de joint, sonde de niveau). La partie se joue dans le navigateur. Le classement en ligne est décrit dans [supabase/README.md](supabase/README.md).
+Huit semaines, deux techniciens, deux modes de défaillance (fuite de joint, sonde de niveau). La partie se joue dans le navigateur. À l'accueil, l'élève saisit son prénom et l'initiale de son nom (ex. : Karim B.), pour que le professeur sache qui a joué. Le classement en ligne est décrit dans [supabase/README.md](supabase/README.md).
 
 ## Lancer en local
 

@@ -34,7 +34,7 @@ import { resultatDepuisPartie } from "../online/depuis-partie";
 import { deposerResultat, renvoyerFile, type ResultatDepot } from "../online/envoi";
 import { dejaEnvoye, mettreEnFile } from "../online/file";
 import { idPartieCourante, lirePseudo, memoriserPseudo, nouvelIdPartie } from "../online/identite";
-import { MESSAGE_PSEUDO, RAPPEL_PSEUDO, pseudoValide, normaliserPseudo } from "../online/pseudo";
+import { CONSIGNE_PRENOM, MESSAGE_PSEUDO, pseudoValide, normaliserPseudo } from "../online/pseudo";
 import { stockageNavigateur } from "../online/stockage";
 import { clientEleve } from "../online/supabase";
 
@@ -163,7 +163,7 @@ function texteStatut(): string {
   if (statutEnvoi === "envoye") return "Score envoyé au prof";
   if (statutEnvoi === "en_attente") return "Hors ligne : score gardé, renvoi automatique plus tard";
   if (statutEnvoi === "en_cours") return "Envoi du score…";
-  if (statutEnvoi === "pseudo") return `${MESSAGE_PSEUDO} ${RAPPEL_PSEUDO}`;
+  if (statutEnvoi === "pseudo") return MESSAGE_PSEUDO;
   if (statutEnvoi === "refuse") return "Score non envoyé : la ligne a été refusée.";
   return "";
 }
@@ -196,9 +196,9 @@ function accueil(): string {
       <p class="muted">Usine fictive, construite pour le BTS Maintenance des systèmes. Les coûts et les lois viennent du fichier usine, pas d'un barème caché.</p>
       <form data-form="accueil" novalidate>
         ${erreurAccueil ? `<p class="alerte rouge" role="alert">${esc(erreurAccueil)}</p>` : ""}
-        <div class="champ"><label>Pseudo <input name="pseudo" required minlength="3" maxlength="20" autocomplete="nickname" placeholder="ex. camille" value="${esc(pseudo)}"></label>
-          <p class="rappel-pseudo">${esc(RAPPEL_PSEUDO)}</p>
-          <p class="muted">3 à 20 caractères : lettres, chiffres, espace, tiret ou underscore.</p></div>
+        <div class="champ"><label>Prénom <input name="pseudo" required minlength="3" maxlength="20" autocomplete="off" placeholder="Karim B." value="${esc(pseudo)}"></label>
+          <p class="consigne-prenom">${esc(CONSIGNE_PRENOM)}</p>
+          <p class="muted">3 à 20 caractères : lettres, chiffres, espace, tiret, underscore ou point.</p></div>
         <div class="champ"><label>Graine de la partie <input name="seed" required value="${esc(seed)}" placeholder="ex. 2026"></label>
           <p class="muted">La même graine rejoue les mêmes pannes. Le professeur peut l'imposer dans l'adresse, par exemple <span>?seed=2026.</span></p></div>
         <div class="actions"><button type="submit">Commencer la semaine 1</button></div>
