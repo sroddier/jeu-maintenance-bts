@@ -140,6 +140,86 @@ input[type="text"], input[type="number"], select {
   border: 1px solid #c9bfb0;
   background: white;
 }
+
+.pas-a-pas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+button.pas-qte {
+  flex: 0 0 48px;
+  width: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+  touch-action: manipulation;
+}
+.pas-a-pas input[type="text"] {
+  width: 3.25rem;
+  flex: 0 0 3.25rem;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 8px 4px;
+  font-size: 16px;
+  text-align: center;
+  touch-action: manipulation;
+}
+
+@media (min-width: 800px) {
+  form[data-form="planning"] td.qte { width: 1%; white-space: nowrap; }
+  form[data-form="planning"] td.delai { width: 1%; }
+}
+
+@media (max-width: 799px) {
+  form[data-form="planning"] .table-wrap { overflow: visible; }
+  form[data-form="planning"] table,
+  form[data-form="planning"] tbody,
+  form[data-form="planning"] tr,
+  form[data-form="planning"] td { display: block; width: auto; }
+  form[data-form="planning"] thead { display: none; }
+  form[data-form="planning"] tr {
+    padding: 8px 0 12px;
+    border-bottom: 1px solid var(--filet);
+  }
+  form[data-form="planning"] td {
+    border: 0;
+    padding: 3px 0;
+    text-align: left;
+  }
+  form[data-form="planning"] td[data-label]::before {
+    content: attr(data-label);
+    color: var(--encre-douce);
+    font-size: 0.85rem;
+  }
+  form[data-form="planning"] td.num {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  form[data-form="planning"] td.qte::before,
+  form[data-form="planning"] td.delai::before {
+    display: block;
+    margin-bottom: 4px;
+  }
+  form[data-form="planning"] .pas-a-pas { display: flex; width: 100%; }
+  form[data-form="planning"] .pas-a-pas input[type="text"] { flex: 1 1 auto; width: auto; }
+  form[data-form="planning"] select { font-size: 16px; min-height: 48px; }
+  /* La bulle du magasinier recouvre le bas de l'écran : on range la photo
+     et on laisse la place de faire défiler quantité et validation au-dessus. */
+  body:has(form[data-form="planning"]) .nar-bulle .nar-visuel { display: none; }
+  body:has(form[data-form="planning"]) .page { padding-bottom: 240px; }
+  form[data-form="planning"] .pas-a-pas,
+  form[data-form="planning"] select,
+  form[data-form="planning"] .actions {
+    scroll-margin-top: 12px;
+    scroll-margin-bottom: 240px;
+  }
+}
+
 .champ { margin: 0 0 12px; }
 .champ label, .champ span { display: block; margin-bottom: 4px; }
 .champ input { display: block; width: 100%; }
