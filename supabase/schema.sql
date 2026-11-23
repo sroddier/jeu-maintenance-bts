@@ -56,7 +56,7 @@ alter table public.resultats add constraint resultats_pseudo_chk check (
   char_length(pseudo) between 3 and 20
   and pseudo = btrim(pseudo)
   and pseudo ~ '^[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ _.-]+$'
-  and pseudo ~ '[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ.]'
+  and pseudo ~ '[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ]'
 );
 
 alter table public.resultats drop constraint if exists resultats_seed_chk;
@@ -116,7 +116,7 @@ create policy resultats_insertion
     char_length(pseudo) between 3 and 20
     and pseudo = btrim(pseudo)
     and pseudo ~ '^[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ _.-]+$'
-    and pseudo ~ '[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ.]'
+    and pseudo ~ '[0-9A-Za-zàâäéèêëïîôùûüÿçœæÀÂÄÉÈÊËÏÎÔÙÛÜŸÇŒÆáíóúñÁÍÓÚÑ]'
     and char_length(seed) between 1 and 80
     and seed = btrim(seed)
     and seed !~ '[[:cntrl:]]'

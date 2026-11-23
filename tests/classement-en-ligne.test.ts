@@ -8,7 +8,7 @@ import { deposerResultat, renvoyerFile, type ClientResultats, type ErreurEnvoi }
 import { familleErreur, messageConnexion, messageLecture, messageSuppression } from "../src/online/erreurs";
 import { lireFile } from "../src/online/file";
 import { ligneSql, type LigneResultat } from "../src/online/ligne";
-import { CARACTERES_PSEUDO, CONSIGNE_PRENOM, MESSAGE_PSEUDO, pseudoValide } from "../src/online/pseudo";
+import { CARACTERES_PSEUDO, CARACTERES_SIGNIFIANTS, CONSIGNE_PRENOM, MESSAGE_PSEUDO, pseudoValide } from "../src/online/pseudo";
 import { stockageMemoire } from "../src/online/stockage";
 import { adaptateur } from "../src/online/supabase";
 import { filtrerEtTrier, ligneDepuisApi } from "../src/online/tableau";
@@ -280,15 +280,18 @@ describe("schéma SQL", () => {
     expect(sql.toLowerCase()).not.toContain("rename column");
   });
 
-  it("autorise le point dans les deux expressions du prénom", () => {
+  it("autorise le point dans la liste, et exige une lettre ou un chiffre sans le point", () => {
     const contrainte = entre(sql, "resultats_pseudo_chk check", "resultats_seed_chk");
     const policy = entre(sql, "policy resultats_insertion", "resultats_lecture_prof");
     for (const bloc of [contrainte, policy]) {
       const expressions = [...bloc.matchAll(/pseudo ~ '([^']+)'/g)].map((trouve) => trouve[1]);
       expect(expressions).toHaveLength(2);
-      for (const expression of expressions) expect(expression).toContain(".");
-      expect(bloc).toContain(" _.-]+");
-      expect(bloc).not.toMatch(/ _-\+/);
+      const [autorisee, obligatoire] = expressions;
+      expect(autorisee?.startsWith("^")).toBe(true);
+      expect(autorisee).toContain(".");
+      expect(autorisee).toContain(" _.-");
+      expect(obligatoire).toBe(`[${CARACTERES_SIGNIFIANTS}]`);
+      expect(obligatoire).not.toContain(".");
     }
     expect(sql).toContain("Prénom et initiale du nom, par exemple Karim B.");
   });
