@@ -8,7 +8,7 @@ import { deposerResultat, renvoyerFile, type ClientResultats, type ErreurEnvoi }
 import { familleErreur, messageConnexion, messageLecture, messageSuppression } from "../src/online/erreurs";
 import { lireFile } from "../src/online/file";
 import { ligneSql, type LigneResultat } from "../src/online/ligne";
-import { CARACTERES_PSEUDO, RAPPEL_PSEUDO, pseudoValide } from "../src/online/pseudo";
+import { CARACTERES_PSEUDO, CONSIGNE_PRENOM, MESSAGE_PSEUDO, pseudoValide } from "../src/online/pseudo";
 import { stockageMemoire } from "../src/online/stockage";
 import { adaptateur } from "../src/online/supabase";
 import { filtrerEtTrier, ligneDepuisApi } from "../src/online/tableau";
@@ -17,19 +17,30 @@ import { evaluerPartie, jouer, politiqueReference, demarrer } from "../src/sim/p
 const ID_A = "11111111-1111-4111-8111-111111111111";
 const ID_B = "22222222-2222-4222-8222-222222222222";
 
-describe("pseudo", () => {
-  it("accepte un pseudonyme court, avec accent, tiret ou underscore", () => {
+describe("prénom", () => {
+  it("accepte le prénom et l'initiale, avec accent, tiret, underscore ou point", () => {
     expect(pseudoValide("camille")).toBe(true);
     expect(pseudoValide("  Jean-Luc  ")).toBe(true);
     expect(pseudoValide("élève_2")).toBe(true);
     expect(pseudoValide("Éloïse")).toBe(true);
     expect(pseudoValide("A B")).toBe(true);
-    expect(RAPPEL_PSEUDO).toBe("N'utilise pas ton vrai nom.");
+    expect(pseudoValide("Karim B.")).toBe(true);
+    expect(pseudoValide("Zoé L.")).toBe(true);
+    expect(pseudoValide("Jean-Luc M.")).toBe(true);
+    expect(pseudoValide("  Karim B.  ")).toBe(true);
+    expect(CONSIGNE_PRENOM).toBe("Ton prénom et l'initiale de ton nom (ex. : Karim B.)");
+    expect(MESSAGE_PSEUDO.toLowerCase()).toContain("prénom");
+    expect(MESSAGE_PSEUDO.toLowerCase()).not.toContain("pseudo");
   });
 
-  it("refuse un pseudo trop court, trop long, vide ou avec un autre signe", () => {
+  it("refuse un prénom trop court, trop long, sans lettre ou avec un autre signe", () => {
     expect(pseudoValide("ab")).toBe(false);
+    expect(pseudoValide("..")).toBe(false);
+    expect(pseudoValide("...")).toBe(false);
+    expect(pseudoValide("123")).toBe(false);
     expect(pseudoValide("a".repeat(21))).toBe(false);
+    expect(pseudoValide(`${"a".repeat(19)}.`)).toBe(true);
+    expect(pseudoValide(`${"a".repeat(20)}.`)).toBe(false);
     expect(pseudoValide("   ")).toBe(false);
     expect(pseudoValide("___")).toBe(false);
     expect(pseudoValide("nom@mail")).toBe(false);
@@ -194,7 +205,7 @@ describe("export CSV du professeur", () => {
       },
     ]);
     expect(csv.charCodeAt(0)).toBe(0xfeff);
-    expect(csv.startsWith("\uFEFFPseudo;Graine;Niveau;Score;Ao;Étoiles;% calculs justes;Date (Paris)\r\n")).toBe(true);
+    expect(csv.startsWith("\uFEFFPrénom;Graine;Niveau;Score;Ao;Étoiles;% calculs justes;Date (Paris)\r\n")).toBe(true);
     expect(csv).toContain("camille;2026;1;87,5;92,5;2;70;16/03/2026 00:30\r\n");
     expect(csv).toContain('"dit ""lulu""";"a;b";1;100;98,01;3;100;01/07/2026 14:00\r\n');
     expect(csv.endsWith("\r\n")).toBe(true);
@@ -265,6 +276,21 @@ describe("schéma SQL", () => {
     expect(sql).toContain(EMAIL_PROF);
     expect(sql).toContain(CARACTERES_PSEUDO);
     expect(sql).toContain("(auth.jwt() ->> 'email')");
+    expect(sql).toContain("pseudo text not null");
+    expect(sql.toLowerCase()).not.toContain("rename column");
+  });
+
+  it("autorise le point dans les deux expressions du prénom", () => {
+    const contrainte = entre(sql, "resultats_pseudo_chk check", "resultats_seed_chk");
+    const policy = entre(sql, "policy resultats_insertion", "resultats_lecture_prof");
+    for (const bloc of [contrainte, policy]) {
+      const expressions = [...bloc.matchAll(/pseudo ~ '([^']+)'/g)].map((trouve) => trouve[1]);
+      expect(expressions).toHaveLength(2);
+      for (const expression of expressions) expect(expression).toContain(".");
+      expect(bloc).toContain(" _.-]+");
+      expect(bloc).not.toMatch(/ _-\+/);
+    }
+    expect(sql).toContain("Prénom et initiale du nom, par exemple Karim B.");
   });
 
   it("publie l'adresse du projet et la clé publique prévues", () => {
@@ -272,6 +298,14 @@ describe("schéma SQL", () => {
     expect(SUPABASE_CLE_PUBLIQUE.startsWith("sb_publishable_")).toBe(true);
   });
 });
+
+function entre(texte: string, debut: string, fin: string): string {
+  const i = texte.indexOf(debut);
+  const j = texte.indexOf(fin, i + debut.length);
+  expect(i).toBeGreaterThanOrEqual(0);
+  expect(j).toBeGreaterThan(i);
+  return texte.slice(i, j);
+}
 
 function exemple(id: string): LigneResultat {
   return {

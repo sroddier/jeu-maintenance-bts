@@ -39,7 +39,7 @@ type Etat =
     };
 
 const COLONNES: Array<{ id: ColonneTri; libelle: string; numerique?: boolean }> = [
-  { id: "pseudo", libelle: "Pseudo" },
+  { id: "pseudo", libelle: "Prénom" },
   { id: "seed", libelle: "Graine" },
   { id: "niveau", libelle: "Niveau", numerique: true },
   { id: "score", libelle: "Score", numerique: true },
@@ -191,8 +191,8 @@ function pageTableau(): string {
     ${etat.erreur ? `<p class="alerte rouge" role="alert">${esc(etat.erreur)}</p>` : ""}
     ${bornesInversees ? `<p class="alerte">La date de début est après la date de fin.</p>` : ""}
     <form data-form="filtres" class="filtres" novalidate>
-      <div class="champ"><label>Filtrer par pseudo
-        <input type="search" name="pseudo" value="${esc(etat.filtrePseudo)}" placeholder="ex. camille">
+      <div class="champ"><label>Filtrer par prénom
+        <input type="search" name="pseudo" value="${esc(etat.filtrePseudo)}" placeholder="Karim B.">
       </label></div>
       <div class="champ"><label>Du
         <input type="date" name="debut" value="${esc(etat.debut)}">
