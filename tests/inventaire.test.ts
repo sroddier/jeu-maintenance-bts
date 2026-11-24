@@ -19,33 +19,44 @@ import {
 import type { Piece } from "../src/sim/types";
 
 describe("inventaire des pièces", () => {
-  it("construit les 14 références de usine.json, dans l'ordre du fichier", () => {
-    const lignes = lignesPieces(usine, null);
+  it("au niveau 1, le vrai usine.json affiche 2 semaines, les stocks mini figés et l'outillage disponible", () => {
+    const surcharge = usine.organisation.surcharges_niveau_1;
+    const lignes = lignesPieces(usine, null, 1);
     expect(usine.pieces).toHaveLength(14);
     expect(lignes).toHaveLength(14);
     expect(lignes.map((ligne) => ligne.ref)).toEqual(usine.pieces.map((piece) => piece.ref));
+    expect(surcharge.delai_semaines_toutes_pieces).toBe(2);
+    expect(surcharge.outillage_tout_disponible).toBe(true);
+    expect(usine.pieces.some((piece) => piece.stock_mini !== surcharge.stock_mini[piece.ref])).toBe(true);
+    expect(usine.pieces.some((piece) => piece.delai_semaines !== 2)).toBe(true);
     for (const ligne of lignes) {
       const piece = usine.pieces.find((item) => item.ref === ligne.ref)!;
       expect(ligne.designation).toBe(piece.designation);
       expect(ligne.prixUnitaireEur).toBe(piece.prix_unitaire_eur);
-      expect(ligne.delaiSemaines).toBe(piece.delai_standard_semaines);
-      expect("delai_semaines" in piece).toBe(false);
+      expect(ligne.delaiSemaines).toBe(2);
+      expect(ligne.stockMini).toBe(surcharge.stock_mini[piece.ref]);
       expect(ligne.stock).toBe(piece.stock_initial);
-      expect(ligne.stockMini).toBe(piece.stock_mini);
       expect(ligne.origineStock).toBe("initial");
       expect(ligne.enCommande).toBeNull();
-      expect(ligne.sousOuAuMini).toBe(piece.stock_initial <= piece.stock_mini);
-      expect(ligne.alerte).toBe(alerteStock(piece.stock_initial, piece.stock_mini));
+      expect(ligne.alerte).toBe(alerteStock(piece.stock_initial, surcharge.stock_mini[piece.ref]));
     }
-    expect(usine.pieces.some((piece) => piece.stock_initial < piece.stock_mini)).toBe(true);
-    expect(usine.pieces.some((piece) => piece.stock_initial === piece.stock_mini)).toBe(true);
-    expect(usine.pieces.some((piece) => piece.stock_initial > piece.stock_mini)).toBe(true);
+    const outils = lignesOutillage(usine, 1);
+    expect(outils.map((ligne) => ligne.nom)).toEqual(usine.outillages?.map((outil) => outil.designation));
+    expect(outils.every((ligne) => ligne.disponible && ligne.mention === "disponible")).toBe(true);
+    expect(usine.outillages?.some((outil) => outil.disponible_au_depart === false)).toBe(true);
+    const html = htmlOutillage(usine);
+    expect(html).toContain("disponible");
+    expect(html).not.toContain("non disponible");
+    expect(html).not.toContain("disponible à partir du niveau 3");
+    expect(htmlPieces(lignes, false)).toContain("2 semaines");
   });
 
   it("repère un stock égal au mini et un stock en dessous", () => {
-    const auMini = usine.pieces.find((piece) => piece.stock_mini > 0)!;
-    const enDessous = usine.pieces.find((piece) => piece.ref !== auMini.ref && piece.stock_mini > 0)!;
-    const auDessus = usine.pieces.find((piece) => piece.ref !== auMini.ref && piece.ref !== enDessous.ref)!;
+    const source = structuredClone(usine);
+    delete (source.organisation as { surcharges_niveau_1?: unknown }).surcharges_niveau_1;
+    const auMini = source.pieces.find((piece) => piece.stock_mini > 0)!;
+    const enDessous = source.pieces.find((piece) => piece.ref !== auMini.ref && piece.stock_mini > 0)!;
+    const auDessus = source.pieces.find((piece) => piece.ref !== auMini.ref && piece.ref !== enDessous.ref)!;
     const etat: EtatStockInventaire = {
       stocks: new Map([
         [auMini.ref, auMini.stock_mini],
@@ -59,7 +70,7 @@ describe("inventaire des pièces", () => {
       ]),
       detailsCommandes: new Map([[enDessous.ref, "2 délai standard"]]),
     };
-    const lignes = lignesPieces(usine, etat);
+    const lignes = lignesPieces(source, etat);
     const egal = lignes.find((ligne) => ligne.ref === auMini.ref)!;
     const sous = lignes.find((ligne) => ligne.ref === enDessous.ref)!;
     const ok = lignes.find((ligne) => ligne.ref === auDessus.ref)!;
@@ -141,7 +152,10 @@ describe("inventaire outillage et EPI", () => {
     const analyseur = OUTILLAGE.find((ligne) => ligne.nom === "Analyseur vibratoire")!;
     expect(analyseur.disponible).toBe(false);
     expect(analyseur.mention).toBe("disponible à partir du niveau 3");
-    const html = htmlOutillage();
+    const nu = structuredClone(usine);
+    delete (nu.organisation as { surcharges_niveau_1?: unknown }).surcharges_niveau_1;
+    delete (nu as { outillages?: unknown }).outillages;
+    const html = htmlOutillage(nu);
     expect(html).toContain("disponible à partir du niveau 3");
     expect(html).toContain("plus-tard");
     expect(html).not.toContain("<table");
@@ -161,23 +175,25 @@ describe("inventaire outillage et EPI", () => {
     expect(EPI.habilitation).toBe("L'habilitation électrique est requise pour les interventions électriques.");
     const html = htmlEpi();
     expect(html).toContain("L&#39;habilitation électrique est requise pour les interventions électriques.");
-    expect(html).toContain("Charlotte");
+    for (const item of usine.organisation.epi_hygiene_base ?? []) expect(html).toContain(item);
+    expect(html).toContain("Gants anti-coupure");
     expect(html).not.toContain("<table");
     expect(html).not.toContain("REM-M1");
   });
 
-  it("lit un délai ou des listes déjà présents, et garde le fichier actuel sinon", () => {
-    expect("outillages" in usine).toBe(false);
-    expect("epi_hygiene_base" in usine.organisation).toBe(false);
-    expect(lignesOutillage(usine).map((ligne) => ligne.nom)).toEqual(OUTILLAGE.map((ligne) => ligne.nom));
-    expect(listeEpi(usine).hygiene).toEqual([...EPI.hygiene]);
-
+  it("lit un délai ou des listes déjà présents, et garde la liste statique sinon", () => {
     const source = structuredClone(usine) as Usine;
+    delete (source.organisation as { surcharges_niveau_1?: unknown }).surcharges_niveau_1;
+    delete (source.organisation as { epi_hygiene_base?: unknown }).epi_hygiene_base;
+    delete (source as { outillages?: unknown }).outillages;
+    expect(lignesOutillage(source).map((ligne) => ligne.nom)).toEqual(OUTILLAGE.map((ligne) => ligne.nom));
+    expect(listeEpi(source).hygiene).toEqual([...EPI.hygiene]);
+    expect(htmlEpi(source)).toContain("Charlotte");
+
     const piece = source.pieces[0] as Piece & { delai_semaines?: number };
     piece.delai_semaines = 11;
-    piece.delai_standard_semaines = 2;
     expect(lignesPieces(source, null)[0].delaiSemaines).toBe(11);
-    expect(lignesPieces(usine, null)[0].delaiSemaines).toBe(usine.pieces[0].delai_standard_semaines);
+    expect(lignesPieces(usine, null)[0].delaiSemaines).toBe(2);
 
     const charge = source as Usine & { outillages?: unknown };
     charge.outillages = [
@@ -197,12 +213,10 @@ describe("inventaire outillage et EPI", () => {
     expect(listeEpi(charge).habilitation).toBe(EPI.habilitation);
     expect(htmlEpi(charge)).toContain("bonnet de test");
     expect(htmlEpi(charge)).not.toContain("Charlotte");
-    expect(htmlEpi(usine)).toContain("Charlotte");
-    expect(htmlOutillage(usine)).toContain("disponible à partir du niveau 3");
+    expect(listeEpi(usine).hygiene).toEqual([...(usine.organisation.epi_hygiene_base ?? [])]);
   });
 
   it("applique les surcharges du niveau 1 et les ignore sinon", () => {
-    expect("surcharges_niveau_1" in usine.organisation).toBe(false);
     const sans = fixture.sans as unknown as Usine;
     const avec = fixture.avec as unknown as Usine;
 
