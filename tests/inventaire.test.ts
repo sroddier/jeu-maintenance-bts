@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { appliquer, demarrer } from "../src/sim/partie";
+import type { Usine } from "../src/sim/types";
 import { usine } from "../src/sim/usine";
+import fixture from "./fixtures/inventaire-surcharge.json";
 import {
   EPI,
   OUTILLAGE,
@@ -14,7 +16,7 @@ import {
   listeEpi,
   type EtatStockInventaire,
 } from "../src/ui/inventaire";
-import type { Piece, Usine } from "../src/sim/types";
+import type { Piece } from "../src/sim/types";
 
 describe("inventaire des pièces", () => {
   it("construit les 14 références de usine.json, dans l'ordre du fichier", () => {
@@ -197,5 +199,36 @@ describe("inventaire outillage et EPI", () => {
     expect(htmlEpi(charge)).not.toContain("Charlotte");
     expect(htmlEpi(usine)).toContain("Charlotte");
     expect(htmlOutillage(usine)).toContain("disponible à partir du niveau 3");
+  });
+
+  it("applique les surcharges du niveau 1 et les ignore sinon", () => {
+    expect("surcharges_niveau_1" in usine.organisation).toBe(false);
+    const sans = fixture.sans as unknown as Usine;
+    const avec = fixture.avec as unknown as Usine;
+
+    const brut = lignesPieces(sans, null);
+    expect(brut.map((ligne) => ligne.delaiSemaines)).toEqual([6, 1]);
+    expect(brut.map((ligne) => ligne.stockMini)).toEqual([8, 0]);
+    expect(brut[0].alerte).toBe("Sous le stock mini");
+    expect(lignesOutillage(sans)[0]).toMatchObject({
+      disponible: false,
+      mention: "non disponible au départ",
+    });
+
+    const niveau1 = lignesPieces(avec, null, 1);
+    expect(niveau1.map((ligne) => ligne.delaiSemaines)).toEqual([4, 4]);
+    expect(niveau1.map((ligne) => ligne.stockMini)).toEqual([1, 0]);
+    expect(niveau1[0].alerte).toBeNull();
+    expect(niveau1[0].sousOuAuMini).toBe(false);
+    expect(niveau1[1].alerte).toBe("Au stock mini");
+    expect(lignesOutillage(avec, 1).every((ligne) => ligne.disponible && ligne.mention === "disponible")).toBe(true);
+    expect(htmlOutillage(avec)).toContain("disponible");
+    expect(htmlOutillage(avec)).not.toContain("non disponible au départ");
+    expect(htmlPieces(niveau1, false)).toContain("4 semaines");
+
+    const autreNiveau = lignesPieces(avec, null, 2);
+    expect(autreNiveau.map((ligne) => ligne.delaiSemaines)).toEqual([6, 1]);
+    expect(autreNiveau.map((ligne) => ligne.stockMini)).toEqual([8, 0]);
+    expect(lignesOutillage(avec, 2)[0].disponible).toBe(false);
   });
 });

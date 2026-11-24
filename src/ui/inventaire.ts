@@ -16,7 +16,10 @@ export interface LignePieceInventaire {
   ref: string;
   designation: string;
   prixUnitaireEur: number;
-  /** `delai_semaines` s'il est présent, sinon `delai_standard_semaines`. */
+  /**
+   * Au niveau 1, `surcharges_niveau_1.delai_semaines_toutes_pieces` s'il est chargé.
+   * Sinon `delai_semaines`, puis `delai_standard_semaines`.
+   */
   delaiSemaines: number | null;
   stock: number;
   stockMini: number;
@@ -78,9 +81,14 @@ export function alerteStock(stock: number, stockMini: number): string | null {
   return null;
 }
 
-/** Les 14 références de usine.json, dans l'ordre du fichier. Aucune valeur du GDD. */
-export function lignesPieces(source: Usine = usine, etat: EtatStockInventaire | null = null): LignePieceInventaire[] {
-  return source.pieces.map((piece) => lignePiece(piece, etat));
+/** Les références de la source, dans l'ordre du fichier. Aucune valeur du GDD. */
+export function lignesPieces(
+  source: Usine = usine,
+  etat: EtatStockInventaire | null = null,
+  niveau = 1,
+): LignePieceInventaire[] {
+  const surcharge = niveau === 1 ? lireSurchargeNiveau1(source) : null;
+  return source.pieces.map((piece) => lignePiece(piece, etat, surcharge));
 }
 
 export function etatDepuisPartie(partie: Partie): EtatStockInventaire {
@@ -135,8 +143,11 @@ export function htmlPieces(lignes: LignePieceInventaire[], enPartie: boolean): s
 }
 
 /** Outils lus dans `outillages[]` s'il est chargé, sinon la liste statique du niveau 1. */
-export function lignesOutillage(source: Usine = usine): readonly LigneOutillage[] {
-  return lireOutillages(source) ?? OUTILLAGE;
+export function lignesOutillage(source: Usine = usine, niveau = 1): readonly LigneOutillage[] {
+  const lignes = lireOutillages(source) ?? OUTILLAGE;
+  const surcharge = niveau === 1 ? lireSurchargeNiveau1(source) : null;
+  if (!surcharge?.outillageToutDisponible) return lignes;
+  return lignes.map((ligne) => ({ ...ligne, disponible: true, mention: "disponible" }));
 }
 
 /** Hygiène lue dans `organisation.epi_hygiene_base` si le champ est chargé. Le reste reste la liste statique. */
@@ -170,19 +181,24 @@ export function htmlEpi(source: Usine = usine): string {
     <p class="inventaire-habilitation">${esc(epi.habilitation)}</p>`;
 }
 
-function lignePiece(piece: Piece, etat: EtatStockInventaire | null): LignePieceInventaire {
+function lignePiece(
+  piece: Piece,
+  etat: EtatStockInventaire | null,
+  surcharge: SurchargeNiveau1 | null,
+): LignePieceInventaire {
   const suivi = etat?.stocks.has(piece.ref) ?? false;
   const stock = suivi ? etat!.stocks.get(piece.ref)! : piece.stock_initial;
   const enCommande = etat?.commandes.has(piece.ref) ? etat.commandes.get(piece.ref)! : null;
   const detail = etat?.detailsCommandes?.get(piece.ref) ?? null;
-  const alerte = alerteStock(stock, piece.stock_mini);
+  const stockMini = surcharge?.stockMini?.get(piece.ref) ?? piece.stock_mini;
+  const alerte = alerteStock(stock, stockMini);
   return {
     ref: piece.ref,
     designation: piece.designation,
     prixUnitaireEur: piece.prix_unitaire_eur,
-    delaiSemaines: lireDelaiSemaines(piece),
+    delaiSemaines: surcharge?.delaiToutesPieces ?? lireDelaiSemaines(piece),
     stock,
-    stockMini: piece.stock_mini,
+    stockMini,
     enCommande,
     detailCommandes: detail,
     origineStock: suivi ? "partie" : "initial",
@@ -210,6 +226,33 @@ function corps(onglet: OngletInventaire, lignes: LignePieceInventaire[], enParti
   if (onglet === "outillage") return htmlOutillage();
   if (onglet === "epi") return htmlEpi();
   return htmlPieces(lignes, enPartie);
+}
+
+interface SurchargeNiveau1 {
+  delaiToutesPieces: number | null;
+  stockMini: ReadonlyMap<string, number>;
+  outillageToutDisponible: boolean;
+}
+
+function lireSurchargeNiveau1(source: Usine): SurchargeNiveau1 | null {
+  const bloc = (source.organisation as { surcharges_niveau_1?: unknown } | undefined)?.surcharges_niveau_1;
+  if (!bloc || typeof bloc !== "object") return null;
+  const brut = bloc as {
+    delai_semaines_toutes_pieces?: unknown;
+    stock_mini?: unknown;
+    outillage_tout_disponible?: unknown;
+  };
+  const stockMini = new Map<string, number>();
+  if (brut.stock_mini && typeof brut.stock_mini === "object" && !Array.isArray(brut.stock_mini)) {
+    for (const [ref, valeur] of Object.entries(brut.stock_mini)) {
+      if (estNombre(valeur)) stockMini.set(ref, valeur);
+    }
+  }
+  return {
+    delaiToutesPieces: estNombre(brut.delai_semaines_toutes_pieces) ? brut.delai_semaines_toutes_pieces : null,
+    stockMini,
+    outillageToutDisponible: brut.outillage_tout_disponible === true,
+  };
 }
 
 function lireDelaiSemaines(piece: Piece): number | null {
