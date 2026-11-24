@@ -1,0 +1,74 @@
+{
+  "sans": {
+    "pieces": [
+      {
+        "ref": "P-FIX-01",
+        "designation": "Pièce de fixture",
+        "prix_unitaire_eur": 10,
+        "delai_standard_semaines": 9,
+        "delai_semaines": 6,
+        "stock_initial": 3,
+        "stock_mini": 8
+      },
+      {
+        "ref": "P-FIX-02",
+        "designation": "Autre pièce de fixture",
+        "prix_unitaire_eur": 20,
+        "delai_standard_semaines": 9,
+        "delai_semaines": 1,
+        "stock_initial": 0,
+        "stock_mini": 0
+      }
+    ],
+    "organisation": {},
+    "outillages": [
+      {
+        "id_outil": "OUTIL-FIX",
+        "designation": "Outil de fixture",
+        "prix_eur": 12,
+        "disponible_au_depart": false
+      }
+    ]
+  },
+  "avec": {
+    "pieces": [
+      {
+        "ref": "P-FIX-01",
+        "designation": "Pièce de fixture",
+        "prix_unitaire_eur": 10,
+        "delai_standard_semaines": 9,
+        "delai_semaines": 6,
+        "stock_initial": 3,
+        "stock_mini": 8
+      },
+      {
+        "ref": "P-FIX-02",
+        "designation": "Autre pièce de fixture",
+        "prix_unitaire_eur": 20,
+        "delai_standard_semaines": 9,
+        "delai_semaines": 1,
+        "stock_initial": 0,
+        "stock_mini": 0
+      }
+    ],
+    "organisation": {
+      "surcharges_niveau_1": {
+        "delai_semaines_toutes_pieces": 4,
+        "delai_express_h": 16,
+        "probabilite_retard": 0,
+        "stock_mini": {
+          "P-FIX-01": 1
+        },
+        "outillage_tout_disponible": true
+      }
+    },
+    "outillages": [
+      {
+        "id_outil": "OUTIL-FIX",
+        "designation": "Outil de fixture",
+        "prix_eur": 12,
+        "disponible_au_depart": false
+      }
+    ]
+  }
+}

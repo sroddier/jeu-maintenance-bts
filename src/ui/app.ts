@@ -32,6 +32,7 @@ import {
   usine,
 } from "../sim/usine";
 import { habillerNarration, installerNarration } from "./narration";
+import { ouvrirInventaire } from "./panneau-inventaire";
 import { QUANTITE_MAX, QUANTITE_MIN, bornerQuantite, filtrerChiffres } from "./quantite";
 import { resultatDepuisPartie } from "../online/depuis-partie";
 import { deposerResultat, renvoyerFile, type ResultatDepot } from "../online/envoi";
@@ -184,9 +185,17 @@ function page(): string {
 function bandeau(): string {
   const seed = partie?.seedLabel || exerciceSeed() || seedDansUrl() || "—";
   return `<header class="bandeau"><div class="bandeau-interne">
-    <p class="kicker">Boissons des Calanques · ligne L1 · niveau 1</p>
-    <h1>Chef du service maintenance</h1>
-    <p class="meta-bandeau">${esc(usine.organisation.produit)} · ${esc(usine.organisation.horaires)} · graine ${esc(seed)}</p>
+    <div class="bandeau-haut">
+      <div class="bandeau-texte">
+        <p class="kicker">Boissons des Calanques · ligne L1 · niveau 1</p>
+        <h1>Chef du service maintenance</h1>
+        <p class="meta-bandeau">${esc(usine.organisation.produit)} · ${esc(usine.organisation.horaires)} · graine ${esc(seed)}</p>
+      </div>
+      <button type="button" class="bouton-inventaire" data-action="inventaire" aria-haspopup="dialog">
+        <span class="icone-sac" aria-hidden="true">🎒</span>
+        <span>Inventaire</span>
+      </button>
+    </div>
   </div></header>`;
 }
 
@@ -357,7 +366,13 @@ function phaseIntervenir(): string {
   const bouton = devis && !devis.erreur ? "" : "disabled";
   return `<section class="grille deux">
     <div class="carte">
-      <h2>${panne.rechute ? "La panne revient" : "Panne en cours"}</h2>
+      <div class="entete-phase">
+        <h2>${panne.rechute ? "La panne revient" : "Panne en cours"}</h2>
+        <button type="button" class="secondaire bouton-inventaire-phase" data-action="inventaire" aria-haspopup="dialog">
+          <span class="icone-sac" aria-hidden="true">🎒</span>
+          <span>Inventaire</span>
+        </button>
+      </div>
       <p><strong>${esc(mode.designation)}</strong> · ${esc(mode.id_mode)}<br>
       ${esc(libelleHoraire(panne.heure, heuresParSemaine()))} · détection : ${esc(mode.mode_detection)}</p>
       <p>Détection constatée : ${formatHeures(panne.detection)}. Réparation curative estimée : ${formatHeures(panne.reparation)}. Remise en service estimée : ${formatHeures(panne.remise)}.</p>
@@ -714,6 +729,10 @@ function onClick(event: Event): void {
   const bouton = (event.target as HTMLElement).closest<HTMLElement>("[data-action]");
   if (!bouton) return;
   const action = bouton.dataset.action;
+  if (action === "inventaire") {
+    ouvrirInventaire(() => partie, bouton);
+    return;
+  }
   if (action === "lire" && partie) agir({ type: "lire" });
   if (action === "tour-suivant" && partie) agir({ type: "tour-suivant" });
   if (action === "exercice") {
