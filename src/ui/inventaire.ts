@@ -144,10 +144,9 @@ export function htmlPieces(lignes: LignePieceInventaire[], enPartie: boolean): s
 
 /** Outils lus dans `outillages[]` s'il est chargé, sinon la liste statique du niveau 1. */
 export function lignesOutillage(source: Usine = usine, niveau = 1): readonly LigneOutillage[] {
-  const lignes = lireOutillages(source) ?? OUTILLAGE;
   const surcharge = niveau === 1 ? lireSurchargeNiveau1(source) : null;
-  if (!surcharge?.outillageToutDisponible) return lignes;
-  return lignes.map((ligne) => ({ ...ligne, disponible: true, mention: "disponible" }));
+  const toutDisponible = surcharge?.outillageToutDisponible === true;
+  return lireOutillages(source, niveau, toutDisponible) ?? debloquerListe(OUTILLAGE, toutDisponible);
 }
 
 /** Hygiène lue dans `organisation.epi_hygiene_base` si le champ est chargé. Le reste reste la liste statique. */
@@ -262,24 +261,67 @@ function lireDelaiSemaines(piece: Piece): number | null {
   return null;
 }
 
-function lireOutillages(source: Usine): LigneOutillage[] | null {
+function lireOutillages(source: Usine, niveau: number, toutDisponible: boolean): LigneOutillage[] | null {
   const liste = (source as Usine & { outillages?: unknown }).outillages;
   if (!Array.isArray(liste)) return null;
   const lignes: LigneOutillage[] = [];
   for (const item of liste) {
     if (!item || typeof item !== "object") continue;
-    const outil = item as { designation?: unknown; prix_eur?: unknown; disponible_au_depart?: unknown };
+    const outil = item as {
+      id_outil?: unknown;
+      designation?: unknown;
+      prix_eur?: unknown;
+      disponible_au_depart?: unknown;
+    };
     if (typeof outil.designation !== "string" || outil.designation.trim() === "") continue;
     if (typeof outil.disponible_au_depart !== "boolean") continue;
     const prix = estNombre(outil.prix_eur) ? formatEuros(outil.prix_eur) : "";
-    lignes.push({
-      nom: outil.designation,
-      detail: prix,
-      disponible: outil.disponible_au_depart,
-      mention: outil.disponible_au_depart ? "disponible" : "non disponible au départ",
-    });
+    const etat = etatOutil(outil, niveau, toutDisponible);
+    lignes.push({ nom: outil.designation, detail: prix, ...etat });
   }
   return lignes.length > 0 ? lignes : null;
+}
+
+/** L'analyseur vibratoire s'achète au niveau 3. Un champ de déblocage du fichier prime sur cette règle. */
+function etatOutil(
+  outil: { id_outil?: unknown; designation?: unknown; disponible_au_depart?: unknown },
+  niveau: number,
+  toutDisponible: boolean,
+): { disponible: boolean; mention: string } {
+  const designation = typeof outil.designation === "string" ? outil.designation : "";
+  const id = typeof outil.id_outil === "string" ? outil.id_outil : "";
+  const niveauMin = lireNiveauMin(outil);
+  if (niveauMin !== null && niveauMin > niveau) {
+    return { disponible: false, mention: `disponible à partir du niveau ${niveauMin}` };
+  }
+  if (niveauMin === null && estAnalyseurVibratoire(designation, id) && niveau < 3) {
+    return { disponible: false, mention: "disponible à partir du niveau 3" };
+  }
+  const disponible = toutDisponible || outil.disponible_au_depart === true;
+  return { disponible, mention: disponible ? "disponible" : "non disponible au départ" };
+}
+
+function lireNiveauMin(outil: object): number | null {
+  const brut = outil as {
+    niveau_min?: unknown;
+    niveau_disponible?: unknown;
+    disponible_a_partir_du_niveau?: unknown;
+  };
+  for (const valeur of [brut.niveau_min, brut.niveau_disponible, brut.disponible_a_partir_du_niveau]) {
+    if (estNombre(valeur)) return valeur;
+  }
+  return null;
+}
+
+function estAnalyseurVibratoire(designation: string, id: string): boolean {
+  return id === "O-VIB" || designation.toLocaleLowerCase("fr").includes("analyseur vibratoire");
+}
+
+function debloquerListe(lignes: readonly LigneOutillage[], toutDisponible: boolean): readonly LigneOutillage[] {
+  if (!toutDisponible) return lignes;
+  return lignes.map((ligne) =>
+    estAnalyseurVibratoire(ligne.nom, "") ? ligne : { ...ligne, disponible: true, mention: "disponible" },
+  );
 }
 
 function lireHygiene(source: Usine): string[] | null {

@@ -42,12 +42,14 @@ describe("inventaire des pièces", () => {
     }
     const outils = lignesOutillage(usine, 1);
     expect(outils.map((ligne) => ligne.nom)).toEqual(usine.outillages?.map((outil) => outil.designation));
-    expect(outils.every((ligne) => ligne.disponible && ligne.mention === "disponible")).toBe(true);
-    expect(usine.outillages?.some((outil) => outil.disponible_au_depart === false)).toBe(true);
+    const analyseur = outils.find((ligne) => ligne.nom.toLocaleLowerCase("fr").includes("analyseur vibratoire"));
+    expect(analyseur?.disponible).toBe(false);
+    expect(analyseur?.mention).toBe("disponible à partir du niveau 3");
+    expect(outils.filter((ligne) => ligne !== analyseur).every((ligne) => ligne.disponible && ligne.mention === "disponible")).toBe(true);
     const html = htmlOutillage(usine);
-    expect(html).toContain("disponible");
+    expect(html).toContain("disponible à partir du niveau 3");
+    expect(html).toContain("plus-tard");
     expect(html).not.toContain("non disponible");
-    expect(html).not.toContain("disponible à partir du niveau 3");
     expect(htmlPieces(lignes, false)).toContain("2 semaines");
   });
 
@@ -244,5 +246,20 @@ describe("inventaire outillage et EPI", () => {
     expect(autreNiveau.map((ligne) => ligne.delaiSemaines)).toEqual([6, 1]);
     expect(autreNiveau.map((ligne) => ligne.stockMini)).toEqual([8, 0]);
     expect(lignesOutillage(avec, 2)[0].disponible).toBe(false);
+
+    const plusTard = structuredClone(avec) as Usine & { outillages: Array<Record<string, unknown>> };
+    plusTard.outillages = [
+      {
+        id_outil: "OUTIL-PLUS-TARD",
+        designation: "Outil plus tard",
+        prix_eur: 1,
+        disponible_au_depart: false,
+        niveau_min: 4,
+      },
+    ];
+    expect(lignesOutillage(plusTard, 1)[0]).toMatchObject({
+      disponible: false,
+      mention: "disponible à partir du niveau 4",
+    });
   });
 });
