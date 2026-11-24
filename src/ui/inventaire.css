@@ -1,0 +1,329 @@
+.bandeau-interne {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.bandeau-haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.bandeau-texte { min-width: 0; flex: 1 1 auto; }
+
+button.bouton-inventaire,
+button.bouton-inventaire-phase,
+.inventaire-panneau button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.bouton-inventaire,
+button.bouton-inventaire-phase {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  min-width: 44px;
+  padding: 10px 16px;
+  font-size: 16px;
+  line-height: 1.2;
+  touch-action: manipulation;
+  flex: 0 0 auto;
+}
+
+button.bouton-inventaire {
+  background: white;
+  color: var(--marine);
+  border: 1px solid white;
+}
+
+button.bouton-inventaire:hover { background: #e7f3f2; color: var(--marine); }
+
+.icone-sac { font-size: 1.25rem; line-height: 1; }
+
+.entete-phase {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.entete-phase h2 { margin: 0; }
+
+/* La bulle du magasinier est fixe en bas : on peut remonter le bouton au-dessus. */
+body:has(.bouton-inventaire-phase) .page { padding-bottom: 360px; }
+.bouton-inventaire-phase {
+  scroll-margin-top: 12px;
+  scroll-margin-bottom: 360px;
+}
+
+body.inventaire-ouvert { overflow: hidden; }
+
+body.inventaire-ouvert .nar-bulle {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.inventaire-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-top: 48px;
+  background: rgba(22, 50, 74, 0.55);
+  overflow: hidden;
+}
+
+.inventaire-panneau {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100dvh - 48px);
+  max-height: calc(100dvh - 48px);
+  border-radius: 16px 16px 0 0;
+  background: var(--carte);
+  color: var(--encre);
+  box-shadow: 0 16px 50px rgba(22, 50, 74, 0.28);
+  overflow: hidden;
+}
+
+.inventaire-panneau:focus { outline: none; }
+
+.inventaire-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 8px;
+  flex: 0 0 auto;
+}
+
+.inventaire-entete h2 { margin: 0; font-size: 1.25rem; }
+.inventaire-entete p { margin: 4px 0 0; font-size: 16px; }
+
+button.inventaire-fermer {
+  min-height: 48px;
+  min-width: 44px;
+  padding: 10px 16px;
+  font-size: 16px;
+  background: var(--carte);
+  color: var(--marine);
+  border: 1px solid #c9bfb0;
+  touch-action: manipulation;
+  flex: 0 0 auto;
+}
+
+button.inventaire-fermer:hover { background: #f6f1e8; color: var(--marine); }
+
+.inventaire-onglets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 12px;
+  flex: 0 0 auto;
+}
+
+.inventaire-onglets button {
+  flex: 1 1 30%;
+  min-height: 48px;
+  min-width: 44px;
+  font-size: 16px;
+  background: var(--carte);
+  color: var(--marine);
+  border: 1px solid #c9bfb0;
+  touch-action: manipulation;
+}
+
+.inventaire-onglets button:hover { background: #f6f1e8; color: var(--marine); }
+
+.inventaire-onglets button[aria-selected="true"] {
+  background: var(--marine);
+  color: white;
+  border-color: var(--marine);
+}
+
+.inventaire-onglets button[aria-selected="true"]:hover {
+  background: var(--marine);
+  color: white;
+}
+
+.inventaire-corps {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  font-size: 16px;
+  overflow-wrap: break-word;
+}
+
+.inventaire-contexte {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.inventaire-table { display: none; }
+
+.inventaire-table table,
+.inventaire-table th,
+.inventaire-table td { font-size: 16px; }
+
+.inventaire-table th { font-size: 16px; }
+
+.piece-cartes { display: grid; gap: 10px; }
+
+.piece-carte {
+  border: 1px solid var(--filet);
+  border-radius: 12px;
+  padding: 12px;
+  background: white;
+  font-size: 16px;
+  max-width: 100%;
+}
+
+.piece-carte-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.piece-designation { margin: 6px 0 0; font-size: 16px; }
+
+.piece-carte dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin: 10px 0 0;
+}
+
+.piece-carte dt {
+  margin: 0;
+  color: var(--encre-douce);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.piece-carte dd { margin: 0; font-size: 16px; font-variant-numeric: tabular-nums; }
+.piece-large { grid-column: 1 / -1; }
+
+.piece-valeur { font-weight: 700; }
+
+.piece-origine {
+  display: block;
+  color: var(--encre-douce);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.badge-alerte {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--ambre-fond);
+  color: var(--ambre);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.piece-carte-entete .badge-alerte { margin-top: 0; }
+
+.piece-sous .badge-alerte,
+tr.piece-sous .badge-alerte {
+  background: var(--rouge-fond);
+  color: var(--rouge);
+}
+
+tr.piece-au-mini,
+.piece-carte.piece-au-mini { background: var(--ambre-fond); }
+
+tr.piece-sous,
+.piece-carte.piece-sous {
+  background: var(--rouge-fond);
+  border-color: #e4b4b4;
+}
+
+.piece-carte.piece-au-mini { border-color: #e0b56a; }
+
+.liste-inventaire {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.liste-inventaire li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--filet);
+  border-radius: 12px;
+  background: white;
+  font-size: 16px;
+}
+
+.outil-nom { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.outil-detail { color: var(--encre-douce); font-size: 16px; }
+.outil-etat { font-weight: 700; color: var(--vert); font-size: 16px; }
+
+.outil.plus-tard {
+  background: #f3efe8;
+  color: var(--encre-douce);
+}
+
+.outil.plus-tard .outil-etat {
+  color: var(--encre-douce);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.inventaire-corps h3 { font-size: 1.05rem; margin: 16px 0 8px; }
+
+.inventaire-habilitation {
+  margin: 4px 0 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--ambre-fond);
+  border: 1px solid #f0d3a8;
+  color: var(--ambre);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+@media (min-width: 800px) {
+  .inventaire-fond {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .inventaire-panneau {
+    width: min(960px, 100%);
+    height: auto;
+    max-height: min(88dvh, 860px);
+    border-radius: 16px;
+  }
+
+  .inventaire-table { display: block; }
+  .piece-cartes { display: none; }
+}
+
+@media (max-width: 799px) {
+  .bandeau-haut { align-items: center; }
+  .inventaire-table { display: none; }
+  .piece-cartes { display: grid; }
+}
