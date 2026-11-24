@@ -85,13 +85,14 @@ Alignée sur la boucle du GDD (1 tour = 1 semaine = 80 h d'ouverture ; phases Pl
 | 1 | Premier poste : la remplisseuse tombe en panne | 1re | correctif immédiat/différé, palliatif/curatif, TBF, TA, MTBF, MTTR, MDT | C11, C12, C13, C24, C51 |
 | 2 | La ligne et son goulot | 1re | cadences, goulot, Ai/Ao, disponibilité d'une ligne en série, TRS = Do × Tp × Tq, coût d'arrêt | C41, C51 |
 | 3 | Anticiper l'usure | 1re → 2e | lois exponentielle et Weibull, R(t), λ(t), MTBF de Weibull, préventif systématique / conditionnel / prévisionnel, stock mini | C21, C22, C23, C52 |
-| 4 | Où agir d'abord ? | 2e | Pareto (N, temps d'arrêt, coûts), ABC du stock, ajustement de Weibull, choix de politique selon β | C51, C52 |
+| 4 | Où agir d'abord ? | 2e | Pareto (N, temps d'arrêt, coûts), ABC du stock, quantité économique de Wilson, ajustement de Weibull, choix de politique selon β | C51, C52 |
 | 5 | Optimiser et maîtriser les risques | 2e | période optimale (2 modèles : réparation minimale, remplacement selon l'âge), AMDEC (C = F × G × D), coût global | C31, C51, C52, C53 |
 | 6 | Bilan annuel du service | 2e | TRS/TRG/TRE, coûts directs et indirects, budget, compte rendu et soutenance | C24, C33, C51, C53 |
 
 ### Niveau 1 — Premier poste : la remplisseuse tombe en panne (1re année)
 - **Objectifs** : distinguer une action **palliative** (dépannage, réparation provisoire) d'une action **curative** (réparation durable), et un correctif **immédiat** d'un correctif **différé**. Lire un historique GMAO, séparer temps de bon fonctionnement (TBF) et temps d'arrêt (TA), et calculer MTBF, MTTR et MDT.
 - **Mécanique de jeu côté métier** : 1 machine (la remplisseuse, goulot), 2 techniciens. Le préventif « joints toutes les 4 semaines » est **imposé et non modifiable**. À chaque panne, le joueur choisit dépannage provisoire (rapide, la panne revient) ou réparation (plus long, durable). Le dépannage suit la règle du § 3.2 : réparation active = 40 % de celle du mode arrondie au ¼ h, sans pièce, et réapparition après 40 h d'ouverture sauf curatif différé le samedi. Il choisit aussi interne ou sous-traitance, et attente ou commande express de la pièce. En phase Bilan, il saisit MTBF, MTTR et MDT.
+- **Paramètres figés** (décision de Steph du 2026-11-24) : le niveau 1 garde l'inventaire d'avant le 2026-11-24 via `organisation.surcharges_niveau_1` (délai de 2 semaines, aucun retard, express en 16 h, anciens stocks mini, outillage sans effet, pas de coût de passation ; § 3.5). Corrigés et score inchangés, vérifiés par assertion.
 - **Compétences** : C11 (hypothèses de panne : choix guidé du sous-ensemble défaillant), C12 et C13 (rétablir, remettre en service), C24 (bon de travail renseigné dans la GMAO), C51 (indicateurs de fiabilité et de maintenabilité).
 - **Critères d'évaluation** : indicateurs justes (tolérances, § 7) ; décomposition correcte du TA (détection, attente, réparation, remise en service) ; BT complet ; pas de dépannage provisoire laissé sans correctif différé.
 - **Objectif chiffré / passage** : Ao de la remplisseuse ≥ 92 % sur la partie ; ≥ 2★ et ≥ 70 % de calculs justes (règle du GDD).
@@ -108,10 +109,10 @@ Alignée sur la boucle du GDD (1 tour = 1 semaine = 80 h d'ouverture ; phases Pl
 - **Mécanique** : le joueur peut programmer des remplacements systématiques (au tour), poser une **ronde de mesure** (vibrations du motoréducteur de la remplisseuse, allongement de la chaîne des convoyeurs) et fixer des seuils, et régler le stock mini de chaque pièce. Les accumulations entre machines deviennent actives (option du moteur : arrêts de moins de 10 min absorbés hors goulot).
 - **Compétences** : C23 (opérations préventives, mesures exploitables), C21 et C22 (consignation avant intervention : question de sécurité à chaque BT préventif), C52 (type d'activité arrêté et justifié, pièces à tenir en stock).
 - **Critères** : calculs de fiabilité justes ; politique cohérente avec β (pas de systématique sur β ≤ 1) ; seuils conditionnels compatibles avec l'intervalle P-F.
-- **Passage** : Ao du goulot ≥ 93 % ; aucune rupture sur une pièce de classe A.
+- **Passage** : Ao du goulot ≥ 93 % ; **aucune rupture sur une pièce critique** (liste fournie dans le jeu, § 3.5 : P-REM-01, P-REM-02, P-REM-03, P-REM-04, P-FAR-01, P-BOU-01, P-CON-02). Pour P-REM-04 (motoréducteur, 0 en stock au départ), la condition est remplie si la pièce est en stock **ou** si une ronde vibratoire (analyseur vibratoire O-VIB) est en place. *Pourquoi pas « classe A »* : l'ABC n'est vu qu'au niveau 4, et il classe la valeur consommée, pas la criticité ; au niveau 3, ce qui compte est le temps d'arrêt qu'une rupture provoquerait (validé par Steph le 2026-11-24).
 
 ### Niveau 4 — Où agir d'abord ? (2e année)
-- **Objectifs** : construire un Pareto (en nombre, en temps d'arrêt, en coût) et un classement ABC ; ajuster une loi de Weibull (papier d'Allan Plait ou régression à la calculatrice) ; en déduire la politique de maintenance par mode.
+- **Objectifs** : construire un Pareto (en nombre, en temps d'arrêt, en coût) et un classement ABC ; calculer une quantité économique de commande (Wilson, § 5.11 et § 6.11) pour les pièces à consommation régulière ; ajuster une loi de Weibull (papier d'Allan Plait ou régression à la calculatrice) ; en déduire la politique de maintenance par mode.
 - **Mécanique** : GMAO complète ; en début de partie, le jeu fournit un historique et demande de classer machines et pièces. La justesse des classes A/B/C débloque des budgets d'amélioration.
 - **Compétences** : C51 (« sous-ensembles et composants les plus pénalisants listés, hiérarchisés »), C52 (« choix des pièces de rechange à tenir en stock justifié »).
 - **Critères** : classes exactes ; β et η dans la tolérance de lecture ; décision cohérente avec β.
@@ -204,8 +205,9 @@ Arrondi : au ¼ h le plus proche, une valeur à mi-chemin étant arrondie vers l
 | Main-d'œuvre interne | **{fr(c['taux_main_oeuvre_eur_par_h'])} €/h** | coût horaire chargé d'un technicien de maintenance (ordre de grandeur courant) ; nombre rond |
 | Heures supplémentaires, samedi | **{fr(c['taux_main_oeuvre_heures_sup_eur_par_h'])} €/h** | + 25 % |
 | Sous-traitance | **{fr(c['sous_traitance_eur_par_h'])} €/h + {fr(c['sous_traitance_deplacement_eur'])} € de déplacement**, arrivée en {fr(c['sous_traitance_delai_arrivee_h'])} h | valeurs du GDD conservées |
-| Pièce en express | **+ {fr(c['majoration_express_pct'])} %**, livrée en {fr(c['delai_express_h'])} h d'ouverture (1 jour) | GDD |
-| Pièce standard | délai 2 semaines (2 tours) | GDD |
+| Pièce en express | **+ {fr(c['majoration_express_pct'])} %**, livrée en {fr(c['delai_express_h'])} h d'ouverture (1 jour), ou en 1 semaine pour P-REM-04, P-BOU-01 et P-CON-02 | GDD ; inventaire validé par Steph le 2026-11-24 |
+| Pièce standard | délai propre à chaque pièce, de 1 à 6 semaines (§ 3.5), retard possible ⌈D/2⌉ avec une probabilité de 10 % | inventaire validé par Steph le 2026-11-24 |
+| Passation d'une commande | **{fr(c['cout_passation_commande_eur'])} €** par commande | coût administratif courant (30 à 100 €) |
 | Possession du stock | {fr(c['cout_possession_stock_pct_par_an'])} %/an de la valeur, soit 0,4 %/semaine (sur 50 semaines) | GDD |
 | **Pénalité d'arrêt** | **1 200 €/h pour tout arrêt de la ligne** (niveaux 1–2 : ligne en série sans accumulation) | 10 000 b/h × 0,12 € de marge |
 | Pénalité avec accumulations (niveaux ≥ 3, option) | goulot : 1 200 €/h ; autres machines : arrêts de moins de 10 min absorbés, au-delà 1 200 €/h | aligné sur le GDD v0.1 (tables tampons 10 min) |
@@ -220,7 +222,113 @@ for p in U["pieces"]:
 pi=U["politique_initiale"][0]
 A(f"""
 **Politique initiale (situation de départ)** : remplacement systématique du kit complet de joints des 24 vannes (P-REM-02) **toutes les 4 semaines**, le samedi, hors temps d'ouverture : 7,5 h + 0,5 h de remise en service, 1 technicien en heures supplémentaires. Coût = 600 + 8 × 50 = **1 000 €**, sans perte de production. Tout le reste est en correctif.
+""")
 
+# ---------- 3.4 Événements ----------
+EVL={x["id_evenement"]:x for x in U["evenements"]["liste"]}
+BASE={"tour":"par tour","commande_standard":"par commande standard","livraison":"par livraison","partie":"par partie"}
+DEC={"E01":"OK","E02":"OK, pour l'équipe : un seul technicien tiré au sort","E03":"OK","E04":"**3 %** au lieu de 5 % (validé par Steph le 2026-11-24)",
+     "E05":"OK","E06":"OK sur la fréquence ; **volume : +20 %** de la production bonne moyenne (validé par Steph le 2026-11-24) (point 1 c)","E07":"OK ; **limitée aux 6 modes sensibles à la chaleur** (validé par Steph le 2026-11-24) (point 1 b)","E08":"OK (PRNG séparé)"}
+JUS={"E01":"de l'ordre de 5 micro-coupures ou coupures brèves par an sur un site industriel raccordé en HTA ; probabilité d'au moins une en 8 tours : 57 %",
+     "E02":"absentéisme de 4 à 5 % en industrie, soit environ 2 à 3 % par technicien et par semaine pour un arrêt d'une semaine entière ; pour une équipe de 2 à 4, 8 % est réaliste",
+     "E03":"un taux de livraison à l'heure de 85 à 95 % est courant chez les fournisseurs industriels",
+     "E04":"les erreurs de livraison sont plutôt de 1 à 2 % ; 3 % les garde visibles dans une partie sans exagérer",
+     "E05":"au moins un audit interne ou externe par trimestre en agroalimentaire (IFS, BRC) ; 1 par partie est cohérent",
+     "E06":"pic d'été habituel sur les boissons ; 1 par partie suffit pour l'enseignement",
+     "E07":"tous les tours des niveaux 4 à 6 sont réputés en saison chaude ; probabilité d'au moins une canicule : 73 % en 8 tours, 86 % en 12",
+     "E08":"sans effet chiffré, donc sans risque pour la notation"}
+A("""### 3.4 Événements (niveaux 2 à 6)
+
+Validation métier du § 14.5 du GDD v0.5. **Au niveau 1 (partie notée), aucun événement chiffré n'est actif** : E01 à E07 sont désactivés et E08, cosmétique, utilise un PRNG séparé. Aucun corrigé de ce document ne dépend donc des événements. Les paramètres sont dans `usine.json`, bloc `evenements`.
+
+**Ajustements validés par Steph le 2026-11-24** : (1) E04 à 3 % des livraisons ; (2) canicule limitée aux 6 modes SOU-M1, REM-M2, REM-M3, ETI-M1, FAR-M1 et CON-M1 ; (3) maintenance du samedi déplacée au dimanche, à 80 €/h, les semaines où le samedi est produit ; (4) commande urgente à +20 % de la production bonne moyenne des tours précédents.
+
+| ID | Événement | Niveaux | Probabilité | Max. par partie | Décision | Justification |
+|---|---|---|---|---|---|---|""")
+for i,x in EVL.items():
+    A(f"| {i} | {x['designation']} | {', '.join(map(str,x['niveaux']))} | {fr(round(x['probabilite']*100,1))} % {BASE[x['base_probabilite']]} | {x['max_par_partie'] if x['max_par_partie'] else '—'} | {DEC[i]} | {JUS[i]} |")
+c7=EVL["E07"]["parametres"]; c1=EVL["E01"]["parametres"]; c6=EVL["E06"]["parametres"]; hs=U["organisation"]["hors_specialite"]
+A(f"""
+**1 a) Probabilités** : voir le tableau. Seule E04 change (3 %, validé par Steph le 2026-11-24).
+
+**1 b) Canicule (E07) : multiplicateur k = {fr(c7['multiplicateur_taux_defaillance'])} du taux de défaillance**, pendant 1 tour, seulement sur les modes sensibles à la chaleur (liste validée par Steph le 2026-11-24) : {', '.join(c7['modes_concernes'])}. Ce sont l'électronique et les capteurs (REM-M2, ETI-M1, CON-M1), les éléments chauffants (SOU-M1, FAR-M1) et le motoréducteur (REM-M3 : échauffement du moteur, lubrifiant fluidifié). *Justification* : la règle d'Arrhenius donne un taux environ doublé pour +10 °C sur l'électronique, et +5 °C environ dans l'atelier donne de l'ordre de ×1,4 à ×1,5. Les modes d'usure mécanique et les bourrages ne sont pas sensibles à une semaine chaude. Les joints REM-M1 vieillissent avec la chaleur, mais sur des mois, et ils sont au contact du produit froid : ils sont exclus.
+- **Formule exacte à appliquer par le moteur** (risque proportionnel) : avec H(t) = ((t − γ)/η)^β (0 si t ≤ γ), la probabilité de panne dans le tour, à l'âge t, est **P = 1 − exp[−k × (H(t + Δt) − H(t))]**. C'est le **taux de défaillance** λ(t) que l'on multiplie par k, et non l'âge.
+- Exponentielle : λ' = k·λ. Exemple : ETI-M1, λ' = 0,015 /h, soit 1,2 panne attendue en 80 h au lieu de 0,8 ; P(au moins une) = 1 − e^(−1,2) = 69,88 %.
+- Weibull : c'est équivalent à **η' = η / k^(1/β)**, appliqué **seulement à l'incrément du tour**, avec l'âge réel t inchangé : P = 1 − exp[−(((t + Δt − γ)/η')^β − ((t − γ)/η')^β)]. Remplacer η par η' sur tout l'âge serait faux, car cela vieillirait d'un coup le composant. Exemples : CON-M1, η' = 100 / 1,5² = 44,44 h ; REM-M3, η' = 4 000 / √1,5 = 3 266 h. γ ne change pas. Le contrôle dans `calculs.py` compare les deux écritures à l'intégrale numérique de k·λ(t).
+
+**1 c) Production le samedi (E06)** : le samedi produit entre dans le temps d'ouverture et dans le temps requis. Règle retenue :
+- **Tour de 96 h** cette semaine-là (80 + {fr(c6['heures_production_samedi_h'])} h, samedi 05:00–21:00), avec Δt = 96 h dans la formule de P et les âges qui avancent de 96 h. Le minuteur de 40 h du dépannage provisoire compte aussi le samedi. **To = Tr = 96 h** pour la semaine, et Tr = 80 n + 16 h sur une partie de n tours.
+- **Créneau de maintenance déplacé au dimanche** (hors ouverture). Le préventif et les curatifs différés restent hors N, ΣTA et MTTR, mais sont payés au **taux du dimanche, {fr(U['couts']['taux_main_oeuvre_dimanche_eur_par_h'])} €/h** (+100 %, validé par Steph le 2026-11-24). Si le joueur refuse le dimanche, tout passe **au samedi suivant** : le préventif est reporté d'un tour (l'âge continue d'augmenter) et un dépannage ouvert rechute à 40 h, y compris pendant le samedi produit.
+- **Effet sur les indicateurs** : seul Tr change, donc la méthode reste la même. Exemple : une panne de TA = 6 h dans une semaine de 96 h donne Ao = 90/96 = 93,75 %. Do, Tp, Tq et le TRS se calculent sur Tr = 96 h. Un arrêt planifié pris sur le samedi produit (option que je ne recommande pas) serait un arrêt programmé : Tr = 96 − durée, hors ΣTA, et il baisserait le TRG (Tu/To) mais pas le TRS.
+- **Volume de la commande** : 960 000 bouteilles demandées, c'est la capacité théorique au goulot sur 96 h (10 000 × 96), soit un TRS de 100 % : la commande serait impossible à tenir. Règle retenue : **+{fr(c6['majoration_volume_pct'])} % de la production bonne moyenne des tours précédents** (validé par Steph le 2026-11-24). Ces 20 % correspondent exactement au samedi : 16/80 = 20 %. Exemple avec l'exercice (529 200 bouteilles bonnes par semaine) : objectif 635 040 = 529 200 × 96/80. Il est tenu si le TRS ne baisse pas.
+
+**2) Coupure électrique (E01) : OK.** C'est un **arrêt induit externe** au sens de la NF E60-182 (manque d'énergie). Il entre dans Tr − Tf : il est hors N et hors ΣTA des machines, il baisse Do et le TRS, et l'Ao machine ne change pas. La NF EN 13306 parle d'**état d'incapacité externe** : le bien est apte, mais il manque une ressource extérieure. Ligne arrêtée {fr(c1['duree_arret_ligne_h'])} h ({fr(c1['duree_coupure_reseau_h'])} h de coupure et {fr(c1['duree_redemarrage_h'])} h de redémarrage du four, qui font partie de l'arrêt induit) ; {c1['nb_rebuts_bouteilles']} bouteilles rebutées comptent dans Tq. Exemple : sur Tr = 80 h, une panne de 3 h et une coupure de 1 h donnent Ao = 77/80 = 96,25 % et Do = 76/80 = 95 %.
+- **Redémarrage** : une panne déclenchée par le redémarrage (carte grillée, variateur en défaut) **est une défaillance du bien**. Elle compte dans N, et son TA (détection, attente, réparation, remise en service) commence à la fin de la coupure d'1 h, sans l'inclure. Le GDD ne prévoit pas de tirage spécifique au redémarrage ; s'il en ajoute un, cette règle s'applique.
+- Pendant la coupure, l'âge des modes n'avance pas (1 h, effet négligeable). Pour le MTBF, on garde la convention ΣTBF = Tr − ΣTA.
+
+**3) Technicien hors de sa spécialité : +{fr(hs['majoration_reparation_active_pct'])} %, OK.** Chaque mode a une `specialite` (`electrique` ou `mecanique`). *Justification* : pour un technicien moins familier du sous-ensemble, un allongement de 20 à 50 % du diagnostic et de l'intervention est un ordre de grandeur courant. 25 % est modéré et facile à calculer (× 1,25).
+- **Ne s'applique qu'à la réparation active**, pas à la détection, à l'attente logistique ni à la remise en service. Durée = **arrondi au ¼ h le plus proche de 1,25 × réparation active** (demi-quart vers le haut, minimum 0,25 h). Exemples : 2 h → 2,5 h ; 2,5 h → 3,25 h ; 3 h → 3,75 h ; 22 h → 27,5 h. Pas de majoration si un spécialiste est dans l'équipe d'intervention, ni en sous-traitance.
+- **Dépannage provisoire** : la majoration s'applique à la durée figée et donne une seconde valeur figée, `duree_reparation_active_hors_specialite_h` (tableau ci-dessous).
+- **Entre dans le MTTR** : c'est la réparation active réelle. Elle augmente aussi les heures de main-d'œuvre. Elle est sans effet au niveau 1 (deux techniciens polyvalents), donc les corrigés ne changent pas.
+
+| Mode | Spécialité | Dépannage figé (h) | Hors spécialité (h) |
+|---|---|---|---|""")
+for k_ in ORD:
+    for m in EQ[k_]["modes"]:
+        d=m["depannage_provisoire"]
+        A(f"| {m['id_mode']} | {'électrique' if m['specialite']=='electrique' else 'mécanique'} | {fr(d['duree_reparation_active_h'])} | {fr(d['duree_reparation_active_hors_specialite_h'])} |")
+V="validé par Steph le 2026-11-24"
+CRIT=[p for p in U["pieces"] if p["critique"]]
+A(f"""
+### 3.5 Inventaire et sécurité ({V})
+
+Avis métier validé en bloc par Steph le 2026-11-24 (chiffres et règles de sécurité). Données dans `usine.json` : par pièce (`pieces[]`), par outil (`outillages[]`) et par mode (`consommation_corrective`, `outillage_requis`, `consignation`, `epi`, `habilitation_electrique`).
+
+**Délais et point de commande.** Délai standard D en semaines entières (= tours). Un retard de R = ⌈D/2⌉ semaines survient avec une probabilité de 10 % (événement E03 généralisé ; pour D = 2, R = 1 comme avant). Consommation c par semaine déduite des lois de fiabilité et de la politique de départ (1/MTBF × 80 h ; REM-M1 : 2 kits par panne, préventif toutes les 4 semaines ; P-CON-02 : 1 panne CON-M1 sur 4, comme EX-0008 ; P-CON-01 n'est jamais consommé).
+- **Point de commande** PC = ⌈c × (D + R)⌉, jamais moins que la quantité consommée par intervention, ni moins de 1 pour une pièce critique.
+- **Stock de sécurité** : en théorie c × R (consommation pendant le retard maximal) ; la valeur entière stockée est `stock_securite` = PC − ⌈c × D⌉. La formule statistique z·σ·√D n'est pas utilisée (hors calculatrice).
+- `stock_mini` = PC pour toutes les pièces, sauf P-REM-04 : 0 au départ (décision du joueur), 1 recommandé en correction (54 h × 1 200 € = 64 800 € d'arrêt, contre 5 750 € la pièce).
+
+| Pièce | D (sem.) | R (sem.) | Express (sem.) | c (/sem.) | c × (D + R) | PC | Stock de sécurité | Stock mini (départ) | Stock initial | Critique |
+|---|---|---|---|---|---|---|---|---|---|---|""")
+for p in U["pieces"]:
+    A(f"| {p['ref']} | {p['delai_semaines']} | {p['retard_possible_semaines']} | {fr(p['delai_express_semaines'],1)} | {fr(p['consommation_theorique_par_semaine'],3)} | {fr(round(p['consommation_theorique_par_semaine']*(p['delai_semaines']+p['retard_possible_semaines']),2),2)} | {p['point_commande_calcule']} | {p['stock_securite']} | {p['stock_mini']} | {p['stock_initial']} | {'oui : '+p['motif_critique'] if p['critique'] else 'non'} |")
+A(f"""
+Express à 0,2 semaine = 16 h d'ouverture. Les stocks initiaux à 0 de P-REM-03 et P-REM-04 sont voulus (attentes de l'historique d'exercice). Consommation de CON-M1 conforme à l'historique d'exercice (4 pannes : EX-0008 remplace la carte P-CON-02, EX-0001, EX-0015 et EX-0024 sont des réglages sans pièce, aucune ne consomme de variateur) : P-CON-02 dans 25 % des pannes, P-CON-01 jamais. D'où P-CON-02 : c = 0,1/semaine, PC = ⌈0,1 × 6⌉ = 1, stock de sécurité 0 ; P-CON-01 : c = 0, PC = 0, stock mini 0 (le variateur du stock initial reste en magasin). Aucun corrigé ne change.
+
+**Pièces critiques** (condition de passage du niveau 3) : {', '.join(p['ref'] for p in CRIT)}. Critère : rupture qui arrête le goulot, mode sans dépannage provisoire possible, ou délai de 4 semaines et plus.
+
+**Outillage.** Un outil **obligatoire** absent interdit l'intervention, y compris le dépannage provisoire (sécurité ou qualité : couple de serrage, vérification d'absence de tension, levage, paramétrage). Un outil **de confort** absent ajoute **+50 % de réparation active**, arrondi au ¼ h le plus proche ; cumul avec la majoration hors spécialité par produit (1,25 × 1,5 = 1,875), puis un seul arrondi ; pas de majoration de confort sur le dépannage provisoire. Au départ, tous les outils sont disponibles sauf l'analyseur vibratoire. **Trois règles de sécurité validées par Steph le 2026-11-24** : O-ETAL obligatoire pour REM-M2 ; O-DYN obligatoire pour REM-M3, en plus de O-PALAN ; habilitations BS pour SOU-M1 et ETI-M1, BR pour REM-M2, FAR-M1 et CON-M1.
+
+| Outil | Désignation | Prix (€) | Disponible au départ |
+|---|---|---|---|""")
+for o in U["outillages"]:
+    A(f"| {o['id_outil']} | {o['designation']} | {fr(o['prix_eur'])} | {'oui' if o['disponible_au_depart'] else '**non** (achat)'} |")
+A(f"""
+**Sécurité par mode.** EPI d'hygiène pour toute intervention : {', '.join(U['organisation']['epi_hygiene_base'])}. Consignation « mécanique » inclut les énergies fluides (air comprimé, produit, NEP). La consignation électrique est faite par un chargé de consignation (BC).
+
+| Mode | Consignation | EPI spécifiques | Habilitation électrique | Outillage (obligatoire / confort) |
+|---|---|---|---|---|""")
+CONS={"electrique":"électrique","mecanique":"mécanique","les_deux":"électrique et mécanique"}
+for k_ in ORD:
+    for m in EQ[k_]["modes"]:
+        ob=", ".join(x["id_outil"] for x in m["outillage_requis"] if x["exigence"]=="obligatoire") or "—"
+        co=", ".join(x["id_outil"] for x in m["outillage_requis"] if x["exigence"]=="confort") or "—"
+        sv=(" ; surveillance : "+", ".join(m["outillage_surveillance"])) if m.get("outillage_surveillance") else ""
+        A(f"| {m['id_mode']} | {CONS[m['consignation']]} | {', '.join(m['epi']) or '—'} | {m['habilitation_electrique'] or '—'} | {ob} / {co}{sv} |")
+A("""
+**Niveau 1 figé** (décision de Steph du 2026-11-24) : `organisation.surcharges_niveau_1` remplace l'inventaire au niveau 1. Délai de 2 semaines pour toutes les pièces, aucun retard (probabilité 0), express en 16 h, stock mini d'avant l'inventaire ({', '.join(f"{r} {v}" for r,v in U['organisation']['surcharges_niveau_1']['stock_mini'].items() if r.startswith('P-REM'))}), tout l'outillage disponible, sans majoration de confort ni interdiction, aucun coût de passation. La majoration hors spécialité et les événements chiffrés sont déjà inactifs au niveau 1. Les 2 kits P-REM-01 par panne REM-M1 ne changent rien : l'historique d'exercice les avait déjà (EX-0004, EX-0016). Contrôle : `calculs.py` compare les paramètres effectifs du niveau 1, tous les corrigés et l'historique simulé de la remplisseuse à `scripts/reference_niveau1.json` (valeurs d'avant l'inventaire) : identiques.
+
+**Compléments proposés, à valider par Steph** (champ `propositions_a_valider[]` à la racine de `usine.json`, **sans effet dans le jeu**) :
+
+| Mode | Type | Proposition | Justification |
+|---|---|---|---|""")
+for x in U["propositions_a_valider"]:
+    A(f"| {x['id_mode']} | {x['type']} | {x['valeur']} | {x['justification']} |")
+A("""
+**Manutention du motoréducteur (REM-M3)** : de l'ordre de 80 à 150 kg (ordre de grandeur, à confirmer sur une fiche constructeur). L'employeur doit fournir des aides mécaniques (Code du travail, art. R4541-5) ; le port est limité à 55 kg sans avis d'aptitude du médecin du travail et à 105 kg au plus, et à 25 kg pour les femmes (art. R4541-9). Le palan (O-PALAN) est donc **obligatoire** : sans lui, l'intervention est interdite.
+""")
+A("""
 ---
 """)
 
@@ -248,7 +356,7 @@ Durées en heures. Pour les interventions hors ouverture, la colonne TA donne la
 
 ### 4.2 Historique SIMULÉ (`historique_pannes_simule.csv`) — pour le moteur de jeu uniquement
 
-50 semaines d'ouverture (année 2025 fictive, fermeture du 04 au 15/08, jours fériés ignorés), soit 4 000 h, **graine 2026** (`numpy.random.default_rng`).
+50 semaines d'ouverture (année 2025 fictive, fermeture du 04 au 15/08, jours fériés ignorés), soit 4 000 h, **graine 2026** (`numpy.random.default_rng`). Les pièces consommées à chaque panne suivent `consommation_corrective` (par exemple P-CON-02 dans 25 % des pannes CON-M1, comme dans l'historique d'exercice, et P-CON-01 jamais). Le tirage utilise un PRNG séparé (graine 2027), donc les dates de panne et les durées tirées ne changent pas.
 Modèle : chaque mode tire sa prochaine défaillance selon sa loi, et son âge ne progresse que pendant que la machine fonctionne. Les modes en renouvellement repartent à 0 après réparation. REM-M1 est en réparation minimale (processus de Poisson non homogène à loi puissance), avec un renouvellement à chaque préventif des 4 semaines. Réparation active : loi log-normale de moyenne égale au MTTR du mode (σ du logarithme = 0,5, arrondie au ¼ h). Attente : 0,25 h si la pièce est en stock, sinon 16 h (express), selon la probabilité de stock du mode.
 
 **Vérification de cohérence avec les paramètres.**
@@ -412,6 +520,14 @@ Temps d'état : **Tt** temps total ⊃ **To** temps d'ouverture ⊃ **Tr** temps
 
 # ======================= 6. CORRIGÉS =======================
 rem=[e for e in H if e["id_equipement"]=="REM" and not e["hors_temps_ouverture"]]
+A(f"""### 5.11 Gestion du stock de pièces : point de commande, possession, Wilson (niveaux 3 et 4)
+
+- **Point de commande** (niveau 3) : PC = ⌈c × (D + R)⌉, avec c la consommation par semaine, D le délai et R = ⌈D/2⌉ le retard possible (§ 3.5).
+- **Coût de possession** : Cposs = t × (Q/2 + SS) × Pu, avec t = {fr(U['couts']['cout_possession_stock_pct_par_an'])} %/an, Q la quantité commandée, SS le stock de sécurité et Pu le prix unitaire. Sur 50 semaines d'ouverture, t = **0,4 % par semaine = 0,4 % par tour** de 80 h (un tour de 96 h compte aussi pour 1 tour).
+- **Wilson** (niveau 4, {V}) : coût annuel Ct(Q) = (D_an / Q) × Cl + (Q/2) × t × Pu, minimal pour **Q* = √(2 × D_an × Cl / (t × Pu))**, avec D_an la consommation annuelle et Cl = {fr(U['couts']['cout_passation_commande_eur'])} € le coût de passation. Au minimum, coût de passation = coût de possession. Nombre de commandes par an : N = D_an / Q*.
+- **Limites** : Wilson suppose une consommation régulière et connue. Il convient aux références consommées régulièrement (P-REM-01, P-ETI-01, P-SOU-01). Pour les pièces lentes et critiques (P-REM-04 : Q* ≈ 0,3), il n'a pas de sens : la décision se prend avec le point de commande et le coût d'arrêt.
+
+""")
 A(f"""## 6. Corrigés complets (données d'exercice, calculatrice)
 
 Toutes les valeurs ci-dessous sont recalculées par `scripts/calculs.py` (fractions exactes et assertions). Sauf mention contraire, le temps requis est **Tr = 800 h par machine** (10 semaines × 80 h).
@@ -469,9 +585,9 @@ Données de production (fictives) sur les 10 semaines : Tt = 10 × 168 = **1 680
 - **Étiqueteuse ETI-M1** (λ = 0,01 h⁻¹) : R(80 h) = e^(−0,8) = **0,4493**, donc une probabilité de **55,07 %** d'avoir au moins une panne de cellule par semaine.
 - **β < 1 (CON-M1)** : λ(25 h) = (0,5/100) × (25/100)^(−0,5) = **0,01 h⁻¹** ; λ(400 h) = 0,005 × 4^(−0,5) = **0,0025 h⁻¹**. Le taux est divisé par 4 : la machine se « rode ».
 - **Probabilité de panne dans le tour** (BOU-M1, âge 400 h, Δt = 80 h) : 1 − exp[−((480/500)² − (400/500)²)] = 1 − e^(−0,2816) = **{fr(CF['P_BOU_sem_age400'],4)}**.
-- **Stock mini (point de commande) de la cellule P-ETI-01** : consommation moyenne = λ × 80 h = 0,8 cellule par semaine (hypothèse : 1 cellule par panne) ; délai standard 2 semaines → 0,8 × 2 = 1,6 ; plus 1 en stock de sécurité = 2,6 → **3** (arrondi à l'entier supérieur).
+- **Stock mini (point de commande) de la cellule P-ETI-01** : consommation moyenne c = λ × 80 h = 0,8 cellule par semaine (1 cellule par panne) ; délai D = 1 semaine, retard possible R = ⌈1/2⌉ = 1 semaine ; PC = ⌈0,8 × (1 + 1)⌉ = ⌈1,6⌉ = **2**. Stock de sécurité : 0,8 × 1 = 0,8 en théorie, soit 2 − ⌈0,8⌉ = **1** en entier. (Avant l'inventaire du 2026-11-24, avec D = 2 semaines et SS = 1, on trouvait 3.)
 - **Conditionnel** (REM-M3, motoréducteur) : intervalle P-F (de la détection d'une hausse vibratoire à la panne) supposé égal à **400 h** (fictif). Règle usuelle : inspecter au plus tous les P-F/2 = **200 h**, soit une ronde au moins toutes les 2 semaines. Le jeu propose une ronde chaque semaine.
-- **Prévisionnel** : vitesse vibratoire efficace mesurée à 2,5 mm/s, en hausse de 0,25 mm/s par semaine, et seuil d'alarme fixé par l'entreprise à 4,5 mm/s. Dépassement prévu dans (4,5 − 2,5)/0,25 = **8 semaines** : on commande le motoréducteur (délai 2 semaines) et on planifie le remplacement un samedi avant cette échéance.
+- **Prévisionnel** : vitesse vibratoire efficace mesurée à 2,5 mm/s, en hausse de 0,25 mm/s par semaine, et seuil d'alarme fixé par l'entreprise à 4,5 mm/s. Dépassement prévu dans (4,5 − 2,5)/0,25 = **8 semaines**. Le motoréducteur a un délai de **6 semaines**, avec un retard possible de ⌈6/2⌉ = 3 semaines : 6 + 3 = 9 semaines > 8. Il faut donc **commander tout de suite** : la date limite sans retard serait dans 8 − 6 = 2 semaines, mais elle ne laisse aucune marge pour le retard. Si le retard survient, l'express (1 semaine) permet encore de tenir l'échéance. On planifie le remplacement un samedi entre la réception (semaine 6) et la semaine 8.
 
 ### 6.6 Pareto et ABC (niveau 4)
 **Pareto des temps d'arrêt** (total 160 h) :
@@ -568,6 +684,15 @@ A("""
 """)
 
 # ======================= 7. TOLÉRANCES =======================
+A("""### 6.11 Wilson et coût de possession (niveau 4)
+
+Données : kit de joints P-REM-01, Pu = 25 € ; consommation de l'historique d'exercice : 4 kits en 10 semaines, soit **D_an = 4 × 50/10 = 20 kits par an** ; Cl = 50 € ; t = 20 %/an.
+- **Q* = √(2 × 20 × 50 / (0,20 × 25)) = √(2 000 / 5) = √400 = 20 kits**, soit N = 20/20 = **1 commande par an**.
+- Vérification : Ct(20) = (20/20) × 50 + (20/2) × 0,20 × 25 = 50 + 50 = **100 €/an** (passation = possession). Ct(10) = 100 + 25 = 125 €/an ; Ct(40) = 25 + 100 = 125 €/an : le minimum est bien à 20.
+- Avec le stock de sécurité (SS = 1, § 3.5) : possession = 0,20 × (20/2 + 1) × 25 = **55 €/an**, soit 0,004 × 11 × 25 = **1,10 € par tour**.
+- **Possession de P-ETI-01** (Q = 10, SS = 1) : 0,20 × (10/2 + 1) × 180 = **216 €/an**, soit **4,32 € par tour**. Pour P-ETI-01 (D_an = 40, Pu = 180 €), Q* = √(4 000/36) = 10,54, ce qui donne 10 à l'entier le plus proche.
+
+""")
 A("""## 7. Arrondis attendus et tolérances de correction (notation)
 
 Principe : les données d'exercice sont construites pour que les résultats soient **exacts**. La tolérance sert à absorber une saisie arrondie ou une lecture graphique, pas une erreur de méthode. Ces tolérances remplacent, pour les exercices notés, la règle provisoire « ±2 % » du GDD : ±2 % sur Ao = 90 % accepterait 88,2 à 91,8 %, ce qui laisserait passer l'oubli de l'attente logistique dans les cas proches.
@@ -605,9 +730,9 @@ A(f"""## 8. Proposition de schéma JSON (draft 2020-12)
 
 Deux schémas, écrits dans `schema_equipement.json` et `schema_historique.json`. Règles de nommage : **unité en suffixe** (`_h` heures d'ouverture, `_eur` euros HT, `_par_h` par heure, `_pct` pourcentage, `_bouteilles_par_h`) ; identifiants courts et stables (`REM`, `REM-M1`, `P-REM-02`) ; dates **ISO 8601 avec décalage** (`2026-01-13T09:00:00+01:00`) ; types de maintenance selon la NF EN 13306 (`corrective_immediate`, `corrective_differee`, `preventive_systematique`, `preventive_conditionnelle`, `preventive_previsionnelle`, `amelioration`).
 
-**Validation** (`scripts/schemas.py`, `jsonschema` 4.26, `Draft202012Validator` avec contrôle des formats `date-time`) : `usine.json` → **VALIDE** ; `historique_pannes.json` → **VALIDE** ; `historique_pannes_simule.json` → **VALIDE**. Contrôles complémentaires, impossibles à exprimer en JSON Schema et faits par le script : TA = détection + attente + réparation + remise en service ; coût total = direct + indirect ; pas de chevauchement de pannes dans l'historique d'exercice ; **contrôle croisé pièces/modes** (dans les deux historiques, chaque pièce citée existe au catalogue avec le bon prix, et appartient aux `pieces_corrective` du mode pour un correctif, ou aux `pieces_corrective` ∪ `pieces_preventive` pour un préventif ; le mode correspond bien à l'équipement et au sous-ensemble de l'événement) ; **règle du dépannage provisoire** (pour chaque mode, `duree_reparation_active_h` = arrondi au ¼ h de `ratio_reparation_active` × `mttr_actif_h`, minimum 0,25 h : 13 modes conformes). Les palliatifs des historiques sont aussi comparés à la règle, à titre d'**avertissement non bloquant** : 0 écart dans l'historique simulé, et EX-0002 et EX-0013 signalés dans l'historique d'exercice (§ 6.2).
+**Validation** (`scripts/schemas.py`, `jsonschema` 4.26, `Draft202012Validator` avec contrôle des formats `date-time`) : `usine.json` → **VALIDE** ; `historique_pannes.json` → **VALIDE** ; `historique_pannes_simule.json` → **VALIDE**. Contrôles complémentaires, impossibles à exprimer en JSON Schema et faits par le script : TA = détection + attente + réparation + remise en service ; coût total = direct + indirect ; pas de chevauchement de pannes dans l'historique d'exercice ; **contrôle croisé pièces/modes** (dans les deux historiques, chaque pièce citée existe au catalogue avec le bon prix, et appartient aux `pieces_corrective` du mode pour un correctif, ou aux `pieces_corrective` ∪ `pieces_preventive` pour un préventif ; le mode correspond bien à l'équipement et au sous-ensemble de l'événement) ; **règle du dépannage provisoire** (pour chaque mode, `duree_reparation_active_h` = arrondi au ¼ h de `ratio_reparation_active` × `mttr_actif_h`, minimum 0,25 h : 13 modes conformes) ; **majoration hors spécialité** (durée hors spécialité = arrondi au ¼ h de 1,25 × durée figée) ; **événements** (E01 à E08 présents, aucun événement chiffré au niveau 1, modes de la canicule existants, 96 h = 80 + 16 h et +20 % = 16/80, coupure = 0,5 + 0,5 h). Les palliatifs des historiques sont aussi comparés à la règle, à titre d'**avertissement non bloquant** : 0 écart dans l'historique simulé, et EX-0002 et EX-0013 signalés dans l'historique d'exercice (§ 6.2).
 
-**(a) Équipements** : l'objet racine `usine.json` contient `meta`, `organisation`, `couts`, `politique_initiale`, `pieces[]` et `equipements[]`. Chaque équipement a `id_equipement`, `designation`, `fonction`, `cadence_nominale_bouteilles_par_h`, `goulot`, `penalite_arret_eur_par_h`, `sous_ensembles[]` et `modes[]`. Chaque mode a `id_mode`, `id_sous_ensemble`, `loi` (exponentielle | weibull), `beta`, `eta_h`, `gamma_h`, `lambda_par_h`, `mtbf_theorique_h`, `effet_correctif` (renouvellement | reparation_minimale), `mttr_actif_h`, `sigma_log_reparation`, `pieces_corrective[]`, `pieces_preventive[]`, `mode_detection`, `probabilite_piece_en_stock` et `depannage_provisoire`. Ce dernier est un objet obligatoire avec `autorise` (booléen), `ratio_reparation_active` (nombre, 0,4), `duree_reparation_active_h` (nombre, multiple de 0,25, ≥ 0,25), `pieces` (tableau vide imposé), `reapparition_apres_h` (nombre, 40), `annule_par_curatif_differe` (booléen) et `justification` (texte, obligatoire si `autorise = false`). Règle conditionnelle : loi exponentielle ⇒ β = 1 et γ = 0.
+**(a) Équipements** : l'objet racine `usine.json` contient `meta`, `organisation`, `couts`, `politique_initiale`, `pieces[]` et `equipements[]`. Chaque équipement a `id_equipement`, `designation`, `fonction`, `cadence_nominale_bouteilles_par_h`, `goulot`, `penalite_arret_eur_par_h`, `sous_ensembles[]` et `modes[]`. Chaque mode a `id_mode`, `id_sous_ensemble`, `loi` (exponentielle | weibull), `beta`, `eta_h`, `gamma_h`, `lambda_par_h`, `mtbf_theorique_h`, `effet_correctif` (renouvellement | reparation_minimale), `mttr_actif_h`, `sigma_log_reparation`, `pieces_corrective[]`, `pieces_preventive[]`, `mode_detection`, `probabilite_piece_en_stock` et `depannage_provisoire`. Ce dernier est un objet obligatoire avec `autorise` (booléen), `ratio_reparation_active` (nombre, 0,4), `duree_reparation_active_h` (nombre, multiple de 0,25, ≥ 0,25), `pieces` (tableau vide imposé), `reapparition_apres_h` (nombre, 40), `annule_par_curatif_differe` (booléen), `duree_reparation_active_hors_specialite_h` (nombre, multiple de 0,25 : arrondi au ¼ h de 1,25 × la durée figée) et `justification` (texte, obligatoire si `autorise = false`). Chaque mode a aussi `specialite` (`electrique` | `mecanique`). Ajouts pour les événements (§ 3.4) : `organisation.hors_specialite` (objet : `majoration_reparation_active_pct` = 25, `s_applique_a` = `reparation_active`, `arrondi`, `minimum_h`, `s_applique_au_depannage_provisoire`, `concerne_sous_traitance`, `entre_dans_mttr`, `niveaux`), `couts.taux_main_oeuvre_dimanche_eur_par_h` (80) et le bloc racine `evenements` : `niveau_1` (texte) et `liste[]` d'objets avec `id_evenement` (E01 à E08), `designation`, `niveaux[]`, `probabilite` (0 à 1), `base_probabilite` (`tour` | `commande_standard` | `livraison` | `partie`), `max_par_partie` (entier ou null), `effet_numerique` (booléen, et alors le niveau 1 est interdit) et `parametres` (objet propre à l'événement : par exemple `multiplicateur_taux_defaillance` et `modes_concernes` pour E07, `heures_ouverture_tour_h` et `taux` du dimanche pour E06, `compte_dans_n` = false pour E01). Ajouts de l'inventaire (§ 3.5, validé par Steph le 2026-11-24) : par pièce, `delai_semaines` (entier), `retard_possible_semaines` (= ⌈D/2⌉), `probabilite_retard` (0,10), `delai_express_semaines` (0,2 ou 1), `consommation_theorique_par_semaine`, `point_commande_calcule`, `stock_securite`, `stock_mini`, `critique` et `motif_critique` (le champ `delai_standard_semaines` est supprimé) ; racine `outillages[]` (`id_outil`, `designation`, `prix_eur`, `disponible_au_depart`) ; `couts.cout_passation_commande_eur` (50) ; `organisation.outillage_confort_absent` (+50 %), `organisation.outillage_obligatoire_absent` et `organisation.epi_hygiene_base` ; par mode, `consommation_corrective[]` (`ref`, `quantite`, `probabilite`), `outillage_requis[]` (`id_outil`, `exigence` : `obligatoire` | `confort`), `outillage_surveillance[]` (REM-M3), `consignation` (`electrique` | `mecanique` | `les_deux`), `epi[]` (EPI spécifiques validés, en plus de l'hygiène) et `habilitation_electrique` (BS, BR ou null). Racine `propositions_a_valider[]` (`id_mode`, `type` : `outil` | `habilitation` | `epi`, `valeur`, `justification`, `statut` = `a_valider_par_Steph`), sans effet dans le jeu et à supprimer quand il est vide ; `organisation.surcharges_niveau_1` (`description`, `delai_semaines_toutes_pieces`, `probabilite_retard` = 0, `delai_express_h`, `stock_mini` par pièce, `cout_passation_commande_eur` = 0, `outillage_tout_disponible` = true, `majoration_outillage_confort_pct` = 0, `interdiction_sans_outillage_obligatoire` = false). Règle conditionnelle : loi exponentielle ⇒ β = 1 et γ = 0.
 
 **(b) Historique** : un tableau d'événements. Les colonnes du CSV (séparateur `;`, décimales avec point, booléens `oui`/`non`, pièces au format `REF×quantité` séparées par `|`, sous la forme `P-REM-01x2`) reprennent dans l'ordre les propriétés du schéma : {', '.join('`'+c+'`' for c in cols)}.
 

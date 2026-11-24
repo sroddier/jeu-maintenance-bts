@@ -17,20 +17,71 @@ schema_eq = {
      "postes_par_jour":{"type":"integer","minimum":1},"heures_par_poste":NUM0,"jours_par_semaine":{"type":"integer","minimum":1,"maximum":7},
      "heures_ouverture_par_semaine":{"type":"number","exclusiveMinimum":0},"horaires":{"type":"string"},"produit":{"type":"string"},
      "marge_sur_cout_variable_eur_par_bouteille":NUM0,"cout_rebut_eur_par_bouteille":NUM0,
-     "coefficient_propagation_arret_hors_goulot":{"type":"number","minimum":0,"maximum":1}}},
+     "coefficient_propagation_arret_hors_goulot":{"type":"number","minimum":0,"maximum":1},
+     "outillage_confort_absent":{"type":"object","additionalProperties":False,
+        "required":["majoration_reparation_active_pct","s_applique_a","arrondi","cumul_avec_hors_specialite","s_applique_au_depannage_provisoire"],
+        "properties":{"majoration_reparation_active_pct":{"type":"number","minimum":0},"s_applique_a":{"const":"reparation_active"},
+                      "arrondi":{"const":"quart_heure_le_plus_proche"},"cumul_avec_hors_specialite":{"const":"multiplicatif_puis_un_seul_arrondi"},
+                      "s_applique_au_depannage_provisoire":{"type":"boolean"}}},
+     "outillage_obligatoire_absent":{"type":"string"},
+     "epi_hygiene_base":{"type":"array","items":{"type":"string"}},
+     "surcharges_niveau_1":{"type":"object","additionalProperties":False,
+        "description":"Niveau 1 figé : ces valeurs remplacent l'inventaire au niveau 1",
+        "required":["description","delai_semaines_toutes_pieces","probabilite_retard","delai_express_h","stock_mini","cout_passation_commande_eur",
+                    "outillage_tout_disponible","majoration_outillage_confort_pct","interdiction_sans_outillage_obligatoire"],
+        "properties":{"description":{"type":"string"},"delai_semaines_toutes_pieces":{"type":"integer","minimum":1},
+                      "probabilite_retard":{"const":0},"delai_express_h":{"type":"number","exclusiveMinimum":0},
+                      "stock_mini":{"type":"object","additionalProperties":{"type":"integer","minimum":0}},
+                      "cout_passation_commande_eur":{"const":0},"outillage_tout_disponible":{"const":True},
+                      "majoration_outillage_confort_pct":{"const":0},"interdiction_sans_outillage_obligatoire":{"const":False}}},
+     "hors_specialite":{"type":"object","additionalProperties":False,
+        "required":["majoration_reparation_active_pct","s_applique_a","arrondi","minimum_h","s_applique_au_depannage_provisoire","concerne_sous_traitance","entre_dans_mttr","niveaux"],
+        "description":"Technicien hors de sa spécialité : réparation active majorée (pas la détection, ni l'attente, ni la remise en service)",
+        "properties":{"majoration_reparation_active_pct":{"type":"number","minimum":0},"s_applique_a":{"const":"reparation_active"},
+                      "arrondi":{"const":"quart_heure_le_plus_proche"},"minimum_h":{"type":"number","minimum":0},
+                      "s_applique_au_depannage_provisoire":{"type":"boolean"},"concerne_sous_traitance":{"type":"boolean"},
+                      "entre_dans_mttr":{"type":"boolean"},"niveaux":{"type":"array","items":{"type":"integer","minimum":1,"maximum":6}}}}}},
   "couts":{"type":"object","required":["taux_main_oeuvre_eur_par_h","penalite_arret_goulot_eur_par_h","penalite_arret_autre_eur_par_h"],
            "additionalProperties":NUM0},
   "politique_initiale":{"type":"array","items":{"type":"object","required":["id_mode","type_maintenance"],"properties":{
      "id_mode":{"type":"string"},"type_maintenance":{"enum":TYPES_MAINT},"action":{"type":"string"},"periode_semaines":{"type":"number","exclusiveMinimum":0},
      "hors_temps_ouverture":{"type":"boolean"},"duree_h":NUM0,"nb_techniciens":{"type":"integer","minimum":1},"cout_eur":NUM0}}},
+  "evenements":{"type":"object","additionalProperties":False,"required":["liste"],"properties":{
+     "niveau_1":{"type":"string"},
+     "liste":{"type":"array","items":{"type":"object","additionalProperties":False,
+        "required":["id_evenement","designation","niveaux","probabilite","base_probabilite","max_par_partie","effet_numerique","parametres"],
+        "properties":{"id_evenement":{"type":"string","pattern":"^E[0-9]{2}$"},"designation":{"type":"string"},
+                      "niveaux":{"type":"array","minItems":1,"items":{"type":"integer","minimum":1,"maximum":6}},
+                      "probabilite":{"type":"number","minimum":0,"maximum":1,"description":"probabilité par unité de base_probabilite"},
+                      "base_probabilite":{"enum":["tour","commande_standard","livraison","partie"]},
+                      "max_par_partie":{"type":["integer","null"],"minimum":1},
+                      "effet_numerique":{"type":"boolean"},"parametres":{"type":"object"}},
+        "if":{"properties":{"effet_numerique":{"const":True}}},"then":{"properties":{"niveaux":{"items":{"minimum":2}}}}}}}},
   "pieces":{"type":"array","items":{"$ref":"#/$defs/piece"}},
+  "outillages":{"type":"array","items":{"$ref":"#/$defs/outil"}},
+  "propositions_a_valider":{"type":"array","minItems":1,"description":"Compléments proposés, NON validés : sans effet dans le jeu (champ à supprimer quand il est vide)",
+     "items":{"type":"object","additionalProperties":False,"required":["id_mode","type","valeur","justification","statut"],
+        "properties":{"id_mode":{"type":"string"},"type":{"enum":["outil","habilitation","epi"]},"valeur":{"type":"string"},
+                      "justification":{"type":"string","minLength":10},"statut":{"const":"a_valider_par_Steph"}}}},
   "equipements":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/equipement"}}
  },
  "$defs":{
   "piece":{"type":"object","required":["ref","designation","prix_unitaire_eur"],"additionalProperties":False,"properties":{
      "ref":{"type":"string","pattern":"^P-[A-Z]{3}-[0-9]{2}$"},"designation":{"type":"string"},"prix_unitaire_eur":NUM0,
-     "delai_standard_semaines":NUM0,"stock_initial":{"type":"integer","minimum":0},"stock_mini":{"type":"integer","minimum":0}}},
-  "mode":{"type":"object","required":["id_mode","id_sous_ensemble","designation","loi","beta","eta_h","gamma_h","effet_correctif","mttr_actif_h","depannage_provisoire"],
+     "delai_semaines":{"type":"integer","minimum":1,"description":"Délai standard D, en semaines (= tours)"},
+     "retard_possible_semaines":{"type":"integer","minimum":0,"description":"R = ⌈D/2⌉ : retard en cas d'aléa fournisseur"},
+     "probabilite_retard":{"type":"number","minimum":0,"maximum":1},
+     "delai_express_semaines":{"type":"number","exclusiveMinimum":0,"description":"0,2 semaine = 16 h d'ouverture ; 1 pour les pièces constructeur spécifiques"},
+     "consommation_theorique_par_semaine":NUM0,
+     "point_commande_calcule":{"type":"integer","minimum":0,"description":"PC = max(⌈c × (D + R)⌉, quantité par intervention, 1 si critique)"},
+     "stock_securite":{"type":"integer","minimum":0,"description":"PC − ⌈c × D⌉"},
+     "stock_initial":{"type":"integer","minimum":0},"stock_mini":{"type":"integer","minimum":0,"description":"réglage de départ (modifiable par le joueur)"},
+     "critique":{"type":"boolean"},"motif_critique":{"type":["string","null"]}},
+     "required":["ref","designation","prix_unitaire_eur","delai_semaines","retard_possible_semaines","probabilite_retard","delai_express_semaines",
+                 "consommation_theorique_par_semaine","point_commande_calcule","stock_securite","stock_initial","stock_mini","critique","motif_critique"]},
+  "outil":{"type":"object","additionalProperties":False,"required":["id_outil","designation","prix_eur","disponible_au_depart"],"properties":{
+     "id_outil":{"type":"string","pattern":"^O-[A-Z]+$"},"designation":{"type":"string"},"prix_eur":NUM0,"disponible_au_depart":{"type":"boolean"}}},
+  "mode":{"type":"object","required":["id_mode","id_sous_ensemble","designation","specialite","consommation_corrective","outillage_requis","consignation","epi","habilitation_electrique","loi","beta","eta_h","gamma_h","effet_correctif","mttr_actif_h","depannage_provisoire"],
      "additionalProperties":False,
      "properties":{
        "id_mode":{"type":"string","pattern":"^[A-Z]{3}-M[0-9]+$"},"id_sous_ensemble":{"type":"string"},"designation":{"type":"string"},
@@ -47,8 +98,17 @@ schema_eq = {
        "pieces_preventive":{"type":"array","items":{"type":"string"},"description":"Pièces consommables en préventif pour ce mode"},
        "mode_detection":{"type":"string"},
        "probabilite_piece_en_stock":{"type":"number","minimum":0,"maximum":1},
+       "consommation_corrective":{"type":"array","description":"Pièces consommées par panne (moteur simulé)","items":{"type":"object","additionalProperties":False,
+          "required":["ref","quantite","probabilite"],"properties":{"ref":{"type":"string"},"quantite":{"type":"integer","minimum":1},"probabilite":{"type":"number","exclusiveMinimum":0,"maximum":1}}}},
+       "outillage_requis":{"type":"array","items":{"type":"object","additionalProperties":False,"required":["id_outil","exigence"],
+          "properties":{"id_outil":{"type":"string"},"exigence":{"enum":["obligatoire","confort"],"description":"obligatoire : intervention interdite sans l'outil ; confort : +50 % de réparation active"}}}},
+       "outillage_surveillance":{"type":"array","items":{"type":"string"},"description":"Outils de la surveillance conditionnelle (ronde)"},
+       "consignation":{"enum":["electrique","mecanique","les_deux"]},
+       "epi":{"type":"array","items":{"type":"string"},"description":"EPI spécifiques, en plus de organisation.epi_hygiene_base"},
+       "habilitation_electrique":{"type":["string","null"],"enum":["BS","BR","B1V","B2V","BC",None]},
+       "specialite":{"enum":["electrique","mecanique"],"description":"Spécialité du technicien qui intervient sans majoration"},
        "depannage_provisoire":{"type":"object","additionalProperties":False,
-          "required":["autorise","ratio_reparation_active","duree_reparation_active_h","pieces","reapparition_apres_h","annule_par_curatif_differe"],
+          "required":["autorise","ratio_reparation_active","duree_reparation_active_h","duree_reparation_active_hors_specialite_h","pieces","reapparition_apres_h","annule_par_curatif_differe"],
           "description":"Règle du dépannage provisoire (action palliative). Détection et remise en service inchangées.",
           "properties":{"autorise":{"type":"boolean","description":"false si un palliatif n'a pas de sens métier pour ce mode"},
                         "ratio_reparation_active":{"type":"number","exclusiveMinimum":0,"maximum":1,"description":"Part de mttr_actif_h (0,4)"},
@@ -56,7 +116,8 @@ schema_eq = {
                         "pieces":{"type":"array","maxItems":0,"description":"Aucune pièce consommée"},
                         "reapparition_apres_h":{"type":"number","exclusiveMinimum":0,"description":"La panne revient après ce temps d'ouverture (le mode n'est pas remis à neuf)"},
                         "annule_par_curatif_differe":{"type":"boolean","description":"true : une réparation curative différée faite le samedi (hors ouverture) annule la réapparition"},
-                        "justification":{"type":["string","null"],"description":"Motif métier quand autorise = false"}},
+                        "justification":{"type":["string","null"],"description":"Motif métier quand autorise = false"},
+                        "duree_reparation_active_hors_specialite_h":{"type":"number","minimum":0.25,"multipleOf":0.25,"description":"Valeur figée = arrondi au ¼ h de 1,25 × duree_reparation_active_h (technicien hors spécialité)"}},
           "if":{"properties":{"autorise":{"const":False}}},"then":{"required":["justification"],"properties":{"justification":{"type":"string","minLength":10}}}},
        "periode_optimale":{"type":"object","required":["modele","cout_preventif_eur","cout_defaillance_moyen_eur"],"additionalProperties":False,
           "description":"Données du préventif systématique : Cp, Cc et modèle de période optimale",
@@ -190,3 +251,56 @@ for f in ["historique_pannes.json","historique_pannes_simule.json"]:
                 if prochain is None or prochain-fin>d["reapparition_apres_h"]:
                     avert.append((ev["id_evenement"],f"{fin_sem-fin:g} h d'ouverture entre la fin du dépannage et le samedi (> 40 h) : réapparition attendue vers {fin+40:g} h, non présente (panne suivante du mode à {prochain} h)"))
     print(f, "-> confrontation des palliatifs à la règle (non bloquant) :", avert if avert else "aucune contradiction")
+
+# ---- contrôles : majoration hors spécialité et événements ----
+k_hs=1+Fr(str(U["organisation"]["hors_specialite"]["majoration_reparation_active_pct"]))/100
+for e in U["equipements"]:
+    for m in e["modes"]:
+        d=m["depannage_provisoire"]
+        assert Fr(str(d["duree_reparation_active_hors_specialite_h"]))==quart(k_hs*Fr(str(d["duree_reparation_active_h"]))), m["id_mode"]
+EV={x["id_evenement"]:x for x in U["evenements"]["liste"]}
+assert sorted(EV)==[f"E0{i}" for i in range(1,9)]
+assert all(1 not in x["niveaux"] for x in EV.values() if x["effet_numerique"])          # niveau 1 : aucun événement chiffré
+assert set(EV["E07"]["parametres"]["modes_concernes"])<=set(MODES)
+pe=EV["E06"]["parametres"]; assert pe["heures_ouverture_tour_h"]==U["organisation"]["heures_ouverture_par_semaine"]+pe["heures_production_samedi_h"]
+assert pe["heures_production_samedi_h"]/U["organisation"]["heures_ouverture_par_semaine"]*100==pe["majoration_volume_pct"]
+pc=EV["E01"]["parametres"]; assert pc["duree_arret_ligne_h"]==pc["duree_coupure_reseau_h"]+pc["duree_redemarrage_h"]
+print("Événements et majoration hors spécialité : cohérents (8 événements, niveau 1 sans effet chiffré)")
+
+# ---- contrôles : inventaire, outillage, sécurité ----
+import math
+OUT_IDS={o["id_outil"] for o in U["outillages"]}; PCAT={p["ref"]:p for p in U["pieces"]}
+assert any(o["id_outil"]=="O-VIB" and o["prix_eur"]==2500 for o in U["outillages"])
+for p in U["pieces"]:
+    D=p["delai_semaines"]; assert p["retard_possible_semaines"]==math.ceil(D/2) and p["probabilite_retard"]==0.10
+    assert p["delai_express_semaines"]==(1.0 if p["ref"] in ("P-REM-04","P-BOU-01","P-CON-02") else 0.2)
+    assert p["delai_express_semaines"]==1.0 or p["delai_express_semaines"]*U["organisation"]["heures_ouverture_par_semaine"]==U["couts"]["delai_express_h"]
+    c=p["consommation_theorique_par_semaine"]; R_=p["retard_possible_semaines"]
+    q=max([x["quantite"] for e in U["equipements"] for m in e["modes"] for x in m["consommation_corrective"] if x["ref"]==p["ref"]] or [1])
+    pc=max(math.ceil(round(c*(D+R_),6)), q if c>0 else 0, 1 if p["critique"] else 0)
+    assert p["point_commande_calcule"]==pc and p["stock_securite"]==pc-math.ceil(round(c*D,6)), p["ref"]
+    assert p["stock_mini"]==pc or p["ref"]=="P-REM-04", p["ref"]          # P-REM-04 : 0 au départ, décision du joueur
+    assert p["critique"]==(p["motif_critique"] is not None)
+assert {p["ref"] for p in U["pieces"] if p["critique"]}=={"P-REM-01","P-REM-02","P-REM-03","P-REM-04","P-FAR-01","P-BOU-01","P-CON-02"}
+for e in U["equipements"]:
+    for m in e["modes"]:
+        for x in m["consommation_corrective"]: assert x["ref"] in m["pieces_corrective"] and x["ref"] in PCAT
+        for o in m["outillage_requis"]: assert o["id_outil"] in OUT_IDS
+        for o in m.get("outillage_surveillance",[]): assert o in OUT_IDS
+        assert (m["habilitation_electrique"] is not None) <= (m["consignation"]!="mecanique")
+assert MODES["CON-M1"][1]["consommation_corrective"]==[{"ref":"P-CON-02","quantite":1,"probabilite":0.25}] and "P-CON-02" in MODES["CON-M1"][1]["pieces_corrective"]
+# périmètre validé par Steph (2026-11-24) : outillage, consignation, EPI, habilitations actifs
+VAL_OUT={"SOU-M2":[("O-DYN","obligatoire")],"REM-M1":[("O-DEMV","confort")],"REM-M2":[("O-ETAL","obligatoire")],
+         "REM-M3":[("O-PALAN","obligatoire"),("O-DYN","obligatoire"),("O-EXTR","confort")],"BOU-M1":[("O-DYN","obligatoire")],
+         "FAR-M1":[("O-VAT","obligatoire")],"CON-M1":[("O-CONS","obligatoire"),("O-VAT","obligatoire")],"CON-M2":[("O-JAUGE","confort"),("O-DERIV","confort")]}
+VAL_HAB={"SOU-M1":"BS","ETI-M1":"BS","REM-M2":"BR","FAR-M1":"BR","CON-M1":"BR"}
+ELEC={"BOU-M2","ETI-M1","ETI-M2","FAR-M1","CON-M1","SOU-M1"}; ANTI={"BOU-M1","BOU-M2","FAR-M2"}
+for k,(eq,m) in MODES.items():
+    assert [(o["id_outil"],o["exigence"]) for o in m["outillage_requis"]]==VAL_OUT.get(k,[]), k
+    assert m["habilitation_electrique"]==VAL_HAB.get(k), k
+    assert m["consignation"]==("electrique" if k in ELEC else "les_deux"), k
+    assert m["epi"]==(["gants anti-coupure"] if k in ANTI else []), k
+PV=U.get("propositions_a_valider")
+assert PV is None or (len(PV)>0 and all(x["id_mode"] in MODES for x in PV))
+assert not any(x["type"]=="outil" and x["id_mode"]==k and x["valeur"].split()[0] in [o["id_outil"] for o in MODES[k][1]["outillage_requis"]] for x in (PV or []) for k in [x["id_mode"]])
+print("Inventaire, outillage et sécurité : cohérents (14 pièces, %d outils, 13 modes)" % len(OUT_IDS))

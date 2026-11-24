@@ -1,3 +1,4 @@
+import { graineConsommation, tirerConsommation, type PieceTiree } from "./consommation";
 import { calculerCout, type DetailCout, type PieceFacturee } from "./couts";
 import { formatEuros, libelleHoraire } from "./format";
 import {
@@ -12,6 +13,7 @@ import { calculerScore, creditChamp as creditChampScore, type Score } from "./sc
 import { contexteDepuisBilan, type ChampBilan, type BilanTour, evaluerChampBilan } from "./bilan";
 import type { ModeDefaillance } from "./types";
 import {
+  delaiExpressNiveau1,
   delaiStandardHeures,
   heuresParSemaine,
   modeParId,
@@ -59,7 +61,7 @@ export interface EvenementPartie {
   id_mode_defaillance: string;
   description: string;
   type_maintenance: "corrective_immediate" | "corrective_differee" | "preventive_systematique";
-  action: "depannage" | "remplacement";
+  action: "depannage" | "remplacement" | "reglage";
   reparation_provisoire: boolean;
   hors_temps_ouverture: boolean;
   debut_arret_h_ouverture: number | null;
@@ -96,12 +98,19 @@ export interface PanneOuverte {
   remise: number;
   rechute: boolean;
   tbfPrecedent: number;
+  /**
+   * null : le mode n'a pas de consommation_corrective.
+   * Tableau vide : réglage, sans pièce et sans attente logistique.
+   */
+  piecesImposees: PieceTiree[] | null;
 }
 
 export interface Differe {
   modeId: string;
   rep: number;
   rem: number;
+  /** Copié depuis la panne quand le mode a un champ consommation_corrective. */
+  piecesImposees?: PieceTiree[];
 }
 
 /** Réapparition figée après un dépannage provisoire, en heures d'ouverture absolues. */
@@ -150,6 +159,8 @@ export interface Partie {
   seed: number;
   pseudo: string;
   rng: number;
+  /** Générateur des pièces (graine + 1). Indépendant de rng. */
+  rngPieces: number;
   tour: number;
   phase: Phase;
   suite: "intervenir" | "bilan" | null;
@@ -201,6 +212,7 @@ export function demarrer(seedLabel: string, pseudo: string): Partie {
     seed,
     pseudo: pseudo.trim(),
     rng,
+    rngPieces: graineConsommation(seed),
     tour: 1,
     phase: "planifier",
     suite: null,
@@ -277,8 +289,21 @@ export function politiqueReference(p: Partie): Decision {
   if (p.phase === "evenements") return { type: "lire" };
   if (p.phase === "intervenir") {
     if (!p.panne) throw new Error("Intervention sans panne");
-    const ref = pieceCorrective(p.panne.modeId);
-    const assez = quantiteStock(p, ref) >= quantiteCorrective(p.panne.modeId);
+    const imposees = p.panne.piecesImposees;
+    if (imposees && imposees.length === 0) {
+      return {
+        type: "intervention",
+        choix: {
+          nature: "curatif",
+          intervenant: "interne",
+          approvisionnement: "stock",
+          curatifDiffere: false,
+        },
+      };
+    }
+    const ref = imposees?.[0]?.ref ?? pieceCorrective(p.panne.modeId);
+    const qte = imposees?.[0]?.quantite ?? quantiteCorrective(p.panne.modeId);
+    const assez = quantiteStock(p, ref) >= qte;
     return {
       type: "intervention",
       choix: {
@@ -334,8 +359,25 @@ export function devisIntervention(p: Partie, choix: ChoixIntervention): DevisInt
       effetApplique: false,
     });
   }
-  const ref = pieceCorrective(mode.id_mode);
-  const qte = quantiteCorrective(mode.id_mode);
+  const imposees = p.panne.piecesImposees;
+  if (imposees && imposees.length === 0) {
+    const attente = choix.intervenant === "sous_traitance" ? usine.couts.sous_traitance_delai_arrivee_h : 0;
+    return chiffrer(p, {
+      detection: p.panne.detection,
+      attente,
+      reparation: p.panne.reparation,
+      remise: p.panne.remise,
+      pieces: [],
+      rebuts: rebutsCuratif(mode.id_mode),
+      intervenant: choix.intervenant,
+      depuisStock: false,
+      hors: false,
+      debut: p.panne.heure,
+      effetApplique: true,
+    });
+  }
+  const ref = imposees?.[0]?.ref ?? pieceCorrective(mode.id_mode);
+  const qte = imposees?.[0]?.quantite ?? quantiteCorrective(mode.id_mode);
   const piece = pieceParRef(ref);
   let attente = 0;
   let pieces: PieceFacturee[] = [];
@@ -348,7 +390,7 @@ export function devisIntervention(p: Partie, choix: ChoixIntervention): DevisInt
     depuisStock = true;
     pieces = [{ ref, quantite: qte, prixUnitaire: prixMoyenDisponible(p, ref, qte) }];
   } else if (choix.approvisionnement === "express") {
-    attente = usine.couts.delai_express_h;
+    attente = delaiExpressNiveau1();
     pieces = [{ ref, quantite: qte, prixUnitaire: round4(prixExpress(piece.prix_unitaire_eur)) }];
   } else {
     attente = delaiStandardHeures(ref);
@@ -445,7 +487,7 @@ function appliquerPlanning(p: Partie, lignes: LigneCommande[], decision: Decisio
     if (!piece) continue;
     const prix =
       ligne.delai === "express" ? round4(prixExpress(piece.prix_unitaire_eur)) : piece.prix_unitaire_eur;
-    const delaiH = ligne.delai === "express" ? usine.couts.delai_express_h : delaiStandardHeures(piece.ref);
+    const delaiH = ligne.delai === "express" ? delaiExpressNiveau1() : delaiStandardHeures(piece.ref);
     p.compteurCommande += 1;
     p.commandes.push({
       id: identifiant("C", p.compteurCommande),
@@ -515,7 +557,7 @@ function appliquerIntervention(p: Partie, choix: ChoixIntervention, decision: De
   pousserEvenement(p, {
     mode,
     type: "corrective_immediate",
-    action: choix.nature === "palliatif" ? "depannage" : "remplacement",
+    action: choix.nature === "palliatif" ? "depannage" : panne.piecesImposees?.length === 0 ? "reglage" : "remplacement",
     provisoire: choix.nature === "palliatif",
     hors: false,
     debut: panne.heure,
@@ -543,7 +585,12 @@ function appliquerIntervention(p: Partie, choix: ChoixIntervention, decision: De
       poserReapparition(p, mode.id_mode, round4(fin + regle.reapparition_apres_h));
     }
     if (choix.curatifDiffere && regle.annule_par_curatif_differe && !p.differes.some((d) => d.modeId === mode.id_mode)) {
-      p.differes.push({ modeId: mode.id_mode, rep: panne.reparation, rem: panne.remise });
+      p.differes.push({
+        modeId: mode.id_mode,
+        rep: panne.reparation,
+        rem: panne.remise,
+        ...(panne.piecesImposees ? { piecesImposees: panne.piecesImposees } : {}),
+      });
       p.recit.push({
         tour: p.tour,
         heure: panne.heure,
@@ -746,6 +793,8 @@ function ouvrirPanne(p: Partie, modeId: string, rechute: boolean): void {
   const mode = modeParId(modeId);
   const tirage = tirageDureesCuratives(p.rng, mode);
   p.rng = tirage.state;
+  const consommation = tirerConsommation(p.rngPieces ?? graineConsommation(p.seed), mode.consommation_corrective);
+  p.rngPieces = consommation.state;
   p.panne = {
     modeId,
     heure: p.heure,
@@ -754,6 +803,7 @@ function ouvrirPanne(p: Partie, modeId: string, rechute: boolean): void {
     remise: tirage.remise,
     rechute,
     tbfPrecedent: round4(Math.max(0, p.heure - p.dernierRedemarrage)),
+    piecesImposees: consommation.pieces,
   };
   p.recit.push({
     tour: p.tour,
@@ -801,8 +851,49 @@ function cloturerSamedi(p: Partie): void {
   p.differes = [];
   for (const differe of differes) {
     const mode = modeParId(differe.modeId);
-    const ref = pieceCorrective(mode.id_mode);
-    const qte = quantiteCorrective(mode.id_mode);
+    if (differe.piecesImposees && differe.piecesImposees.length === 0) {
+      const cout = calculerCout({
+        idEquipement: "REM",
+        detection: 0,
+        attente: 0,
+        reparation: differe.rep,
+        remise: differe.rem,
+        nbTechniciens: techniciensInternes(mode),
+        intervenant: "interne",
+        horsOuverture: true,
+        pieces: [],
+        rebuts: 0,
+      });
+      solderMode(p, mode.id_mode);
+      appliquerEffetCuratif(p, mode);
+      pousserEvenement(p, {
+        mode,
+        type: "corrective_differee",
+        action: "reglage",
+        provisoire: false,
+        hors: true,
+        debut: null,
+        tbf: null,
+        detection: 0,
+        attente: 0,
+        reparation: differe.rep,
+        remise: differe.rem,
+        intervenant: "interne",
+        pieces: [],
+        rebuts: 0,
+        cout,
+        rechute: false,
+        tronque: false,
+      });
+      p.recit.push({
+        tour: p.tour,
+        heure: null,
+        texte: `Samedi — curatif différé réalisé (${mode.designation}), hors ouverture, coût direct ${formatEuros(cout.coutDirect)}. Il ne compte ni dans N, ni dans ΣTA, ni dans le MTTR.`,
+      });
+      continue;
+    }
+    const ref = differe.piecesImposees?.[0]?.ref ?? pieceCorrective(mode.id_mode);
+    const qte = differe.piecesImposees?.[0]?.quantite ?? quantiteCorrective(mode.id_mode);
     if (quantiteStock(p, ref) < qte) {
       p.recit.push({
         tour: p.tour,

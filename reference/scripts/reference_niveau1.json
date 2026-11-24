@@ -1,0 +1,878 @@
+{
+ "description": "Référence du niveau 1 figé : paramètres effectifs et corrigés calculés AVANT l'inventaire du 2026-11-24 (usine.json et resultats.json de la passe précédente).",
+ "parametres_effectifs": {
+  "modes": {
+   "REM-M1": {
+    "loi": "weibull",
+    "beta": 3,
+    "eta_h": 300,
+    "gamma_h": 0,
+    "effet": "reparation_minimale",
+    "mttr_actif_h": 2.5,
+    "sigma": 0.5,
+    "pieces_corrective": [
+     "P-REM-01"
+    ],
+    "probabilite_piece_en_stock": 0.95,
+    "consommation": [
+     {
+      "ref": "P-REM-01",
+      "quantite": 2,
+      "probabilite": 1.0
+     }
+    ],
+    "depannage": [
+     true,
+     1.0,
+     40.0
+    ]
+   },
+   "REM-M2": {
+    "loi": "exponentielle",
+    "beta": 1,
+    "eta_h": 600,
+    "gamma_h": 0,
+    "effet": "renouvellement",
+    "mttr_actif_h": 3.0,
+    "sigma": 0.5,
+    "pieces_corrective": [
+     "P-REM-03"
+    ],
+    "probabilite_piece_en_stock": 0.0,
+    "consommation": [
+     {
+      "ref": "P-REM-03",
+      "quantite": 1,
+      "probabilite": 1.0
+     }
+    ],
+    "depannage": [
+     true,
+     1.25,
+     40.0
+    ]
+   },
+   "REM-M3": {
+    "loi": "weibull",
+    "beta": 2,
+    "eta_h": 4000,
+    "gamma_h": 0,
+    "effet": "renouvellement",
+    "mttr_actif_h": 22.0,
+    "sigma": 0.5,
+    "pieces_corrective": [
+     "P-REM-04"
+    ],
+    "probabilite_piece_en_stock": 0.0,
+    "consommation": [
+     {
+      "ref": "P-REM-04",
+      "quantite": 1,
+      "probabilite": 1.0
+     }
+    ],
+    "depannage": [
+     false,
+     8.75,
+     40.0
+    ]
+   }
+  },
+  "pieces": {
+   "P-REM-01": {
+    "prix": 25.0,
+    "delai_semaines": 2,
+    "probabilite_retard": 0.0,
+    "delai_express_h": 16.0,
+    "stock_initial": 10,
+    "stock_mini": 4
+   },
+   "P-REM-02": {
+    "prix": 600.0,
+    "delai_semaines": 2,
+    "probabilite_retard": 0.0,
+    "delai_express_h": 16.0,
+    "stock_initial": 1,
+    "stock_mini": 1
+   },
+   "P-REM-03": {
+    "prix": 450.0,
+    "delai_semaines": 2,
+    "probabilite_retard": 0.0,
+    "delai_express_h": 16.0,
+    "stock_initial": 0,
+    "stock_mini": 1
+   },
+   "P-REM-04": {
+    "prix": 5750.0,
+    "delai_semaines": 2,
+    "probabilite_retard": 0.0,
+    "delai_express_h": 16.0,
+    "stock_initial": 0,
+    "stock_mini": 0
+   }
+  },
+  "couts": {
+   "taux_main_oeuvre_eur_par_h": 40.0,
+   "taux_main_oeuvre_heures_sup_eur_par_h": 50.0,
+   "sous_traitance_eur_par_h": 90.0,
+   "sous_traitance_deplacement_eur": 150.0,
+   "sous_traitance_delai_arrivee_h": 4.0,
+   "majoration_express_pct": 50.0,
+   "cout_possession_stock_pct_par_an": 20.0,
+   "penalite_arret_goulot_eur_par_h": 1200.0,
+   "penalite_arret_autre_eur_par_h": 1200.0
+  },
+  "cout_passation_commande_eur": 0.0,
+  "outillage": "sans_effet",
+  "politique_initiale": [
+   {
+    "id_mode": "REM-M1",
+    "type_maintenance": "preventive_systematique",
+    "action": "Remplacement de tous les joints des 24 vannes (kit P-REM-02)",
+    "periode_semaines": 4,
+    "hors_temps_ouverture": true,
+    "duree_h": 8.0,
+    "nb_techniciens": 1,
+    "cout_eur": 1000.0
+   }
+  ],
+  "organisation": {
+   "heures_ouverture_par_semaine": 80,
+   "cout_rebut_eur_par_bouteille": 0.2,
+   "coefficient_propagation_arret_hors_goulot": 1.0
+  },
+  "cadence_goulot": 10000
+ },
+ "corriges": {
+  "indicateurs": {
+   "SOU": {
+    "N": 4,
+    "somme_TA_h": 16.0,
+    "somme_reparation_h": 8.0,
+    "somme_attente_h": 4.0,
+    "somme_TBF_h": 784.0,
+    "MTBF_h": 196.0,
+    "MTTR_h": 2.0,
+    "MDT_h": 4.0,
+    "Ao_pct": 98.0,
+    "Ai_pct_exact": 98.98989898989899,
+    "Ai_pct_arrondi": 99.0,
+    "Ai_exact": false,
+    "cout_direct_eur": 2920.0,
+    "cout_indirect_eur": 19200.0,
+    "cout_total_eur": 22120.0
+   },
+   "REM": {
+    "N": 4,
+    "somme_TA_h": 80.0,
+    "somme_reparation_h": 30.0,
+    "somme_attente_h": 46.0,
+    "somme_TBF_h": 720.0,
+    "MTBF_h": 180.0,
+    "MTTR_h": 7.5,
+    "MDT_h": 20.0,
+    "Ao_pct": 90.0,
+    "Ai_pct_exact": 96.0,
+    "Ai_pct_arrondi": 96.0,
+    "Ai_exact": true,
+    "cout_direct_eur": 8540.0,
+    "cout_indirect_eur": 96720.0,
+    "cout_total_eur": 105260.0
+   },
+   "BOU": {
+    "N": 2,
+    "somme_TA_h": 8.0,
+    "somme_reparation_h": 3.0,
+    "somme_attente_h": 3.0,
+    "somme_TBF_h": 792.0,
+    "MTBF_h": 396.0,
+    "MTTR_h": 1.5,
+    "MDT_h": 4.0,
+    "Ao_pct": 99.0,
+    "Ai_pct_exact": 99.62264150943396,
+    "Ai_pct_arrondi": 99.6,
+    "Ai_exact": false,
+    "cout_direct_eur": 1060.0,
+    "cout_indirect_eur": 9600.0,
+    "cout_total_eur": 10660.0
+   },
+   "ETI": {
+    "N": 8,
+    "somme_TA_h": 48.0,
+    "somme_reparation_h": 8.0,
+    "somme_attente_h": 32.0,
+    "somme_TBF_h": 752.0,
+    "MTBF_h": 94.0,
+    "MTTR_h": 1.0,
+    "MDT_h": 6.0,
+    "Ao_pct": 94.0,
+    "Ai_pct_exact": 98.94736842105263,
+    "Ai_pct_arrondi": 98.9,
+    "Ai_exact": false,
+    "cout_direct_eur": 1440.0,
+    "cout_indirect_eur": 57600.0,
+    "cout_total_eur": 59040.0
+   },
+   "FAR": {
+    "N": 2,
+    "somme_TA_h": 4.0,
+    "somme_reparation_h": 2.0,
+    "somme_attente_h": 0.5,
+    "somme_TBF_h": 796.0,
+    "MTBF_h": 398.0,
+    "MTTR_h": 1.0,
+    "MDT_h": 2.0,
+    "Ao_pct": 99.5,
+    "Ai_pct_exact": 99.74937343358395,
+    "Ai_pct_arrondi": 99.7,
+    "Ai_exact": false,
+    "cout_direct_eur": 510.0,
+    "cout_indirect_eur": 4800.0,
+    "cout_total_eur": 5310.0
+   },
+   "CON": {
+    "N": 4,
+    "somme_TA_h": 4.0,
+    "somme_reparation_h": 2.0,
+    "somme_attente_h": 0.0,
+    "somme_TBF_h": 796.0,
+    "MTBF_h": 199.0,
+    "MTTR_h": 0.5,
+    "MDT_h": 1.0,
+    "Ao_pct": 99.5,
+    "Ai_pct_exact": 99.74937343358395,
+    "Ai_pct_arrondi": 99.7,
+    "Ai_exact": false,
+    "cout_direct_eur": 720.0,
+    "cout_indirect_eur": 4800.0,
+    "cout_total_eur": 5520.0
+   }
+  },
+  "goulot": {
+   "id": "REM",
+   "cadence": 10000,
+   "cadences": {
+    "SOU": 11000,
+    "REM": 10000,
+    "BOU": 11500,
+    "ETI": 12000,
+    "FAR": 13000,
+    "CON": 15000
+   }
+  },
+  "pareto": [
+   {
+    "eq": "REM",
+    "TA": 80.0,
+    "N": 4,
+    "MDT": 20.0,
+    "pct": 50.0,
+    "cumul": 50.0,
+    "classe": "A"
+   },
+   {
+    "eq": "ETI",
+    "TA": 48.0,
+    "N": 8,
+    "MDT": 6.0,
+    "pct": 30.0,
+    "cumul": 80.0,
+    "classe": "A"
+   },
+   {
+    "eq": "SOU",
+    "TA": 16.0,
+    "N": 4,
+    "MDT": 4.0,
+    "pct": 10.0,
+    "cumul": 90.0,
+    "classe": "B"
+   },
+   {
+    "eq": "BOU",
+    "TA": 8.0,
+    "N": 2,
+    "MDT": 4.0,
+    "pct": 5.0,
+    "cumul": 95.0,
+    "classe": "B"
+   },
+   {
+    "eq": "CON",
+    "TA": 4.0,
+    "N": 4,
+    "MDT": 1.0,
+    "pct": 2.5,
+    "cumul": 97.5,
+    "classe": "C"
+   },
+   {
+    "eq": "FAR",
+    "TA": 4.0,
+    "N": 2,
+    "MDT": 2.0,
+    "pct": 2.5,
+    "cumul": 100.0,
+    "classe": "C"
+   }
+  ],
+  "pareto_N": [
+   [
+    "ETI",
+    8
+   ],
+   [
+    "SOU",
+    4
+   ],
+   [
+    "REM",
+    4
+   ],
+   [
+    "CON",
+    4
+   ],
+   [
+    "BOU",
+    2
+   ],
+   [
+    "FAR",
+    2
+   ]
+  ],
+  "abc": [
+   {
+    "ref": "P-REM-02",
+    "designation": "Kit joints complet 24 vannes de remplissage",
+    "qte_an": 25,
+    "prix": 600.0,
+    "valeur": 15000.0,
+    "pct": 30.0,
+    "cumul": 30.0,
+    "classe": "A"
+   },
+   {
+    "ref": "P-BOU-01",
+    "designation": "Tête de vissage à embrayage magnétique",
+    "qte_an": 15,
+    "prix": 900.0,
+    "valeur": 13500.0,
+    "pct": 27.0,
+    "cumul": 57.0,
+    "classe": "A"
+   },
+   {
+    "ref": "P-REM-04",
+    "designation": "Motoréducteur d'entraînement du carrousel",
+    "qte_an": 2,
+    "prix": 5750.0,
+    "valeur": 11500.0,
+    "pct": 23.0,
+    "cumul": 80.0,
+    "classe": "A"
+   },
+   {
+    "ref": "P-REM-03",
+    "designation": "Sonde de niveau / débitmètre de vanne",
+    "qte_an": 10,
+    "prix": 450.0,
+    "valeur": 4500.0,
+    "pct": 9.0,
+    "cumul": 89.0,
+    "classe": "B"
+   },
+   {
+    "ref": "P-ETI-01",
+    "designation": "Cellule photoélectrique de détection d'étiquette",
+    "qte_an": 10,
+    "prix": 180.0,
+    "valeur": 1800.0,
+    "pct": 3.6,
+    "cumul": 92.6,
+    "classe": "B"
+   },
+   {
+    "ref": "P-FAR-02",
+    "designation": "Lame de coupe du film",
+    "qte_an": 8,
+    "prix": 150.0,
+    "valeur": 1200.0,
+    "pct": 2.4,
+    "cumul": 95.0,
+    "classe": "B"
+   },
+   {
+    "ref": "P-SOU-01",
+    "designation": "Lampe infrarouge four de préchauffe 1,5 kW",
+    "qte_an": 20,
+    "prix": 60.0,
+    "valeur": 1200.0,
+    "pct": 2.4,
+    "cumul": 97.4,
+    "classe": "C"
+   },
+   {
+    "ref": "P-ETI-02",
+    "designation": "Brosse de pose d'étiquette",
+    "qte_an": 5,
+    "prix": 120.0,
+    "valeur": 600.0,
+    "pct": 1.2,
+    "cumul": 98.6,
+    "classe": "C"
+   },
+   {
+    "ref": "P-FAR-01",
+    "designation": "Résistance du four de rétraction",
+    "qte_an": 2,
+    "prix": 250.0,
+    "valeur": 500.0,
+    "pct": 1.0,
+    "cumul": 99.6,
+    "classe": "C"
+   },
+   {
+    "ref": "P-CON-03",
+    "designation": "Chaîne à palettes inox (lot de 1 m)",
+    "qte_an": 1,
+    "prix": 200.0,
+    "valeur": 200.0,
+    "pct": 0.4,
+    "cumul": 100.0,
+    "classe": "C"
+   }
+  ],
+  "gamma_table": {
+   "0.5": 2.0,
+   "1": 1.0,
+   "1.5": 0.9027,
+   "2": 0.8862,
+   "2.5": 0.8873,
+   "3": 0.893,
+   "3.5": 0.8997,
+   "4": 0.9064
+  },
+  "calc_fiab": {
+   "MTBF_CON_M1": 200.0,
+   "MTBF_BOU_M1": 443.1,
+   "MTBF_FAR_M2": 457.2,
+   "MTBF_REM_M1_premiere": 267.9,
+   "R_BOU_250": 0.7788,
+   "lambda_BOU_250": 0.002,
+   "R_ETI_80": 0.4493,
+   "F_ETI_80": 0.5507,
+   "lambda_CON_25": 0.01,
+   "lambda_CON_400": 0.0025,
+   "P_BOU_sem_age400": 0.2454
+  },
+  "weibull": {
+   "t": [
+    170,
+    280,
+    370,
+    460,
+    580,
+    740
+   ],
+   "F_bernard": [
+    0.1094,
+    0.2656,
+    0.4219,
+    0.5781,
+    0.7344,
+    0.8906
+   ],
+   "X": [
+    5.1358,
+    5.6348,
+    5.9135,
+    6.1312,
+    6.363,
+    6.6067
+   ],
+   "Y": [
+    -2.1556,
+    -1.1753,
+    -0.6015,
+    -0.1473,
+    0.2819,
+    0.7943
+   ],
+   "beta_reg": 2.005,
+   "eta_reg": 499.6,
+   "r": 0.9999,
+   "beta_mle": 2.508,
+   "eta_mle": 490.1
+  },
+  "prev_A": {
+   "Cp": 1000,
+   "Cc": 4000,
+   "beta": 3,
+   "eta": 300,
+   "Tstar": 150.0,
+   "Cstar": 10.0,
+   "tab": [
+    [
+     80,
+     13.45
+    ],
+    [
+     100,
+     11.48
+    ],
+    [
+     150,
+     10.0
+    ],
+    [
+     160,
+     10.04
+    ],
+    [
+     200,
+     10.93
+    ],
+    [
+     240,
+     12.7
+    ],
+    [
+     320,
+     18.3
+    ],
+    [
+     400,
+     26.2
+    ]
+   ],
+   "H320": 1.2136,
+   "C160": 10.04,
+   "C320": 18.3,
+   "gain_annuel_eur": 33011.0
+  },
+  "prev_B": {
+   "Cp": 1000,
+   "Cc": 5800,
+   "beta": 2,
+   "eta": 500,
+   "Tstar": 232.3,
+   "Cstar": 8.919,
+   "C_corr": 13.09,
+   "tab": [
+    [
+     100,
+     12.041
+    ],
+    [
+     200,
+     9.007
+    ],
+    [
+     300,
+     9.161
+    ],
+    [
+     400,
+     9.941
+    ],
+    [
+     500,
+     10.804
+    ],
+    [
+     800,
+     12.549
+    ],
+    [
+     1500,
+     13.088
+    ]
+   ]
+  },
+  "prev_B_calc": {
+   "Cp": 1000,
+   "Cc": 5800,
+   "lignes": [
+    {
+     "T": 80,
+     "R": 0.9747,
+     "F": 0.0253,
+     "I_tab": 79.3,
+     "I_exact": 79.3225,
+     "num": 1121.44,
+     "C_eleve": 14.1417,
+     "C_eleve_arr": 14.14,
+     "C_exact": 14.1362,
+     "C_exact_arr": 14.14,
+     "ecart": 0.0055
+    },
+    {
+     "T": 160,
+     "R": 0.9027,
+     "F": 0.0973,
+     "I_tab": 154.7,
+     "I_exact": 154.7024,
+     "num": 1467.04,
+     "C_eleve": 9.4831,
+     "C_eleve_arr": 9.48,
+     "C_exact": 9.484,
+     "C_exact_arr": 9.48,
+     "ecart": -0.0008
+    },
+    {
+     "T": 240,
+     "R": 0.7942,
+     "F": 0.2058,
+     "I_tab": 222.8,
+     "I_exact": 222.7751,
+     "num": 1987.84,
+     "C_eleve": 8.9221,
+     "C_eleve_arr": 8.92,
+     "C_exact": 8.9227,
+     "C_exact_arr": 8.92,
+     "ecart": -0.0007
+    },
+    {
+     "T": 320,
+     "R": 0.6639,
+     "F": 0.3361,
+     "I_tab": 281.2,
+     "I_exact": 281.1935,
+     "num": 2613.28,
+     "C_eleve": 9.2933,
+     "C_eleve_arr": 9.29,
+     "C_exact": 9.2933,
+     "C_exact_arr": 9.29,
+     "ecart": 0.0001
+    },
+    {
+     "T": 400,
+     "R": 0.5273,
+     "F": 0.4727,
+     "I_tab": 328.8,
+     "I_exact": 328.8349,
+     "num": 3268.96,
+     "C_eleve": 9.9421,
+     "C_eleve_arr": 9.94,
+     "C_exact": 9.9411,
+     "C_exact_arr": 9.94,
+     "ecart": 0.0009
+    },
+    {
+     "T": 480,
+     "R": 0.3979,
+     "F": 0.6021,
+     "I_tab": 365.8,
+     "I_exact": 365.7563,
+     "num": 3890.08,
+     "C_eleve": 10.6344,
+     "C_eleve_arr": 10.63,
+     "C_exact": 10.636,
+     "C_exact_arr": 10.64,
+     "ecart": -0.0015
+    }
+   ],
+   "Tmin_grille": 240,
+   "Cmin_grille": 8.92,
+   "Cmin_exact_grille": 8.9227,
+   "Tstar_continu": 232.3,
+   "Cstar_continu": 8.919,
+   "C_corr": 13.09,
+   "gain_eur_h": 4.17,
+   "gain_annuel_eur": 16680,
+   "trapezes": [
+    {
+     "T": 80,
+     "I_trap": 79.24,
+     "ecart_pct": -0.107
+    },
+    {
+     "T": 160,
+     "I_trap": 154.55,
+     "ecart_pct": -0.101
+    },
+    {
+     "T": 240,
+     "I_trap": 222.57,
+     "ecart_pct": -0.093
+    },
+    {
+     "T": 320,
+     "I_trap": 280.96,
+     "ecart_pct": -0.082
+    },
+    {
+     "T": 400,
+     "I_trap": 328.61,
+     "ecart_pct": -0.07
+    },
+    {
+     "T": 480,
+     "I_trap": 365.55,
+     "ecart_pct": -0.056
+    }
+   ],
+   "C240_trap": 8.9314,
+   "ecart_grille_continu": 0.0041
+  },
+  "prev_beta1": [
+   16.775,
+   15.048,
+   14.282,
+   14.034,
+   14.001
+  ],
+  "trs": {
+   "Tt": 1680.0,
+   "To": 800.0,
+   "Tr": 800.0,
+   "arr_goulot": 80.0,
+   "arr_autres": 80.0,
+   "induits": 80.0,
+   "formats": 40.0,
+   "Tf": 600.0,
+   "Do": 75.0,
+   "production": 5400000,
+   "bonnes": 5292000,
+   "rebuts": 108000,
+   "Tn": 540.0,
+   "Tu": 529.2,
+   "Tp": 90.0,
+   "Tq": 98.0,
+   "TRS": 66.15,
+   "TRG": 66.15,
+   "TRE": 31.5,
+   "somme_erronee": 87.66666666666667
+  },
+  "dispo_serie": {
+   "somme": 80.0,
+   "produit": 81.26
+  },
+  "couts": {
+   "direct": 17650.0,
+   "indirect": 192720.0,
+   "total": 210370.0,
+   "par_eq": {
+    "SOU": [
+     2920.0,
+     19200.0,
+     22120.0
+    ],
+    "REM": [
+     8540.0,
+     96720.0,
+     105260.0
+    ],
+    "BOU": [
+     1060.0,
+     9600.0,
+     10660.0
+    ],
+    "ETI": [
+     1440.0,
+     57600.0,
+     59040.0
+    ],
+    "FAR": [
+     510.0,
+     4800.0,
+     5310.0
+    ],
+    "CON": [
+     720.0,
+     4800.0,
+     5520.0
+    ]
+   },
+   "prev_direct": 2460.0,
+   "mo": 4410.0,
+   "pieces": 13240.0,
+   "arret": 192000.0,
+   "rebuts": 720.0
+  },
+  "ex17": {
+   "id_evenement": "EX-0017",
+   "source": "exercice",
+   "id_equipement": "REM",
+   "id_sous_ensemble": "REM-ENT",
+   "id_mode_defaillance": "REM-M3",
+   "description": "Défaillance du motoréducteur du carrousel",
+   "type_maintenance": "corrective_immediate",
+   "action": "remplacement",
+   "reparation_provisoire": false,
+   "debut_arret": "2026-02-23T05:00:00+01:00",
+   "fin_arret": "2026-02-26T11:00:00+01:00",
+   "hors_temps_ouverture": false,
+   "debut_arret_h_ouverture": 560,
+   "tbf_precedent_h": 57.0,
+   "duree_detection_h": 0.5,
+   "duree_attente_logistique_h": 30,
+   "duree_reparation_active_h": 22,
+   "duree_remise_en_service_h": 1.5,
+   "duree_arret_totale_h": 54.0,
+   "nb_techniciens": 2,
+   "intervenant": "interne",
+   "heures_main_oeuvre_h": 47.0,
+   "pieces": [
+    {
+     "ref": "P-REM-04",
+     "quantite": 1,
+     "prix_unitaire_eur": 5750.0
+    }
+   ],
+   "cout_pieces_eur": 5750,
+   "cout_main_oeuvre_eur": 1880.0,
+   "cout_sous_traitance_eur": 0.0,
+   "cout_direct_eur": 7630.0,
+   "penalite_arret_eur_par_h": 1200.0,
+   "cout_arret_production_eur": 64800.0,
+   "nb_rebuts_bouteilles": 600,
+   "cout_rebuts_eur": 120.0,
+   "cout_indirect_eur": 64920.0,
+   "cout_total_eur": 72550.0
+  },
+  "amdec": [
+   {
+    "mode": "REM-M1",
+    "def_": "Fuite de joint de vanne",
+    "effet": "sous-remplissage, bouteilles rebutées",
+    "F": 3,
+    "G": 3,
+    "D": 2,
+    "C": 18
+   },
+   {
+    "mode": "REM-M2",
+    "def_": "Dérive de la sonde de niveau",
+    "effet": "niveaux hors tolérance non vus",
+    "F": 2,
+    "G": 3,
+    "D": 3,
+    "C": 18
+   },
+   {
+    "mode": "REM-M3",
+    "def_": "Défaillance du motoréducteur",
+    "effet": "arrêt long (> 24 h) de la ligne",
+    "F": 1,
+    "G": 4,
+    "D": 2,
+    "C": 8
+   },
+   {
+    "mode": "REM-M4",
+    "def_": "Contamination produit (joint de cuve / NEP)",
+    "effet": "risque sanitaire, rappel de lots",
+    "F": 1,
+    "G": 4,
+    "D": 3,
+    "C": 12
+   }
+  ]
+ },
+ "historique_simule_REM_sha256": "409a24af0628773e74b60a78eb1e455bb204e051d296c9668472f1cd7b359a5a",
+ "historique_simule_REM_nb": 34
+}
