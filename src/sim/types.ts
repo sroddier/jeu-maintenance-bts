@@ -23,6 +23,31 @@ export interface Organisation {
    * Chargée, non appliquée au niveau 1 (niveaux 2 à 6).
    */
   hors_specialite: HorsSpecialite;
+  /** Chargé, non appliqué au niveau 1. */
+  outillage_confort_absent?: {
+    majoration_reparation_active_pct: number;
+    s_applique_a: string;
+    arrondi: string;
+    cumul_avec_hors_specialite: string;
+    s_applique_au_depannage_provisoire: boolean;
+  };
+  /** Chargé, non appliqué au niveau 1. */
+  outillage_obligatoire_absent?: string;
+  epi_hygiene_base?: string[];
+  /** Fige l'inventaire du niveau 1 sur les valeurs d'avant le catalogue élargi. */
+  surcharges_niveau_1: SurchargesNiveau1;
+}
+
+export interface SurchargesNiveau1 {
+  description?: string;
+  delai_semaines_toutes_pieces: number;
+  probabilite_retard: number;
+  delai_express_h: number;
+  stock_mini: Record<string, number>;
+  cout_passation_commande_eur: number;
+  outillage_tout_disponible: boolean;
+  majoration_outillage_confort_pct: number;
+  interdiction_sans_outillage_obligatoire: boolean;
 }
 
 /** Présent dans usine.json. Le moteur du niveau 1 ne l'applique pas. */
@@ -45,6 +70,8 @@ export interface CoutsUsine {
   sous_traitance_delai_arrivee_h: number;
   majoration_express_pct: number;
   delai_express_h: number;
+  /** Barème catalogue. Au niveau 1, la surcharge impose 0 : le moteur ne le facture pas. */
+  cout_passation_commande_eur?: number;
   cout_possession_stock_pct_par_an: number;
   penalite_arret_goulot_eur_par_h: number;
   penalite_arret_autre_eur_par_h: number;
@@ -67,9 +94,17 @@ export interface Piece {
   ref: string;
   designation: string;
   prix_unitaire_eur: number;
-  delai_standard_semaines: number;
+  delai_semaines: number;
+  retard_possible_semaines?: number;
+  probabilite_retard?: number;
+  delai_express_semaines?: number;
+  consommation_theorique_par_semaine?: number;
+  point_commande_calcule?: number;
+  stock_securite?: number;
   stock_initial: number;
   stock_mini: number;
+  critique?: boolean;
+  motif_critique?: string | null;
 }
 
 export interface SousEnsemble {
@@ -94,6 +129,13 @@ export interface DepannageProvisoire {
   justification: string | null;
 }
 
+/** Pièce éventuellement consommée à chaque panne. Absente : règle historique du moteur. */
+export interface LigneConsommationCorrective {
+  ref: string;
+  quantite: number;
+  probabilite: number;
+}
+
 export interface ModeDefaillance {
   id_mode: string;
   id_sous_ensemble: string;
@@ -111,9 +153,36 @@ export interface ModeDefaillance {
   pieces_preventive: string[];
   mode_detection: string;
   probabilite_piece_en_stock: number;
+  /**
+   * Pièces tirées à chaque panne, sur le générateur de graine + 1.
+   * Probabilité 1 : pièce prise sans tirage. Tableau vide : aucune pièce.
+   */
+  consommation_corrective?: LigneConsommationCorrective[];
+  /** Chargés, sans effet au niveau 1 (outillage tout disponible, majoration 0). */
+  outillage_requis?: { id_outil: string; exigence: string }[];
+  outillage_surveillance?: string[];
+  consignation?: string;
+  epi?: string[];
+  habilitation_electrique?: string | null;
   /** Spécialité sans majoration. Chargée, ignorée au niveau 1. */
   specialite: "electrique" | "mecanique";
   depannage_provisoire: DepannageProvisoire;
+}
+
+export interface OutilCatalogue {
+  id_outil: string;
+  designation: string;
+  prix_eur: number;
+  disponible_au_depart: boolean;
+}
+
+/** Champ optionnel. Absent de la version finale : aucun effet dans le jeu. */
+export interface PropositionAValider {
+  id_mode: string;
+  type: string;
+  valeur: string;
+  justification: string;
+  statut: string;
 }
 
 /** Événement spécial de usine.json. Aucun n'est tiré au niveau 1. */
@@ -146,6 +215,9 @@ export interface Usine {
   couts: CoutsUsine;
   politique_initiale: PolitiqueInitiale[];
   pieces: Piece[];
+  outillages?: OutilCatalogue[];
+  /** Optionnel. Le jeu ne le lit pas. */
+  propositions_a_valider?: PropositionAValider[];
   equipements: Equipement[];
   /** Liste chargée. Le niveau 1 ne tire aucun de ces événements. */
   evenements: {

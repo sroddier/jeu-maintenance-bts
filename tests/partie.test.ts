@@ -65,7 +65,7 @@ describe("partie de niveau 1", () => {
     const standard = devisIntervention(panne, choix("standard"));
     expect(express.erreur).toBeNull();
     expect(express.attente).toBe(usine.couts.delai_express_h);
-    expect(standard.attente).toBe(pieceParRef("P-REM-03").delai_standard_semaines * heuresParSemaine());
+    expect(standard.attente).toBe(2 * heuresParSemaine());
     const prix = pieceParRef("P-REM-03").prix_unitaire_eur;
     expect(express.pieces[0]?.prixUnitaire).toBeCloseTo(prix * (1 + usine.couts.majoration_express_pct / 100), 6);
     expect(standard.pieces[0]?.prixUnitaire).toBe(prix);
