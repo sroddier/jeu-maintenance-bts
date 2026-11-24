@@ -31,6 +31,46 @@
         5,
         6
       ]
+    },
+    "outillage_confort_absent": {
+      "majoration_reparation_active_pct": 50.0,
+      "s_applique_a": "reparation_active",
+      "arrondi": "quart_heure_le_plus_proche",
+      "cumul_avec_hors_specialite": "multiplicatif_puis_un_seul_arrondi",
+      "s_applique_au_depannage_provisoire": false
+    },
+    "outillage_obligatoire_absent": "intervention_interdite (y compris dépannage provisoire)",
+    "epi_hygiene_base": [
+      "charlotte",
+      "blouse ou combinaison",
+      "chaussures de sécurité",
+      "cache-barbe"
+    ],
+    "surcharges_niveau_1": {
+      "description": "Niveau 1 figé (décision de Steph du 2026-11-24) : paramètres d'inventaire d'avant l'inventaire du 2026-11-24.",
+      "delai_semaines_toutes_pieces": 2,
+      "probabilite_retard": 0.0,
+      "delai_express_h": 16.0,
+      "stock_mini": {
+        "P-SOU-01": 2,
+        "P-SOU-02": 1,
+        "P-REM-01": 4,
+        "P-REM-02": 1,
+        "P-REM-03": 1,
+        "P-REM-04": 0,
+        "P-BOU-01": 1,
+        "P-ETI-01": 1,
+        "P-ETI-02": 1,
+        "P-FAR-01": 1,
+        "P-FAR-02": 1,
+        "P-CON-01": 1,
+        "P-CON-02": 1,
+        "P-CON-03": 1
+      },
+      "cout_passation_commande_eur": 0.0,
+      "outillage_tout_disponible": true,
+      "majoration_outillage_confort_pct": 0.0,
+      "interdiction_sans_outillage_obligatoire": false
     }
   },
   "couts": {
@@ -40,6 +80,7 @@
     "sous_traitance_deplacement_eur": 150.0,
     "sous_traitance_delai_arrivee_h": 4.0,
     "majoration_express_pct": 50.0,
+    "cout_passation_commande_eur": 50.0,
     "taux_main_oeuvre_dimanche_eur_par_h": 80.0,
     "delai_express_h": 16.0,
     "cout_possession_stock_pct_par_an": 20.0,
@@ -230,113 +271,293 @@
       "ref": "P-SOU-01",
       "designation": "Lampe infrarouge four de préchauffe 1,5 kW",
       "prix_unitaire_eur": 60.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 1,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.2,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 6,
-      "stock_mini": 2
+      "stock_mini": 1,
+      "critique": false,
+      "motif_critique": null
     },
     {
       "ref": "P-SOU-02",
       "designation": "Vanne haute pression de soufflage 40 bar",
       "prix_unitaire_eur": 1200.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 3,
+      "retard_possible_semaines": 2,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.1128,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 1,
-      "stock_mini": 1
+      "stock_mini": 1,
+      "critique": false,
+      "motif_critique": null
     },
     {
       "ref": "P-REM-01",
       "designation": "Kit joints pour 1 vanne de remplissage",
       "prix_unitaire_eur": 25.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 1,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.6068,
+      "point_commande_calcule": 2,
+      "stock_securite": 1,
       "stock_initial": 10,
-      "stock_mini": 4
+      "stock_mini": 2,
+      "critique": true,
+      "motif_critique": "goulot"
     },
     {
       "ref": "P-REM-02",
       "designation": "Kit joints complet 24 vannes de remplissage",
       "prix_unitaire_eur": 600.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 2,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.25,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 1,
-      "stock_mini": 1
+      "stock_mini": 1,
+      "critique": true,
+      "motif_critique": "goulot"
     },
     {
       "ref": "P-REM-03",
       "designation": "Sonde de niveau / débitmètre de vanne",
       "prix_unitaire_eur": 450.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 3,
+      "retard_possible_semaines": 2,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.1333,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 0,
-      "stock_mini": 1
+      "stock_mini": 1,
+      "critique": true,
+      "motif_critique": "goulot"
     },
     {
       "ref": "P-REM-04",
       "designation": "Motoréducteur d'entraînement du carrousel",
       "prix_unitaire_eur": 5750.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 6,
+      "retard_possible_semaines": 3,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 1.0,
+      "consommation_theorique_par_semaine": 0.0226,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 0,
-      "stock_mini": 0
+      "stock_mini": 0,
+      "critique": true,
+      "motif_critique": "pas de dépannage provisoire (REM-M3), goulot"
     },
     {
       "ref": "P-BOU-01",
       "designation": "Tête de vissage à embrayage magnétique",
       "prix_unitaire_eur": 900.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 4,
+      "retard_possible_semaines": 2,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 1.0,
+      "consommation_theorique_par_semaine": 0.1805,
+      "point_commande_calcule": 2,
+      "stock_securite": 1,
       "stock_initial": 1,
-      "stock_mini": 1
+      "stock_mini": 2,
+      "critique": true,
+      "motif_critique": "délai de 4 semaines"
     },
     {
       "ref": "P-ETI-01",
       "designation": "Cellule photoélectrique de détection d'étiquette",
       "prix_unitaire_eur": 180.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 1,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.8,
+      "point_commande_calcule": 2,
+      "stock_securite": 1,
       "stock_initial": 2,
-      "stock_mini": 1
+      "stock_mini": 2,
+      "critique": false,
+      "motif_critique": null
     },
     {
       "ref": "P-ETI-02",
       "designation": "Brosse de pose d'étiquette",
       "prix_unitaire_eur": 120.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 1,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.0903,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 2,
-      "stock_mini": 1
+      "stock_mini": 1,
+      "critique": false,
+      "motif_critique": null
     },
     {
       "ref": "P-FAR-01",
       "designation": "Résistance du four de rétraction",
       "prix_unitaire_eur": 250.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 1,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.08,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 1,
-      "stock_mini": 1
+      "stock_mini": 1,
+      "critique": true,
+      "motif_critique": "pas de dépannage provisoire (FAR-M1)"
     },
     {
       "ref": "P-FAR-02",
       "designation": "Lame de coupe du film",
       "prix_unitaire_eur": 150.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 2,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.175,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 2,
-      "stock_mini": 1
+      "stock_mini": 1,
+      "critique": false,
+      "motif_critique": null
     },
     {
       "ref": "P-CON-01",
       "designation": "Variateur de vitesse 1,5 kW",
       "prix_unitaire_eur": 450.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 1,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.0,
+      "point_commande_calcule": 0,
+      "stock_securite": 0,
       "stock_initial": 1,
-      "stock_mini": 1
+      "stock_mini": 0,
+      "critique": false,
+      "motif_critique": null
     },
     {
       "ref": "P-CON-02",
       "designation": "Carte d'entrées/sorties déportée automate",
       "prix_unitaire_eur": 600.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 4,
+      "retard_possible_semaines": 2,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 1.0,
+      "consommation_theorique_par_semaine": 0.1,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 1,
-      "stock_mini": 1
+      "stock_mini": 1,
+      "critique": true,
+      "motif_critique": "délai de 4 semaines"
     },
     {
       "ref": "P-CON-03",
       "designation": "Chaîne à palettes inox (lot de 1 m)",
       "prix_unitaire_eur": 200.0,
-      "delai_standard_semaines": 2,
+      "delai_semaines": 2,
+      "retard_possible_semaines": 1,
+      "probabilite_retard": 0.1,
+      "delai_express_semaines": 0.2,
+      "consommation_theorique_par_semaine": 0.0451,
+      "point_commande_calcule": 1,
+      "stock_securite": 0,
       "stock_initial": 2,
-      "stock_mini": 1
+      "stock_mini": 1,
+      "critique": false,
+      "motif_critique": null
+    }
+  ],
+  "outillages": [
+    {
+      "id_outil": "O-DYN",
+      "designation": "Clé dynamométrique / couplemètre",
+      "prix_eur": 300.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-VAT",
+      "designation": "Vérificateur d'absence de tension (VAT)",
+      "prix_eur": 150.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-MULTI",
+      "designation": "Multimètre",
+      "prix_eur": 150.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-PALAN",
+      "designation": "Palan et potence de levage (CMU 250 kg)",
+      "prix_eur": 1800.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-EXTR",
+      "designation": "Extracteur d'accouplement",
+      "prix_eur": 200.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-CONS",
+      "designation": "Console de paramétrage variateur / PC automate",
+      "prix_eur": 1200.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-DEMV",
+      "designation": "Outil de démontage de vanne de remplissage",
+      "prix_eur": 400.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-ETAL",
+      "designation": "Étalon de niveau de remplissage",
+      "prix_eur": 300.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-JAUGE",
+      "designation": "Jauge d'allongement de chaîne",
+      "prix_eur": 80.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-DERIV",
+      "designation": "Dérive-chaîne",
+      "prix_eur": 120.0,
+      "disponible_au_depart": true
+    },
+    {
+      "id_outil": "O-VIB",
+      "designation": "Analyseur vibratoire portatif",
+      "prix_eur": 2500.0,
+      "disponible_au_depart": false
     }
   ],
   "equipements": [
@@ -382,6 +603,25 @@
           "pieces_preventive": [],
           "mode_detection": "automatique (pyromètre)",
           "probabilite_piece_en_stock": 0.95,
+          "consommation_corrective": [
+            {
+              "ref": "P-SOU-01",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-MULTI",
+              "exigence": "confort"
+            }
+          ],
+          "consignation": "electrique",
+          "epi": [
+            "gants de protection thermique",
+            "lunettes"
+          ],
+          "habilitation_electrique": "BS",
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -413,6 +653,26 @@
           "pieces_preventive": [],
           "mode_detection": "opérateur (bouteilles mal formées)",
           "probabilite_piece_en_stock": 0.8,
+          "consommation_corrective": [
+            {
+              "ref": "P-SOU-02",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-DYN",
+              "exigence": "obligatoire"
+            }
+          ],
+          "consignation": "les_deux",
+          "epi": [
+            "lunettes",
+            "protection auditive",
+            "gants"
+          ],
+          "habilitation_electrique": null,
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -475,6 +735,25 @@
           ],
           "mode_detection": "opérateur (fuite visible ; pas de contrôleur pondéral en ligne)",
           "probabilite_piece_en_stock": 0.95,
+          "consommation_corrective": [
+            {
+              "ref": "P-REM-01",
+              "quantite": 2,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-DEMV",
+              "exigence": "confort"
+            }
+          ],
+          "consignation": "les_deux",
+          "epi": [
+            "gants nitrile",
+            "lunettes"
+          ],
+          "habilitation_electrique": null,
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -513,6 +792,25 @@
           "pieces_preventive": [],
           "mode_detection": "contrôle qualité (niveaux hors tolérance)",
           "probabilite_piece_en_stock": 0.0,
+          "consommation_corrective": [
+            {
+              "ref": "P-REM-03",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-ETAL",
+              "exigence": "obligatoire"
+            }
+          ],
+          "consignation": "les_deux",
+          "epi": [
+            "gants nitrile",
+            "lunettes"
+          ],
+          "habilitation_electrique": "BR",
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -544,6 +842,37 @@
           "pieces_preventive": [],
           "mode_detection": "bruit / vibration (ronde)",
           "probabilite_piece_en_stock": 0.0,
+          "consommation_corrective": [
+            {
+              "ref": "P-REM-04",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-PALAN",
+              "exigence": "obligatoire"
+            },
+            {
+              "id_outil": "O-DYN",
+              "exigence": "obligatoire"
+            },
+            {
+              "id_outil": "O-EXTR",
+              "exigence": "confort"
+            }
+          ],
+          "outillage_surveillance": [
+            "O-VIB"
+          ],
+          "consignation": "les_deux",
+          "epi": [
+            "casque",
+            "gants de manutention",
+            "chaussures S3"
+          ],
+          "habilitation_electrique": null,
           "depannage_provisoire": {
             "autorise": false,
             "ratio_reparation_active": 0.4,
@@ -598,6 +927,25 @@
           ],
           "mode_detection": "contrôle de couple",
           "probabilite_piece_en_stock": 0.9,
+          "consommation_corrective": [
+            {
+              "ref": "P-BOU-01",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-DYN",
+              "exigence": "obligatoire"
+            }
+          ],
+          "consignation": "les_deux",
+          "epi": [
+            "gants anti-coupure",
+            "lunettes"
+          ],
+          "habilitation_electrique": null,
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -634,6 +982,13 @@
           "pieces_preventive": [],
           "mode_detection": "automatique (détecteur de bourrage)",
           "probabilite_piece_en_stock": 1.0,
+          "consommation_corrective": [],
+          "outillage_requis": [],
+          "consignation": "electrique",
+          "epi": [
+            "gants anti-coupure"
+          ],
+          "habilitation_electrique": null,
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -686,6 +1041,19 @@
           "pieces_preventive": [],
           "mode_detection": "automatique (défaut machine)",
           "probabilite_piece_en_stock": 0.9,
+          "consommation_corrective": [
+            {
+              "ref": "P-ETI-01",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [],
+          "consignation": "electrique",
+          "epi": [
+            "gants"
+          ],
+          "habilitation_electrique": "BS",
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -717,6 +1085,19 @@
           "pieces_preventive": [],
           "mode_detection": "opérateur (étiquette mal posée)",
           "probabilite_piece_en_stock": 0.9,
+          "consommation_corrective": [
+            {
+              "ref": "P-ETI-02",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [],
+          "consignation": "electrique",
+          "epi": [
+            "gants"
+          ],
+          "habilitation_electrique": null,
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -769,6 +1150,26 @@
           "pieces_preventive": [],
           "mode_detection": "automatique (température)",
           "probabilite_piece_en_stock": 0.9,
+          "consommation_corrective": [
+            {
+              "ref": "P-FAR-01",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-VAT",
+              "exigence": "obligatoire"
+            }
+          ],
+          "consignation": "electrique",
+          "epi": [
+            "gants de protection thermique",
+            "lunettes",
+            "gants isolants et écran facial (VAT)"
+          ],
+          "habilitation_electrique": "BR",
           "depannage_provisoire": {
             "autorise": false,
             "ratio_reparation_active": 0.4,
@@ -800,6 +1201,20 @@
           "pieces_preventive": [],
           "mode_detection": "opérateur (film mal coupé)",
           "probabilite_piece_en_stock": 0.95,
+          "consommation_corrective": [
+            {
+              "ref": "P-FAR-02",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [],
+          "consignation": "les_deux",
+          "epi": [
+            "gants anti-coupure de niveau F (EN 388)",
+            "lunettes"
+          ],
+          "habilitation_electrique": null,
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -853,6 +1268,28 @@
           "pieces_preventive": [],
           "mode_detection": "automatique (défaut variateur / défaut bus E/S)",
           "probabilite_piece_en_stock": 0.9,
+          "consommation_corrective": [
+            {
+              "ref": "P-CON-02",
+              "quantite": 1,
+              "probabilite": 0.25
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-CONS",
+              "exigence": "obligatoire"
+            },
+            {
+              "id_outil": "O-VAT",
+              "exigence": "obligatoire"
+            }
+          ],
+          "consignation": "electrique",
+          "epi": [
+            "gants isolants et écran facial (VAT)"
+          ],
+          "habilitation_electrique": "BR",
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,
@@ -884,6 +1321,29 @@
           "pieces_preventive": [],
           "mode_detection": "ronde (mesure d'allongement)",
           "probabilite_piece_en_stock": 0.9,
+          "consommation_corrective": [
+            {
+              "ref": "P-CON-03",
+              "quantite": 1,
+              "probabilite": 1.0
+            }
+          ],
+          "outillage_requis": [
+            {
+              "id_outil": "O-JAUGE",
+              "exigence": "confort"
+            },
+            {
+              "id_outil": "O-DERIV",
+              "exigence": "confort"
+            }
+          ],
+          "consignation": "les_deux",
+          "epi": [
+            "gants anti-coupure",
+            "chaussures S3"
+          ],
+          "habilitation_electrique": null,
           "depannage_provisoire": {
             "autorise": true,
             "ratio_reparation_active": 0.4,

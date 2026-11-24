@@ -80,6 +80,95 @@
           "minimum": 0,
           "maximum": 1
         },
+        "outillage_confort_absent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "majoration_reparation_active_pct",
+            "s_applique_a",
+            "arrondi",
+            "cumul_avec_hors_specialite",
+            "s_applique_au_depannage_provisoire"
+          ],
+          "properties": {
+            "majoration_reparation_active_pct": {
+              "type": "number",
+              "minimum": 0
+            },
+            "s_applique_a": {
+              "const": "reparation_active"
+            },
+            "arrondi": {
+              "const": "quart_heure_le_plus_proche"
+            },
+            "cumul_avec_hors_specialite": {
+              "const": "multiplicatif_puis_un_seul_arrondi"
+            },
+            "s_applique_au_depannage_provisoire": {
+              "type": "boolean"
+            }
+          }
+        },
+        "outillage_obligatoire_absent": {
+          "type": "string"
+        },
+        "epi_hygiene_base": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "surcharges_niveau_1": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Niveau 1 figé : ces valeurs remplacent l'inventaire au niveau 1",
+          "required": [
+            "description",
+            "delai_semaines_toutes_pieces",
+            "probabilite_retard",
+            "delai_express_h",
+            "stock_mini",
+            "cout_passation_commande_eur",
+            "outillage_tout_disponible",
+            "majoration_outillage_confort_pct",
+            "interdiction_sans_outillage_obligatoire"
+          ],
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "delai_semaines_toutes_pieces": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "probabilite_retard": {
+              "const": 0
+            },
+            "delai_express_h": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "stock_mini": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "cout_passation_commande_eur": {
+              "const": 0
+            },
+            "outillage_tout_disponible": {
+              "const": true
+            },
+            "majoration_outillage_confort_pct": {
+              "const": 0
+            },
+            "interdiction_sans_outillage_obligatoire": {
+              "const": false
+            }
+          }
+        },
         "hors_specialite": {
           "type": "object",
           "additionalProperties": false,
@@ -285,6 +374,50 @@
         "$ref": "#/$defs/piece"
       }
     },
+    "outillages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/outil"
+      }
+    },
+    "propositions_a_valider": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Compléments proposés, NON validés : sans effet dans le jeu (champ à supprimer quand il est vide)",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id_mode",
+          "type",
+          "valeur",
+          "justification",
+          "statut"
+        ],
+        "properties": {
+          "id_mode": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "outil",
+              "habilitation",
+              "epi"
+            ]
+          },
+          "valeur": {
+            "type": "string"
+          },
+          "justification": {
+            "type": "string",
+            "minLength": 10
+          },
+          "statut": {
+            "const": "a_valider_par_Steph"
+          }
+        }
+      }
+    },
     "equipements": {
       "type": "array",
       "minItems": 1,
@@ -299,7 +432,18 @@
       "required": [
         "ref",
         "designation",
-        "prix_unitaire_eur"
+        "prix_unitaire_eur",
+        "delai_semaines",
+        "retard_possible_semaines",
+        "probabilite_retard",
+        "delai_express_semaines",
+        "consommation_theorique_par_semaine",
+        "point_commande_calcule",
+        "stock_securite",
+        "stock_initial",
+        "stock_mini",
+        "critique",
+        "motif_critique"
       ],
       "additionalProperties": false,
       "properties": {
@@ -314,9 +458,39 @@
           "type": "number",
           "minimum": 0
         },
-        "delai_standard_semaines": {
+        "delai_semaines": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Délai standard D, en semaines (= tours)"
+        },
+        "retard_possible_semaines": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "R = ⌈D/2⌉ : retard en cas d'aléa fournisseur"
+        },
+        "probabilite_retard": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "delai_express_semaines": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "0,2 semaine = 16 h d'ouverture ; 1 pour les pièces constructeur spécifiques"
+        },
+        "consommation_theorique_par_semaine": {
           "type": "number",
           "minimum": 0
+        },
+        "point_commande_calcule": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "PC = max(⌈c × (D + R)⌉, quantité par intervention, 1 si critique)"
+        },
+        "stock_securite": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "PC − ⌈c × D⌉"
         },
         "stock_initial": {
           "type": "integer",
@@ -324,7 +498,43 @@
         },
         "stock_mini": {
           "type": "integer",
+          "minimum": 0,
+          "description": "réglage de départ (modifiable par le joueur)"
+        },
+        "critique": {
+          "type": "boolean"
+        },
+        "motif_critique": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "outil": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id_outil",
+        "designation",
+        "prix_eur",
+        "disponible_au_depart"
+      ],
+      "properties": {
+        "id_outil": {
+          "type": "string",
+          "pattern": "^O-[A-Z]+$"
+        },
+        "designation": {
+          "type": "string"
+        },
+        "prix_eur": {
+          "type": "number",
           "minimum": 0
+        },
+        "disponible_au_depart": {
+          "type": "boolean"
         }
       }
     },
@@ -335,6 +545,11 @@
         "id_sous_ensemble",
         "designation",
         "specialite",
+        "consommation_corrective",
+        "outillage_requis",
+        "consignation",
+        "epi",
+        "habilitation_electrique",
         "loi",
         "beta",
         "eta_h",
@@ -427,6 +642,91 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "consommation_corrective": {
+          "type": "array",
+          "description": "Pièces consommées par panne (moteur simulé)",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ref",
+              "quantite",
+              "probabilite"
+            ],
+            "properties": {
+              "ref": {
+                "type": "string"
+              },
+              "quantite": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "probabilite": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        "outillage_requis": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id_outil",
+              "exigence"
+            ],
+            "properties": {
+              "id_outil": {
+                "type": "string"
+              },
+              "exigence": {
+                "enum": [
+                  "obligatoire",
+                  "confort"
+                ],
+                "description": "obligatoire : intervention interdite sans l'outil ; confort : +50 % de réparation active"
+              }
+            }
+          }
+        },
+        "outillage_surveillance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Outils de la surveillance conditionnelle (ronde)"
+        },
+        "consignation": {
+          "enum": [
+            "electrique",
+            "mecanique",
+            "les_deux"
+          ]
+        },
+        "epi": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "EPI spécifiques, en plus de organisation.epi_hygiene_base"
+        },
+        "habilitation_electrique": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "BS",
+            "BR",
+            "B1V",
+            "B2V",
+            "BC",
+            null
+          ]
         },
         "specialite": {
           "enum": [

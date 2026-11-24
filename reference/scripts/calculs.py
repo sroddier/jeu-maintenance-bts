@@ -191,6 +191,58 @@ fict.append(dict(debut=fin1+F(str(dep["reapparition_apres_h"])), det=F("0.5"), r
 Nf=len(fict); TAf=sum(x["det"]+x["rep"]+x["rs"] for x in fict); TRf=sum(x["rep"] for x in fict)
 assert Nf==2 and fict[1]["debut"]-fin1==40 and TAf==F("3.0") and TRf==1 and TRf/Nf==F("0.5")
 
+# ---------- Événements (niveaux 2 à 6) : exemples de contrôle, sans effet sur les corrigés ----------
+from scipy.integrate import quad as _quad
+EVT={x["id_evenement"]:x for x in U["evenements"]["liste"]}
+k=Fr(str(EVT["E07"]["parametres"]["multiplicateur_taux_defaillance"])); assert k==Fr(3,2)
+MODX={m["id_mode"]:m for E_ in U["equipements"] for m in E_["modes"]}
+def Hc(m,t,eta=None):
+    eta=eta or m["eta_h"]; x=max(t-m["gamma_h"],0)/eta; return x**m["beta"]
+for idm in EVT["E07"]["parametres"]["modes_concernes"]:
+    m=MODX[idm]; b=m["beta"]; eta2=m["eta_h"]/float(k)**(1/b)
+    for t in (0.0,150.0,400.0):
+        p1=1-math.exp(-float(k)*(Hc(m,t+80)-Hc(m,t)))                      # k × incrément de H
+        p2=1-math.exp(-(Hc(m,t+80,eta2)-Hc(m,t,eta2)))                       # η' = η / k^(1/β) sur l'incrément
+        h=lambda u: 0 if u<=m["gamma_h"] else b/m["eta_h"]*((u-m["gamma_h"])/m["eta_h"])**(b-1)
+        integ=_quad(lambda u: float(k)*h(u), t, t+80, limit=200)[0] if not (b<1 and t==0) else float(k)*(Hc(m,80))
+        p3=1-math.exp(-integ)                                                # intégration directe de k·h(t)
+        assert abs(p1-p2)<1e-12 and abs(p1-p3)<1e-9, (idm,t)
+assert MODX["ETI-M1"]["lambda_par_h"]*float(k)*80==1.2 and round(1-math.exp(-1.2),4)==0.6988
+assert round(MODX["CON-M1"]["eta_h"]/float(k)**2,2)==44.44 and round(MODX["REM-M3"]["eta_h"]/float(k)**0.5,1)==3266.0
+# E01 coupure : semaine fictive, Tr = 80 h, une panne de TA = 3 h et une coupure de 1 h
+Trf=Fr(80); TAf=Fr(3); coup=F(EVT["E01"]["parametres"]["duree_arret_ligne_h"])
+assert (Trf-TAf)/Trf*100==F("96.25")                    # Ao machine : la coupure n'entre pas dans ΣTA
+assert (Trf-TAf-coup)/Trf*100==95                       # Do : la coupure réduit Tf
+# E06 samedi produit : Tr = 96 h ; panne de TA = 6 h -> Ao = 93,75 % ; volume +20 % = 16/80
+pe=EVT["E06"]["parametres"]; Tr6=F(pe["heures_ouverture_tour_h"]); assert Tr6==96 and (Tr6-6)/Tr6*100==F("93.75")
+assert F(529200)*Fr(6,5)==635040 and F(529200)*Tr6/80==635040    # +20 % = production d'un samedi à TRS constant
+# Majoration hors spécialité : arrondi au ¼ h de 1,25 × durée
+def _q(x):
+    q=Fr(x)*4; n=int(q)+(1 if q-int(q)>=Fr(1,2) else 0); return max(Fr(n,4),Fr(1,4))
+assert [_q(Fr(5,4)*F(d)) for d in ("0.25","0.5","0.75","1","2","2.5","3","22")]==[F(x) for x in ("0.25","0.75","1","1.25","2.5","3.25","3.75","27.5")]
+
+# ---------- Inventaire (validé par Steph le 2026-11-24) : corrigés § 6.5 et § 6.11 ----------
+PI={p["ref"]:p for p in U["pieces"]}
+pe=PI["P-ETI-01"]; c_eti=F(MODX["ETI-M1"]["lambda_par_h"])*80
+assert c_eti==F("0.8") and pe["delai_semaines"]==1 and pe["retard_possible_semaines"]==1
+pc_eti=math.ceil(c_eti*(pe["delai_semaines"]+pe["retard_possible_semaines"])); assert pc_eti==2==pe["point_commande_calcule"]==pe["stock_mini"]
+assert pc_eti-math.ceil(c_eti*pe["delai_semaines"])==1==pe["stock_securite"]
+# prévisionnel REM-M3 : dépassement dans 8 semaines, délai 6 + retard 3
+pm=PI["P-REM-04"]; sem=(F("4.5")-F("2.5"))/F("0.25"); assert sem==8
+assert pm["delai_semaines"]==6 and pm["retard_possible_semaines"]==3 and pm["delai_semaines"]+pm["retard_possible_semaines"]>sem
+assert sem-pm["delai_semaines"]==2 and pm["delai_semaines"]+pm["delai_express_semaines"]<=sem   # retard rattrapé par l'express (1 semaine)
+# Wilson : P-REM-01, 4 kits en 10 semaines d'exercice -> 20 kits/an
+n_kits=sum(p["quantite"] for e in H for p in e["pieces"] if p["ref"]=="P-REM-01"); assert n_kits==4
+Dan=F(n_kits)*50/10; Cl=F(str(U["couts"]["cout_passation_commande_eur"])); t=F(str(U["couts"]["cout_possession_stock_pct_par_an"]))/100; Pu=F(str(PI["P-REM-01"]["prix_unitaire_eur"]))
+assert Dan==20 and Cl==50 and t==Fr(1,5) and Pu==25
+Q2=2*Dan*Cl/(t*Pu); assert Q2==400; Qs=20
+Ct=lambda Q: Dan/Q*Cl+Fr(Q,2)*t*Pu
+assert Ct(Qs)==100 and Ct(10)==125 and Ct(40)==125 and all(Ct(q)>=Ct(Qs) for q in range(1,60))
+assert t*(Fr(Qs,2)+PI["P-REM-01"]["stock_securite"])*Pu==55 and Fr(4,1000)*(Fr(Qs,2)+1)*Pu==F("1.10")
+assert t*(5+1)*180==216 and Fr(4,1000)*6*180==F("4.32") and round(math.sqrt(2*40*50/(0.2*180)),2)==10.54
+assert round(math.sqrt(2*1.13*50/(0.2*5750)),1)==0.3        # P-REM-04 : Wilson sans objet
+
+# ---------- 9. Coûts (exercice) ----------
 cd=sum(F(e["cout_direct_eur"]) for e in H); assert cd>=sum(F(e["cout_direct_eur"]) for e in corr)+460; ci=sum(F(e["cout_indirect_eur"]) for e in H)
 R["couts"]=dict(direct=float(cd), indirect=float(ci), total=float(cd+ci),
                 par_eq={k:(ind[k]["cout_direct_eur"],ind[k]["cout_indirect_eur"],ind[k]["cout_total_eur"]) for k in ind},
@@ -244,6 +296,16 @@ for k,v in R["simL_modes"].items():
     if v["moy"] is not None: assert abs(v["moy"]-v["th"])/v["th"] < 0.03, (k,v)
 assert abs(R["simL_modes"]["REM-M1"]["n"]/R["simL_modes"]["REM-M1"]["attendu"]-1) < 0.02
 R["sim_nb"]=len(S); R["sim_nb_prev"]=sum(1 for e in S if e["type_maintenance"]=="preventive_systematique")
+# ---------- Niveau 1 figé (décision de Steph du 2026-11-24) ----------
+import hashlib, niveau1
+REF1=json.load(open(OUT+"scripts/reference_niveau1.json"))
+assert json.loads(json.dumps(niveau1.effectifs(U)))==REF1["parametres_effectifs"], "paramètres effectifs du niveau 1 modifiés"
+_R=json.loads(json.dumps(R, default=str))
+assert {k:_R[k] for k in REF1["corriges"]}==REF1["corriges"], "corrigé modifié par rapport à la référence"
+_rem=[{k:v for k,v in e.items() if k!="id_evenement"} for e in S if e["id_equipement"]=="REM"]
+assert len(_rem)==REF1["historique_simule_REM_nb"] and hashlib.sha256(json.dumps(_rem,ensure_ascii=False,sort_keys=True).encode()).hexdigest()==REF1["historique_simule_REM_sha256"]
+assert all(p["quantite"]==2 for e in H if e["id_mode_defaillance"]=="REM-M1" and e["type_maintenance"].startswith("corrective") for p in e["pieces"] if p["ref"]=="P-REM-01")
+print("Niveau 1 figé : paramètres effectifs, corrigés et historique simulé de la remplisseuse identiques à la référence")
 json.dump(R, open(OUT+"scripts/resultats.json","w"), ensure_ascii=False, indent=1, default=str)
 print(json.dumps({k:R[k] for k in ["sim_ind","sim_modes","simL_ind","simL_modes","mtbf_th_eq","sim_nb","sim_nb_prev","calc_fiab"]}, ensure_ascii=False, default=str))
 print("TOUTES LES ASSERTIONS PASSENT")

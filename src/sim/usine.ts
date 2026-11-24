@@ -1,5 +1,13 @@
 import brut from "../../data/usine.json";
-import type { DepannageProvisoire, Equipement, ModeDefaillance, Piece, PolitiqueInitiale, Usine } from "./types";
+import type {
+  DepannageProvisoire,
+  Equipement,
+  ModeDefaillance,
+  Piece,
+  PolitiqueInitiale,
+  SurchargesNiveau1,
+  Usine,
+} from "./types";
 
 /** Vérifie la présence des champs. Ne les applique pas : le niveau 1 les ignore. */
 function charger(source: Usine): Usine {
@@ -10,6 +18,16 @@ function charger(source: Usine): Usine {
   if (typeof source.couts.taux_main_oeuvre_dimanche_eur_par_h !== "number") {
     throw new Error("usine.json : taux_main_oeuvre_dimanche_eur_par_h est absent");
   }
+  const surcharges = source.organisation.surcharges_niveau_1;
+  if (!surcharges || typeof surcharges.delai_semaines_toutes_pieces !== "number") {
+    throw new Error("usine.json : organisation.surcharges_niveau_1 est absent");
+  }
+  if (source.propositions_a_valider !== undefined && !Array.isArray(source.propositions_a_valider)) {
+    throw new Error("usine.json : propositions_a_valider n'est pas un tableau");
+  }
+  if (source.outillages !== undefined && !Array.isArray(source.outillages)) {
+    throw new Error("usine.json : outillages n'est pas un tableau");
+  }
   for (const eq of source.equipements) {
     for (const mode of eq.modes) {
       if (mode.specialite !== "electrique" && mode.specialite !== "mecanique") {
@@ -17,6 +35,15 @@ function charger(source: Usine): Usine {
       }
       if (typeof mode.depannage_provisoire?.duree_reparation_active_hors_specialite_h !== "number") {
         throw new Error(`usine.json : duree hors spécialité absente pour ${mode.id_mode}`);
+      }
+      if (mode.outillage_requis !== undefined && !Array.isArray(mode.outillage_requis)) {
+        throw new Error(`usine.json : outillage_requis illisible pour ${mode.id_mode}`);
+      }
+      if (mode.epi !== undefined && !Array.isArray(mode.epi)) {
+        throw new Error(`usine.json : epi illisible pour ${mode.id_mode}`);
+      }
+      if (mode.consommation_corrective !== undefined && !Array.isArray(mode.consommation_corrective)) {
+        throw new Error(`usine.json : consommation_corrective illisible pour ${mode.id_mode}`);
       }
     }
   }
@@ -86,6 +113,34 @@ export function pieceParRef(ref: string, source: Usine = usine): Piece {
   return piece;
 }
 
+export function surchargesNiveau1(source: Usine = usine): SurchargesNiveau1 {
+  return source.organisation.surcharges_niveau_1;
+}
+
+/** Délai standard figé du niveau 1 : 2 semaines pour toutes les pièces. */
+export function delaiSemainesNiveau1(_ref: string, source: Usine = usine): number {
+  return surchargesNiveau1(source).delai_semaines_toutes_pieces;
+}
+
+export function stockMiniNiveau1(ref: string, source: Usine = usine): number {
+  const mini = surchargesNiveau1(source).stock_mini[ref];
+  if (typeof mini !== "number") throw new Error(`stock_mini niveau 1 absent pour ${ref}`);
+  return mini;
+}
+
+export function delaiExpressNiveau1(source: Usine = usine): number {
+  return surchargesNiveau1(source).delai_express_h;
+}
+
+/** Vue niveau 1 : délai et stock mini de la surcharge, le reste vient du catalogue. */
+export function pieceVueNiveau1(piece: Piece, source: Usine = usine): Piece {
+  return {
+    ...piece,
+    delai_semaines: delaiSemainesNiveau1(piece.ref, source),
+    stock_mini: stockMiniNiveau1(piece.ref, source),
+  };
+}
+
 /** Pièces utiles à la remplisseuse sur les modes du niveau 1 (correctif et préventif). */
 export function piecesNiveau1(source: Usine = usine): Piece[] {
   const refs = new Set<string>();
@@ -93,7 +148,7 @@ export function piecesNiveau1(source: Usine = usine): Piece[] {
     for (const ref of mode.pieces_corrective) refs.add(ref);
     for (const ref of mode.pieces_preventive) refs.add(ref);
   }
-  return source.pieces.filter((p) => refs.has(p.ref));
+  return source.pieces.filter((p) => refs.has(p.ref)).map((p) => pieceVueNiveau1(p, source));
 }
 
 export function politiqueRemM1(source: Usine = usine): PolitiqueInitiale {
@@ -112,7 +167,7 @@ export function tauxPossessionSemaine(source: Usine = usine): number {
 }
 
 export function delaiStandardHeures(ref: string, source: Usine = usine): number {
-  return pieceParRef(ref, source).delai_standard_semaines * heuresParSemaine(source);
+  return delaiSemainesNiveau1(ref, source) * heuresParSemaine(source);
 }
 
 export function prixExpress(prix: number, source: Usine = usine): number {

@@ -22,6 +22,8 @@ import { evaluerSaisie } from "../sim/saisie";
 import {
   actionsProposees,
   heuresParSemaine,
+  delaiSemainesNiveau1,
+  delaiStandardHeures,
   pieceParRef,
   piecesNiveau1,
   politiqueRemM1,
@@ -308,7 +310,7 @@ function phasePlanifier(): string {
         <td class="num" data-label="En commande">${encours}</td>
         <td class="qte" data-label="Quantité">${champQuantite(piece.ref)}</td>
         <td class="delai" data-label="Délai"><select name="delai-${esc(piece.ref)}" aria-label="Délai ${esc(piece.ref)}">
-          <option value="standard">Standard (${piece.delai_standard_semaines} sem.)</option>
+          <option value="standard">Standard (${piece.delai_semaines} sem.)</option>
           <option value="express">Express (${formatHeures(usine.couts.delai_express_h)}, +${formatNombre(usine.couts.majoration_express_pct, 0)} %)</option>
         </select></td>
       </tr>`;
@@ -316,7 +318,7 @@ function phasePlanifier(): string {
     .join("");
   return `<section class="carte"><h2>Planifier la semaine ${p.tour}</h2>
     ${alerte}${preventif}
-    <p>Les deux techniciens restent sur la remplisseuse. Tu peux commander des pièces : le délai standard est de ${pieceParRef("P-REM-01").delai_standard_semaines} semaines, l'express arrive en ${formatHeures(usine.couts.delai_express_h)} d'ouverture.</p>
+    <p>Les deux techniciens restent sur la remplisseuse. Tu peux commander des pièces : le délai standard est de ${delaiSemainesNiveau1("P-REM-01")} semaines, l'express arrive en ${formatHeures(usine.couts.delai_express_h)} d'ouverture.</p>
     <form data-form="planning"><div class="table-wrap"><table>
       <thead><tr><th>Pièce</th><th class="num">Stock</th><th class="num">Mini</th><th class="num">Prix</th><th class="num">En commande</th><th>Qté</th><th>Délai</th></tr></thead>
       <tbody>${lignes}</tbody>
@@ -410,7 +412,7 @@ function blocPiece(ref: string, qte: number, stock: number, standardPossible: bo
   const detailStock = stock >= qte ? stock + " disponible(s)." : "Stock insuffisant.";
   const titreExpress =
     "Commande express · " + formatHeures(usine.couts.delai_express_h) + ", +" + formatNombre(usine.couts.majoration_express_pct, 0) + " %";
-  const titreStandard = "Délai standard · " + pieceParRef(ref).delai_standard_semaines + " semaines";
+  const titreStandard = "Délai standard · " + delaiSemainesNiveau1(ref) + " semaines";
   const detailStandard = standardPossible ? "La ligne reste arrêtée jusqu'à la livraison." : "Ce délai dépasse la fin de la partie.";
   return `<fieldset><legend>Pièce</legend>
     ${radio("approvisionnement", "stock", titreStock, detailStock, stock < qte)}
@@ -878,7 +880,7 @@ function horizon(): number {
 }
 
 function delaiStandard(ref: string): number {
-  return pieceParRef(ref).delai_standard_semaines * heuresParSemaine();
+  return delaiStandardHeures(ref);
 }
 
 function seedDansUrl(): string {
